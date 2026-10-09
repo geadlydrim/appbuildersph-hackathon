@@ -8,9 +8,13 @@ import app.commutenity.domain.QaThread
 /**
  * Mock posts and comments for the Q&A screen.
  * There is no account, no login, and no other rider behind these posts.
+ * Place ids match [SampleTripSource] so threads line up with the sample trip.
  */
 object SampleQuestions {
     fun initial(): QaState = QaState(threads = threads)
+
+    private val ayalaToDelaRosa = QaRoute("ayala-center", "dela-rosa", "Ayala Center", "Dela Rosa St")
+    private val delaRosaToAyala = QaRoute("dela-rosa", "ayala-center", "Dela Rosa St", "Ayala Center")
 
     private val threads = listOf(
         QaThread(
@@ -21,7 +25,7 @@ object SampleQuestions {
                     "Lakad muna sa Station Rd tapos jeep.",
                 placeName = "Ayala Center → Dela Rosa St",
                 score = 24,
-                route = QaRoute(from = "Ayala Center", to = "Dela Rosa St"),
+                route = ayalaToDelaRosa,
             ),
             comments = listOf(
                 QaPost(
@@ -29,6 +33,7 @@ object SampleQuestions {
                     body = "Sample only: oo, 'yan ang pinakamadali kung hindi traffic sa Ayala Ave.",
                     placeName = null,
                     score = 9,
+                    workedTrip = SampleTripSource.keyFor("ayala-center", "dela-rosa"),
                 ),
                 QaPost(
                     id = "sample-optimal-c2",
@@ -42,10 +47,10 @@ object SampleQuestions {
             id = "sample-board",
             question = QaPost(
                 id = "sample-board-q",
-                body = "Saan ang sakayan ng jeep papuntang Pio del Pilar? Tama ba 'tong ruta ko?",
-                placeName = "Dela Rosa St → Pio del Pilar",
+                body = "Saan ang sakayan pabalik ng Ayala Center galing Dela Rosa St? Tama ba 'tong ruta ko?",
+                placeName = "Dela Rosa St → Ayala Center",
                 score = 11,
-                route = QaRoute(from = "Dela Rosa St", to = "Pio del Pilar"),
+                route = delaRosaToAyala,
             ),
             comments = listOf(
                 QaPost(

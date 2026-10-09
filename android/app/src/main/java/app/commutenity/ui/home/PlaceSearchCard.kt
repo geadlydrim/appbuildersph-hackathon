@@ -22,6 +22,7 @@ fun PlaceSearchCard(
     field: Field,
     query: String,
     rows: List<SearchRow>,
+    myLocationName: String,
     showClear: Boolean,
     onQuery: (String) -> Unit,
     onRow: (SearchRow) -> Unit,
@@ -83,15 +84,15 @@ fun PlaceSearchCard(
         }
         rows.forEach { row ->
             when (row) {
-                SearchRow.UseMyLocation -> Text(
-                    text = "Use my location",
-                    color = colors.ink,
-                    fontSize = 15.sp,
-                    modifier = Modifier
+                SearchRow.UseMyLocation -> Column(
+                    Modifier
                         .fillMaxWidth()
                         .clickable { onRow(row) }
-                        .padding(vertical = 6.dp),
-                )
+                        .padding(vertical = 4.dp),
+                ) {
+                    Text("Use my location", color = colors.ink, fontSize = 15.sp)
+                    Text("Sample: sets $myLocationName, not GPS", color = colors.muted, fontSize = 13.sp)
+                }
                 is SearchRow.PlaceRow -> Column(
                     Modifier
                         .fillMaxWidth()
