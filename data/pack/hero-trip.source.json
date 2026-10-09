@@ -1,0 +1,94 @@
+{
+  "meta": {
+    "version": "0.1.0-hero",
+    "built_at": null,
+    "coverage": { "name": "Makati City (hero trip only)" },
+    "sources": [
+      "Owner route knowledge (geadlydrim), recorded 2026-10-10 from memory",
+      "Point locations: owner-supplied plus codes; OpenStreetMap via Nominatim and Overpass, 2026-10-10"
+    ],
+    "shape_precision": 6,
+    "notes": "Source file for the hero trip only (state.md D37). Road shapes and distance_m are filled by the road-lines pipeline; until then they are null."
+  },
+  "places": [
+    {
+      "id": "va-rufino",
+      "name": "V.A. Rufino St",
+      "aliases": ["V.A. Rufino", "VA Rufino", "Rufino", "Rufino St"],
+      "lat": 14.558012,
+      "lng": 121.018547,
+      "kind": "area",
+      "stop_ids": ["gil-puyat-h267"],
+      "notes": "Hero trip start (D37). Plus code 7Q63H259+6C3. Next to Ayala Ave / Legazpi Village."
+    },
+    {
+      "id": "dela-rosa-pio-del-pilar",
+      "name": "Dela Rosa St, Pio del Pilar",
+      "aliases": ["Dela Rosa", "Dela Rosa St", "Pio del Pilar"],
+      "lat": 14.557063,
+      "lng": 121.008188,
+      "kind": "area",
+      "stop_ids": ["gil-puyat-osmena"],
+      "notes": "Hero trip end (D30). Plus code 7Q63H245+R7."
+    }
+  ],
+  "stops": [
+    {
+      "id": "gil-puyat-h267",
+      "name": "Gil Puyat Ave (San Antonio)",
+      "lat": 14.561313,
+      "lng": 121.014922,
+      "modes": ["jeepney", "bus"],
+      "notes": "Boarding spot, plus code 7Q63H267+GXF (owner). About 540 m straight-line walk from V.A. Rufino St."
+    },
+    {
+      "id": "gil-puyat-osmena",
+      "name": "Gil Puyat Ave near Osmeña Hwy / PNR",
+      "lat": 14.55785,
+      "lng": 121.00778,
+      "modes": ["jeepney", "bus"],
+      "notes": "Get-off ('para') spot, confirmed by owner. About 100 m straight-line walk to Dela Rosa St (owner: 'barely a distance')."
+    }
+  ],
+  "routes": [
+    {
+      "id": "jeep-buendia-lrt",
+      "name": "Jeepney via Gil Puyat Ave to LRT",
+      "mode": "jeepney",
+      "signboards": ["LRT", "Buendia - LRT"],
+      "notes": "Heads west on Gil Puyat Ave toward the LRT. Signboard varies between the two texts."
+    },
+    {
+      "id": "bus-buendia-lrt",
+      "name": "City bus via Gil Puyat Ave to LRT",
+      "mode": "bus",
+      "signboards": ["LRT", "Buendia - LRT"],
+      "notes": "Regular city bus. Same signboards as the jeep, so the vehicle check matches both."
+    }
+  ],
+  "segments": [
+    {
+      "route_id": "jeep-buendia-lrt",
+      "seq": 1,
+      "from_stop_id": "gil-puyat-h267",
+      "to_stop_id": "gil-puyat-osmena",
+      "fare_php": 12,
+      "minutes": 7,
+      "distance_m": null,
+      "shape": null,
+      "provenance": { "source_class": "known", "source": "owner, from memory: fare ₱12, 6–7 min on board", "verified_by": "geadlydrim", "verified_at": null }
+    },
+    {
+      "route_id": "bus-buendia-lrt",
+      "seq": 1,
+      "from_stop_id": "gil-puyat-h267",
+      "to_stop_id": "gil-puyat-osmena",
+      "fare_php": 15,
+      "minutes": 7,
+      "distance_m": null,
+      "shape": null,
+      "provenance": { "source_class": "known", "source": "owner, from memory: fare ₱15, 6–7 min on board", "verified_by": "geadlydrim", "verified_at": null }
+    }
+  ],
+  "transfers": []
+}
