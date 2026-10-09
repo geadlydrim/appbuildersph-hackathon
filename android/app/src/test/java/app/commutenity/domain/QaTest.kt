@@ -80,33 +80,108 @@ class QaTest {
         assertEquals(2, reduceQa(filtered, QaEvent.ShowAll).visibleThreads().size)
     }
 
+    private val ayalaCandidates = listOf(QaCandidate(ayalaTrip.key, "Sample trip"), QaCandidate("other-trip", "Other trip"))
+
     @Test
     fun workedChipOnlyTiesAnswersInAThreadAboutTheTripOnScreen() {
-        val open = reduceQa(SampleQuestions.initial(), QaEvent.Open(ayalaTrip))
+        val open = reduceQa(SampleQuestions.initial(), QaEvent.Open(ayalaTrip, candidates = ayalaCandidates))
 
         val other = reduceQa(open, QaEvent.OpenThread("sample-board"))
-        assertFalse(reduceQa(other, QaEvent.ToggleWorked).markWorked)
+        assertNull(reduceQa(other, QaEvent.MarkWorked(ayalaTrip.key)).markWorkedKey)
 
         val same = reduceQa(open, QaEvent.OpenThread("sample-optimal"))
         val posted = reduceQa(
-            reduceQa(reduceQa(same, QaEvent.ToggleWorked), QaEvent.Draft("Gumana")),
+            reduceQa(reduceQa(same, QaEvent.MarkWorked(ayalaTrip.key)), QaEvent.Draft("Gumana")),
             QaEvent.SaveDraft,
         )
         assertEquals(2, posted.evidenceFor(ayalaTrip.key))
         assertEquals(ayalaTrip.key, posted.threads.first { it.id == "sample-optimal" }.comments.last().workedTrip)
+        assertNull(posted.markWorkedKey)
+    }
+
+    @Test
+    fun anAnswerCanOnlyBeTiedToAnOpenCandidate() {
+        val same = reduceQa(
+            reduceQa(SampleQuestions.initial(), QaEvent.Open(ayalaTrip, candidates = ayalaCandidates)),
+            QaEvent.OpenThread("sample-optimal"),
+        )
+        assertNull(reduceQa(same, QaEvent.MarkWorked("not-a-candidate")).markWorkedKey)
+        assertEquals("other-trip", reduceQa(same, QaEvent.MarkWorked("other-trip")).markWorkedKey)
+    }
+
+    @Test
+    fun pressingTheSameCandidateAgainOrNullUntiesIt() {
+        val same = reduceQa(
+            reduceQa(SampleQuestions.initial(), QaEvent.Open(ayalaTrip, candidates = ayalaCandidates)),
+            QaEvent.OpenThread("sample-optimal"),
+        )
+        val tied = reduceQa(same, QaEvent.MarkWorked(ayalaTrip.key))
+        assertEquals(ayalaTrip.key, tied.markWorkedKey)
+        assertNull(reduceQa(tied, QaEvent.MarkWorked(ayalaTrip.key)).markWorkedKey)
+        assertNull(reduceQa(tied, QaEvent.MarkWorked(null)).markWorkedKey)
+
+        val untied = reduceQa(reduceQa(tied, QaEvent.MarkWorked(null)), QaEvent.Draft("Text lang"))
+        val posted = reduceQa(untied, QaEvent.SaveDraft)
+        assertNull(posted.threads.first { it.id == "sample-optimal" }.comments.last().workedTrip)
     }
 
     @Test
     fun onePhoneCountsAsOneRiderForATrip() {
-        var state = reduceQa(SampleQuestions.initial(), QaEvent.Open(ayalaTrip))
+        var state = reduceQa(SampleQuestions.initial(), QaEvent.Open(ayalaTrip, candidates = ayalaCandidates))
         state = reduceQa(state, QaEvent.OpenThread("sample-optimal"))
         repeat(3) {
-            state = reduceQa(reduceQa(reduceQa(state, QaEvent.ToggleWorked), QaEvent.Draft("Gumana $it")), QaEvent.SaveDraft)
+            state = reduceQa(
+                reduceQa(reduceQa(state, QaEvent.MarkWorked(ayalaTrip.key)), QaEvent.Draft("Gumana $it")),
+                QaEvent.SaveDraft,
+            )
         }
         assertEquals(2, state.evidenceFor(ayalaTrip.key))
         assertTrue(state.alreadyMarkedWorked())
         assertFalse(state.canMarkWorked(state.threads.first { it.id == "sample-optimal" }))
         assertEquals(1, state.threads.first { it.id == "sample-optimal" }.comments.count { it.mine && it.workedTrip != null })
+    }
+
+    @Test
+    fun aPhonesTwoTiedAnswersForTheSamePairCountOnce() {
+        val route = ayalaTrip.route
+        fun mine(id: String, key: String) = QaPost(id, "Gumana", null, route = null, workedTrip = key, sample = true, mine = true)
+        val thread = QaThread(
+            id = "t",
+            question = QaPost("t-q", "?", null, route = route),
+            comments = listOf(mine("c1", "trip-a"), mine("c2", "trip-a"), mine("c3", "trip-b")),
+        )
+        val state = QaState(threads = listOf(thread))
+        assertEquals(1, state.evidenceFor("trip-a"))
+        assertEquals(1, state.evidenceFor("trip-b"))
+        assertEquals(1, state.orderingVotes("trip-a", heroPair = false))
+        assertEquals(1, state.orderingVotes("trip-a", heroPair = true))
+    }
+
+    @Test
+    fun arrowVotesNeverChangeEvidence() {
+        val start = SampleQuestions.initial()
+        val tied = start.threads.first { it.id == "sample-optimal" }.comments.first { it.workedTrip != null }
+        val voted = reduceQa(reduceQa(start, QaEvent.Vote(tied.id, QaVote.Up)), QaEvent.Vote(start.threads.first().question.id, QaVote.Down))
+        assertEquals(start.evidenceFor(ayalaTrip.key), voted.evidenceFor(ayalaTrip.key))
+        assertEquals(start.orderingVotes(ayalaTrip.key, heroPair = false), voted.orderingVotes(ayalaTrip.key, heroPair = false))
+    }
+
+    @Test
+    fun heroPairShowsMockEvidenceButOnlyCountsMyOwnForOrdering() {
+        val mock = QaPost("m1", "Gumana", null, workedTrip = "trip-a", sample = true, mine = false)
+        val mine = QaPost("c1", "Gumana", null, workedTrip = "trip-a", sample = true, mine = true)
+        val thread = QaThread("t", QaPost("t-q", "?", null, route = ayalaTrip.route), listOf(mock, mine))
+        val state = QaState(threads = listOf(thread))
+        assertEquals(2, state.evidenceFor("trip-a"))
+        assertEquals(1, state.orderingVotes("trip-a", heroPair = true))
+        assertEquals(2, state.orderingVotes("trip-a", heroPair = false))
+    }
+
+    @Test
+    fun untiedAnswersCountForNothing() {
+        val state = SampleQuestions.initial()
+        assertEquals(0, state.evidenceFor("missing"))
+        assertEquals(0, state.orderingVotes("missing", heroPair = false))
     }
 
     @Test

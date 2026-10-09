@@ -86,6 +86,10 @@ interface TripSource {
     val myLocation: Place
     fun search(field: Field, query: String): List<SearchRow>
     fun resolve(origin: Place, destination: Place, preference: TripPreference = TripPreference.Default): TripResult
+
+    /** Every candidate for the pair, best first; empty when none. Default returns the single resolved trip. */
+    fun candidates(origin: Place, destination: Place, preference: TripPreference = TripPreference.Default): List<Trip> =
+        (resolve(origin, destination, preference) as? TripResult.Ready)?.let { listOf(it.trip) } ?: emptyList()
 }
 
 /** The rider's stated preference (from the ask bar); promotes one criterion in the D16 order. */

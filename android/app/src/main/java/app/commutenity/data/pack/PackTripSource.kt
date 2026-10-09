@@ -29,7 +29,10 @@ import kotlin.math.sqrt
  * Trips and places straight from the commute pack. Every fare, minute, stop, signboard and shape shown
  * comes from [pack]; nothing is invented here.
  */
-class PackTripSource(private val pack: CommutePack) : TripSource {
+class PackTripSource(
+    private val pack: CommutePack,
+    netVotes: (candidateKey: String) -> Int = { 0 },
+) : TripSource {
     private val placeIndex = pack.placeIndex()
     private val stopsById = pack.stops.associateBy { it.id }
     private val packPlaceStops = pack.places.associate { it.id to it.stopIds }
@@ -53,6 +56,7 @@ class PackTripSource(private val pack: CommutePack) : TripSource {
                     )
                 },
         ),
+        netVotes,
     )
 
     /** No GPS yet: the first pack place stands in, and its name says so. */
@@ -65,17 +69,19 @@ class PackTripSource(private val pack: CommutePack) : TripSource {
         placeIndex.search(query).forEach { add(SearchRow.PlaceRow(it)) }
     }
 
-    override fun resolve(origin: Place, destination: Place, preference: TripPreference): TripResult {
-        if (!origin.inMakati || !destination.inMakati) return TripResult.NotInData
+    override fun resolve(origin: Place, destination: Place, preference: TripPreference): TripResult =
+        candidates(origin, destination, preference).firstOrNull()?.let { TripResult.Ready(it) } ?: TripResult.NotInData
+
+    override fun candidates(origin: Place, destination: Place, preference: TripPreference): List<Trip> {
+        if (!origin.inMakati || !destination.inMakati) return emptyList()
         val originStops = stopsFor(origin)
         val destinationStops = stopsFor(destination)
-        if (originStops.isEmpty() || destinationStops.isEmpty()) return TripResult.NotInData
+        if (originStops.isEmpty() || destinationStops.isEmpty()) return emptyList()
 
-        val candidates = finder.find(TripRequest(originStops, destinationStops, preference.toFinder()))
-        val best = candidates.firstOrNull() ?: return TripResult.NotInData
-        val trip = buildTrip(best, reasonFor(best, candidates.getOrNull(1), preference), origin, destination)
-            ?: return TripResult.NotInData
-        return TripResult.Ready(trip)
+        val found = finder.find(TripRequest(originStops, destinationStops, preference.toFinder()))
+        return found.mapIndexedNotNull { index, candidate ->
+            buildTrip(candidate, reasonFor(candidate, found.getOrNull(index + 1), preference), origin, destination)
+        }
     }
 
     /** A pack place uses its declared stops; any other place with coordinates uses every stop within walking range. */
@@ -207,9 +213,13 @@ class PackTripSource(private val pack: CommutePack) : TripSource {
         private const val ASSET_PATH = "pack/hero-trip.json"
         private const val EARTH_RADIUS_M = 6_371_000.0
 
-        fun fromAssets(context: Context): PackTripSource =
+        const val HERO_ORIGIN_ID = "va-rufino"
+        const val HERO_DESTINATION_ID = "dela-rosa-pio-del-pilar"
+
+        fun fromAssets(context: Context, netVotes: (String) -> Int = { 0 }): PackTripSource =
             PackTripSource(
                 CommutePack.parse(context.assets.open(ASSET_PATH).bufferedReader().use { it.readText() }),
+                netVotes,
             )
 
         private fun edgeId(segment: PackSegment) = "${segment.routeId}#${segment.seq}"

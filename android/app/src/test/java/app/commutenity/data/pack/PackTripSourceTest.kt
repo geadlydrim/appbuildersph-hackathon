@@ -106,6 +106,24 @@ class PackTripSourceTest {
     }
 
     @Test
+    fun candidatesListsJeepThenBus() {
+        val trips = source.candidates(rufino, delaRosa)
+        assertEquals(listOf("jeep-buendia-lrt#1", "bus-buendia-lrt#1"), trips.map { it.key })
+        assertEquals(ready(source.resolve(rufino, delaRosa)), trips.first())
+    }
+
+    @Test
+    fun netVotesOnlyBreakAnExactTieSoTheCheaperJeepStaysFirst() {
+        val voted = PackTripSource(pack, netVotes = { if (it.startsWith("bus")) 3 else 0 })
+        assertEquals(listOf("jeep-buendia-lrt#1", "bus-buendia-lrt#1"), voted.candidates(rufino, delaRosa).map { it.key })
+    }
+
+    @Test
+    fun noCandidatesWhenThereIsNoRouteData() {
+        assertTrue(source.candidates(delaRosa, rufino).isEmpty())
+    }
+
+    @Test
     fun pinnedSpotNearVaRufinoResolvesViaNearestStop() {
         val pin = Place("pin", "Pinned spot", "", inMakati = true, lat = 14.5585, lng = 121.0180)
         val trip = ready(source.resolve(pin, delaRosa))

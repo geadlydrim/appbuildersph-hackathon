@@ -56,6 +56,7 @@ import app.commutenity.domain.QaPost
 import app.commutenity.domain.QaState
 import app.commutenity.domain.QaThread
 import app.commutenity.domain.QaVote
+import app.commutenity.domain.QaCandidate
 import app.commutenity.domain.alreadyMarkedWorked
 import app.commutenity.domain.canMarkWorked
 import app.commutenity.domain.isAboutTrip
@@ -214,9 +215,10 @@ private fun ThreadDetail(thread: QaThread, state: QaState, onEvent: (QaEvent) ->
         focus = state.focusComment,
         focusRequester = focusRequester,
         showButtons = state.draft.isNotEmpty() || state.saveError != null,
-        worked = state.markWorked,
-        onToggleWorked = if (state.canMarkWorked(thread)) {
-            { onEvent(QaEvent.ToggleWorked) }
+        candidates = state.candidates,
+        workedKey = state.markWorkedKey,
+        onMarkWorked = if (state.canMarkWorked(thread)) {
+            { key -> onEvent(QaEvent.MarkWorked(key)) }
         } else {
             null
         },
@@ -308,8 +310,9 @@ private fun CommentCard(comment: QaPost, state: QaState, onEvent: (QaEvent) -> U
             modifier = Modifier.padding(top = 6.dp),
         )
         if (comment.workedTrip != null) {
+            val label = state.candidates.firstOrNull { it.key == comment.workedTrip }?.label ?: "this trip"
             Text(
-                text = "This trip worked · sample",
+                text = if (comment.sample) "Worked: $label · sample" else "Worked: $label",
                 color = colors.ink,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
@@ -479,9 +482,11 @@ private fun DraftBox(
     focus: Boolean = false,
     focusRequester: FocusRequester = remember { FocusRequester() },
     showButtons: Boolean = true,
-    worked: Boolean = false,
-    onToggleWorked: (() -> Unit)? = null,
+    candidates: List<QaCandidate> = emptyList(),
+    workedKey: String? = null,
+    onMarkWorked: ((String?) -> Unit)? = null,
 ) {
+    val showWorkedChips = onMarkWorked != null && candidates.isNotEmpty()
     val colors = LocalCommuteColors.current
     val focusManager = LocalFocusManager.current
     val bringIntoView = remember { BringIntoViewRequester() }
@@ -505,18 +510,23 @@ private fun DraftBox(
             .background(colors.surface)
             .padding(12.dp),
     ) {
-        if (onToggleWorked != null) {
-            Text(
-                text = "This trip worked",
-                color = if (worked) colors.paraOn else colors.ink,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(99.dp))
-                    .background(if (worked) colors.ink else colors.sample)
-                    .clickable(onClick = onToggleWorked)
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-            )
+        if (showWorkedChips) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                candidates.forEach { candidate ->
+                    val selected = workedKey == candidate.key
+                    Text(
+                        text = "Worked: ${candidate.label}",
+                        color = if (selected) colors.paraOn else colors.ink,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(99.dp))
+                            .background(if (selected) colors.ink else colors.sample)
+                            .clickable { onMarkWorked?.invoke(if (selected) null else candidate.key) }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                    )
+                }
+            }
         }
         BasicTextField(
             value = draft,
@@ -524,7 +534,7 @@ private fun DraftBox(
             textStyle = TextStyle(color = colors.ink, fontSize = 16.sp),
             cursorBrush = SolidColor(colors.ink),
             modifier = Modifier
-                .padding(top = if (onToggleWorked != null) 8.dp else 0.dp)
+                .padding(top = if (showWorkedChips) 8.dp else 0.dp)
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
                 .onFocusChanged { focused = it.isFocused }
