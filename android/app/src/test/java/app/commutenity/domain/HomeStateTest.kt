@@ -227,6 +227,42 @@ class HomeStateTest {
         assertEquals(Field.B, outsideField(reduce(reduce(bothSet(), HomeEvent.Focus(Field.B), source), HomeEvent.Pick(outside), source)))
     }
 
+    @Test
+    fun mapTapsSetAThenBThenStartOver() {
+        val a = reduce(HomeState(), HomeEvent.MapTap(14.558012, 121.018547), source)
+        assertEquals("Pinned spot", a.origin?.name)
+        assertEquals(14.558012, a.origin!!.lat!!, 1e-9)
+        assertNull(a.destination)
+        assertEquals(Sheet.Peek, a.sheet)
+
+        val ab = reduce(a, HomeEvent.MapTap(14.557063, 121.008188), source)
+        assertEquals(121.008188, ab.destination!!.lng!!, 1e-9)
+        assertEquals(Sheet.Half, ab.sheet)
+
+        val again = reduce(ab, HomeEvent.MapTap(14.55, 121.02), source)
+        assertEquals(14.55, again.origin!!.lat!!, 1e-9)
+        assertNull(again.destination)
+        assertEquals(Sheet.Peek, again.sheet)
+    }
+
+    @Test
+    fun mapTapFillsTheOpenSearchBoxAndClosesIt() {
+        val searchingA = reduce(bothSet(), HomeEvent.Focus(Field.A), source)
+        val next = reduce(searchingA, HomeEvent.MapTap(14.56, 121.01), source)
+        assertEquals("Pinned spot", next.origin?.name)
+        assertEquals("Dela Rosa St", next.destination?.name)
+        assertNull(next.activeField)
+        assertEquals("", next.query)
+    }
+
+    @Test
+    fun mapTapOutsideMakatiShowsTheNotice() {
+        val a = reduce(HomeState(), HomeEvent.MapTap(14.558, 121.018), source)
+        val outside = reduce(a, HomeEvent.MapTap(14.59, 121.07), source)
+        assertFalse(outside.destination!!.inMakati)
+        assertEquals(Sheet.Notice, outside.sheet)
+    }
+
     private fun bothSet(): HomeState {
         val origin = reduce(HomeState(), HomeEvent.UseMyLocation, source)
         val searching = reduce(origin, HomeEvent.Focus(Field.B), source)

@@ -46,6 +46,7 @@ import app.commutenity.domain.TripSource
 import app.commutenity.domain.canOpenTrip
 import app.commutenity.domain.outsideField
 import app.commutenity.domain.peekMessage
+import app.commutenity.ui.map.MapLibreSurface
 import app.commutenity.ui.map.MapSurface
 import app.commutenity.ui.map.PlaceholderMap
 import app.commutenity.ui.theme.LocalCommuteColors
@@ -66,7 +67,7 @@ fun MapHomeScreen(
     onMenu: () -> Unit = {},
     onMic: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
-    map: MapSurface = PlaceholderMap,
+    map: MapSurface = MapLibreSurface,
     designStatusBar: Boolean = false,
 ) {
     val colors = LocalCommuteColors.current
@@ -93,8 +94,15 @@ fun MapHomeScreen(
         map.Content(
             showTrip = trip != null && state.sheet == Sheet.Half,
             modifier = Modifier.fillMaxSize(),
+            origin = state.origin,
+            destination = state.destination,
+            onTap = { lat, lng -> onEvent(HomeEvent.MapTap(lat, lng)) },
         )
-        PinLayer(state = state, showTrip = trip != null && state.sheet == Sheet.Half)
+        // The placeholder picture has no coordinates, so it gets these fixed-position pins. The real
+        // map draws A and B itself at their coordinates.
+        if (map === PlaceholderMap) {
+            PinLayer(state = state, showTrip = trip != null && state.sheet == Sheet.Half)
+        }
         if (designStatusBar) {
             Text(
                 text = "9:41",

@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.commutenity.domain.Place
 import app.commutenity.ui.theme.LocalCommuteColors
 
 private data class Block(val x: Float, val y: Float, val w: Float, val h: Float, val r: Float, val park: Boolean)
@@ -56,9 +57,16 @@ private val streets = listOf(
 private const val FrameWidth = 412f
 private const val FrameHeight = 915f
 
+/** Drawn picture of the T0 frames. It ignores pins and taps; the home screen draws its own pins over it. */
 object PlaceholderMap : MapSurface {
     @Composable
-    override fun Content(showTrip: Boolean, modifier: Modifier) {
+    override fun Content(
+        showTrip: Boolean,
+        modifier: Modifier,
+        origin: Place?,
+        destination: Place?,
+        onTap: ((lat: Double, lng: Double) -> Unit)?,
+    ) {
         val colors = LocalCommuteColors.current
         val paths = remember {
             mapRoads.map { shape ->

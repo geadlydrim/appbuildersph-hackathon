@@ -9,6 +9,9 @@ data class Place(
     val name: String,
     val area: String,
     val inMakati: Boolean,
+    /** Map position. Null for places without coordinates (no pin is drawn for them). */
+    val lat: Double? = null,
+    val lng: Double? = null,
 )
 
 data class Trip(
