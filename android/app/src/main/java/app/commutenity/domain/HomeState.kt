@@ -34,6 +34,39 @@ sealed interface HomeEvent {
     data class VoiceError(val message: String) : HomeEvent
     data object VoiceStop : HomeEvent
     data class SettleSheet(val sheet: Sheet) : HomeEvent
+    /** A tap on the map at a coordinate. */
+    data class MapTap(val lat: Double, val lng: Double) : HomeEvent
+}
+
+/**
+ * Rough Makati City bounding box. Taps outside it get the "not in my data" notice (D20). It is a box,
+ * not the city boundary, so edge areas of neighbouring cities can pass; the pack decides real coverage.
+ */
+private const val MAKATI_MIN_LAT = 14.525
+private const val MAKATI_MAX_LAT = 14.585
+private const val MAKATI_MIN_LNG = 120.995
+private const val MAKATI_MAX_LNG = 121.065
+
+/** A place for a point the rider tapped on the map. */
+fun pinnedPlace(lat: Double, lng: Double): Place {
+    val coords = "%.5f, %.5f".format(java.util.Locale.ROOT, lat, lng)
+    return Place(
+        id = "pin:$coords",
+        name = "Pinned spot",
+        area = coords,
+        inMakati = lat in MAKATI_MIN_LAT..MAKATI_MAX_LAT && lng in MAKATI_MIN_LNG..MAKATI_MAX_LNG,
+        lat = lat,
+        lng = lng,
+    )
+}
+
+/** Which end a map tap fills: the open search box, else A, then B, then start over with a new A. */
+private fun applyMapTap(state: HomeState, place: Place): HomeState = when {
+    state.activeField == Field.B -> state.copy(destination = place)
+    state.activeField == Field.A -> state.copy(origin = place)
+    state.origin == null -> state.copy(origin = place)
+    state.destination == null -> state.copy(destination = place)
+    else -> state.copy(origin = place, destination = null)
 }
 
 data class AskMatch(
@@ -162,6 +195,10 @@ fun reduce(state: HomeState, event: HomeEvent, source: TripSource): HomeState {
             else if (canOpenTrip(state)) state.copy(sheet = event.sheet)
             else state
         }
+        is HomeEvent.MapTap -> settle(
+            applyMapTap(state, pinnedPlace(event.lat, event.lng)).copy(activeField = null, query = ""),
+            source,
+        )
     }
 }
 

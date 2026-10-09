@@ -94,10 +94,12 @@ fun MapHomeScreen(
         map.Content(
             showTrip = trip != null && state.sheet == Sheet.Half,
             modifier = Modifier.fillMaxSize(),
+            origin = state.origin,
+            destination = state.destination,
+            onTap = { lat, lng -> onEvent(HomeEvent.MapTap(lat, lng)) },
         )
-        // These pins sit at fixed screen spots drawn for the placeholder picture. On the real map they
-        // would slide off their places when panning, so they only show on the placeholder until pins
-        // are drawn from map coordinates (the "draw the trip on the map" issue).
+        // The placeholder picture has no coordinates, so it gets these fixed-position pins. The real
+        // map draws A and B itself at their coordinates.
         if (map === PlaceholderMap) {
             PinLayer(state = state, showTrip = trip != null && state.sheet == Sheet.Half)
         }

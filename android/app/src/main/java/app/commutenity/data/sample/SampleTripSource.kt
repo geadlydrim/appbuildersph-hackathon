@@ -19,12 +19,16 @@ class SampleTripSource : TripSource {
         name = "Ayala Center",
         area = "Station Rd, San Lorenzo",
         inMakati = true,
+        lat = 14.549312,
+        lng = 121.027062,
     )
     private val delaRosa = Place(
         id = "dela-rosa",
         name = "Dela Rosa St",
         area = "Pio del Pilar",
         inMakati = true,
+        lat = 14.557063,
+        lng = 121.008188,
     )
     private val outside = Place(
         id = "outside-makati",
