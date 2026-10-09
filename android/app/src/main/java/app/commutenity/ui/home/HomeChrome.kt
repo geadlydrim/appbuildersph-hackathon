@@ -1,7 +1,13 @@
 package app.commutenity.ui.home
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +47,7 @@ import app.commutenity.ui.theme.LocalCommuteColors
 import app.commutenity.ui.theme.PlusJakarta
 
 @Composable
-fun WordmarkRow(modifier: Modifier = Modifier) {
+fun WordmarkRow(modifier: Modifier = Modifier, onMenu: (() -> Unit)? = null) {
     val colors = LocalCommuteColors.current
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -49,6 +55,9 @@ fun WordmarkRow(modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            if (onMenu != null) {
+                MenuButton(onMenu, Modifier.padding(end = 8.dp))
+            }
             LogoMark()
             Text(
                 text = "CommuteNity",
@@ -72,7 +81,32 @@ fun WordmarkRow(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun LogoMark() {
+private fun MenuButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalCommuteColors.current
+    Canvas(
+        modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(colors.surface)
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = "Menu" }
+            .padding(horizontal = 11.dp, vertical = 13.dp),
+    ) {
+        val stroke = 2.dp.toPx()
+        listOf(0f, size.height / 2f, size.height).forEach { y ->
+            drawLine(
+                color = colors.ink,
+                start = Offset(0f, y),
+                end = Offset(size.width, y),
+                strokeWidth = stroke,
+                cap = StrokeCap.Round,
+            )
+        }
+    }
+}
+
+@Composable
+fun LogoMark(size: Dp = 32.dp) {
     val context = LocalContext.current
     val bitmap = remember {
         BitmapFactory.decodeResource(context.resources, R.drawable.logo)?.asImageBitmap()
@@ -83,32 +117,18 @@ private fun LogoMark() {
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(32.dp)
-                .clip(RoundedCornerShape(8.dp)),
+                .size(size)
+                .clip(RoundedCornerShape(size / 4)),
         )
     } else {
         val colors = LocalCommuteColors.current
         Box(
             Modifier
-                .size(32.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .size(size)
+                .clip(RoundedCornerShape(size / 4))
                 .background(colors.ink),
         )
     }
-}
-
-@Composable
-fun OfflineBadge(modifier: Modifier = Modifier) {
-    val colors = LocalCommuteColors.current
-    Text(
-        text = "On-device · Offline OK",
-        color = colors.ink,
-        fontWeight = FontWeight.Bold,
-        fontSize = 11.sp,
-        modifier = modifier
-            .background(colors.surface, CircleShape)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-    )
 }
 
 @Composable

@@ -60,6 +60,7 @@ fun MapHomeScreen(
     source: TripSource,
     onEvent: (HomeEvent) -> Unit,
     onOpenQuestions: () -> Unit = {},
+    onMenu: () -> Unit = {},
     modifier: Modifier = Modifier,
     map: MapSurface = PlaceholderMap,
     designStatusBar: Boolean = false,
@@ -105,20 +106,7 @@ fun MapHomeScreen(
                 .then(if (designStatusBar) Modifier else Modifier.statusBarsPadding())
                 .padding(start = 16.dp, end = 16.dp, top = if (designStatusBar) 28.dp else 8.dp),
         ) {
-            WordmarkRow()
-            OfflineBadge(Modifier.padding(top = 8.dp))
-            Text(
-                text = "Questions",
-                color = colors.ink,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .clip(RoundedCornerShape(99.dp))
-                    .background(colors.surface)
-                    .clickable(onClick = onOpenQuestions)
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-            )
+            WordmarkRow(onMenu = onMenu)
             val field = state.activeField
             if (field != null) {
                 PlaceSearchCard(

@@ -21,7 +21,12 @@ import app.commutenity.domain.HomeState
 import app.commutenity.domain.QaEvent
 import app.commutenity.domain.reduce
 import app.commutenity.domain.reduceQa
+import app.commutenity.ui.home.HomeMenuDrawer
 import app.commutenity.ui.home.MapHomeScreen
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import app.commutenity.ui.qa.QaScreen
 import app.commutenity.ui.theme.CommuteNityTheme
 
@@ -40,18 +45,25 @@ class MainActivity : ComponentActivity() {
                 BackHandler(enabled = questions.open || state.asking || state.activeField != null) {
                     when {
                         questions.threadId != null -> questions = reduceQa(questions, QaEvent.BackToList)
+                        questions.asking -> questions = reduceQa(questions, QaEvent.CancelDraft)
                         questions.open -> questions = reduceQa(questions, QaEvent.Close)
                         state.asking -> state = reduce(state, HomeEvent.CloseAsk, source)
                         state.activeField != null -> state = reduce(state, HomeEvent.DismissSearch, source)
                     }
                 }
+                val drawerState = rememberDrawerState(DrawerValue.Closed)
+                val scope = rememberCoroutineScope()
+                val openQuestions = { questions = reduceQa(questions, QaEvent.Open) }
                 Box(Modifier.fillMaxSize()) {
-                    MapHomeScreen(
-                        state = state,
-                        source = source,
-                        onEvent = { event: HomeEvent -> state = reduce(state, event, source) },
-                        onOpenQuestions = { questions = reduceQa(questions, QaEvent.Open) },
-                    )
+                    HomeMenuDrawer(drawerState = drawerState, onOpenQuestions = openQuestions) {
+                        MapHomeScreen(
+                            state = state,
+                            source = source,
+                            onEvent = { event: HomeEvent -> state = reduce(state, event, source) },
+                            onOpenQuestions = openQuestions,
+                            onMenu = { scope.launch { drawerState.open() } },
+                        )
+                    }
                     if (questions.open) {
                         QaScreen(
                             state = questions,
