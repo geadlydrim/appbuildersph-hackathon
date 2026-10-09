@@ -47,7 +47,7 @@ Ranker **data collection** (scenarios, preference labels, seeded contributions) 
 
 | Feature | Reason |
 |---|---|
-| Accounts and auth | Contributions use an anonymous device ID ([A9](state.md#4-open-assumptions)) |
+| User-facing accounts | Contributions use an internal anonymous Auth identity; riders never sign up ([D17](state.md#5-decisions)) |
 | Cloud LLM answering the core question | Breaks the theme. Cloud may only be secondary ([JUDGING](JUDGING.md#rules)). |
 | Turn-by-turn live navigation | Needs real-time GPS. It's a different product. |
 | Real-time vehicle location | Needs hardware or third-party feeds |

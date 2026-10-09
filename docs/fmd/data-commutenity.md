@@ -46,15 +46,14 @@ A validator runs before every pack build.
 
 ### 2.1 Contribution Schema
 
-These records are stored locally in Room and synced to the backend ([A9](state.md#4-open-assumptions)).
+These records are stored locally in Room and synced through the authenticated Supabase Edge Function ([D17](state.md#5-decisions)). The database has only the two contribution tables below; Room-only `synced` and `sync_cursor` state do not sync.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| `route_suggestions` | `id` (UUID), `device_id`, `origin_place_id`, `dest_place_id`, `legs[]` (route_id, board_stop_id, alight_stop_id), `note?` (≤ 280 chars), `created_at`, `synced` | Legs must be pack-valid. Fares and minutes are always computed from the pack. |
-| `route_votes` | `device_id`, `candidate_key`, `value` (+1/−1), `created_at`, `synced` | `candidate_key` is a hash of the leg sequence. One vote per device and key. |
-| `sync_cursor` | `last_pulled_at` | Pull-since cursor |
+| `route_suggestions` | `id` (UUID), `author_id` (server-set anonymous Auth UID), `origin_place_id`, `dest_place_id`, `legs[]` (route_id, board_stop_id, alight_stop_id), `note?` (≤ 280 chars), `created_at` | The function validates legs against the pack. Fares and minutes are always recomputed from the pack. Public pull excludes `author_id`. |
+| `route_votes` | `author_id` (server-set anonymous Auth UID), `candidate_key`, `value` (+1/−1), `updated_at` | Unique on (`author_id`, `candidate_key`). The function upserts the current vote; clearing removes it. Public pull exposes aggregate `net_votes` and `vote_count` only. |
 
-`device_id` is a random UUID generated on the phone. It is not tied to an account or the hardware.
+Anonymous Auth creates a stable per-install identity without a user-facing account. The Android client never receives the service-role key.
 
 ## 3. Collection Protocol
 

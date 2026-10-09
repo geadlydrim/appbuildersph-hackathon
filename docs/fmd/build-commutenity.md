@@ -4,7 +4,7 @@
 **Date:** 2026-10-09
 **Version:** 0.2
 **Owner:** Implementer
-**Status:** Draft. Runtime pending [A4](state.md#4-open-assumptions), backend pending [A9](state.md#4-open-assumptions), and role owners pending [A8](state.md#4-open-assumptions).
+**Status:** Draft. Runtime pending [A4](state.md#4-open-assumptions) and role owners pending [A8](state.md#4-open-assumptions). Contribution sync is decided in [D17](state.md#5-decisions).
 **Last reconciled:** 2026-10-09
 **PRD:** [Requirements](prd-commutenity.md) · **SDD:** [System design](sdd-commutenity.md) · **Data:** [Data plan](data-commutenity.md)
 
@@ -57,14 +57,14 @@ Nothing is pinned yet. Record exact versions when installing, and never fabricat
 | Embeddings / ranker | LiteRT-LM EmbeddingEngine + EmbeddingGemma; ranker in plain Kotlin | No | — |
 | Signboard OCR | ML Kit Text Recognition v2, bundled Latin model | No | — |
 | Speech | whisper.cpp via JNI | No | — |
-| Sync backend | Supabase (Postgres plus REST) or an alternative ([A9](state.md#4-open-assumptions)) | No | — |
+| Sync backend | Supabase: anonymous Auth, authenticated Edge Function, Postgres | No | — |
 | Training / eval | Python (scikit-learn for logistic regression; GBDT library only if needed) | No | — |
 | Demo mirroring | scrcpy over USB | No | — |
 
 ## 4. Golden Paths
 
 - **Facts:** the pack goes to the candidate generator, then the scorer or ranker, then the template. The LLM never outputs a fare, stop, or minutes value that isn't in `factsUsed`.
-- **Contributions:** validate against the pack, save to Room, sync later. Fares and minutes are always recomputed from the pack.
+- **Contributions:** validate against the pack, save to Room, then sync batched mutations through the authenticated Supabase Edge Function. Fares and minutes are always recomputed from the pack; only aggregates are pulled for votes.
 - **Ranker:** one feature spec file shared by Python and Kotlin. Retrain, evaluate on held-out pairs, run the parity test, then flip the flag.
 - **Models:** downloaded once and cached in app storage. Model IDs live in one config file.
 - **Pack:** edit the source, run the validator, build. Never hand-edit the built pack.

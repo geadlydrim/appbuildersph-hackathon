@@ -52,7 +52,7 @@ The only external authority cited so far is the official briefing ([JUDGING](JUD
 |---|---|---|
 | Runtime and model not proven on our phone | SDD, BUILD | A4 and A12; CP1 |
 | No corridor data or minutes | Pack, ranker, demo | D15, D16; data plan §3 |
-| No sync backend chosen | T1 | A9 |
+| Sync backend not deployed or tested | T1 | D17; CP4 fallback is local-only contributions |
 | No problem evidence | Pitch | [VALIDATION](val-commutenity.md) |
 | Role owners unassigned | BUILD | A8 |
 

@@ -13,7 +13,7 @@
 This register covers a local hackathon demo on Android phones. The privacy story is local processing: questions, voice, and camera images never leave the phone.
 
 Two exposures remain:
-- **Community contributions.** Route suggestions, votes, and notes sync to a backend under an anonymous device ID.
+- **Community contributions.** Route suggestions, votes, and notes sync through an authenticated backend function under an anonymous Auth identity.
 - **Team data collection in public spaces.** Signboard photos.
 
 ## 1. Processing Inventory
@@ -24,7 +24,7 @@ Two exposures remain:
 | Voice (T4) | Audio and transcript | Phone memory | Discarded after transcription | Never stored or uploaded |
 | Signboard check (T3) | Camera frame | Phone memory | Discarded after the verdict | Never stored or uploaded |
 | Local events (PRD §5.6) | Latencies and flags | Phone | Until cleared | No question text |
-| Contributions | Suggested legs (pack IDs), note, vote, random device UUID, timestamp | Phone (Room) and sync backend | Event duration | No account, name, or location trace. Notes are free text and could contain personal data, so the UI warns against it. |
+| Contributions | Suggested legs (pack IDs), note, vote, anonymous Auth UID, timestamp | Phone (Room) and Supabase sync backend | Event duration | No user-facing account, name, or location trace. Raw UIDs and votes are not exposed to readers. Notes are free text and could contain personal data, so the UI warns against it. |
 | Team photo collection | Photos of public vehicles | Team machines; blurred photos only in the repo | Event duration plus the repo | Faces and plates blurred before commit |
 | Team preference labels | Rankings per scenario per rater | Repo | Permanent | Raters shown as R1–R4, not by name |
 
@@ -44,7 +44,7 @@ No legal conclusion is drawn beyond this.
 | Flag | Present? | Protection | Status |
 |---|---|---|---|
 | Answer-path data leaving the phone | No | No network calls on the ask, answer, alternatives, scan, or voice paths | QA-01 pending |
-| Contribution data leaving the phone | Yes | Anonymous UUID; notes ≤ 280 characters with a no-personal-info hint; backend accepts inserts only; rate limit | QA-10, AI-07 pending |
+| Contribution data leaving the phone | Yes | Anonymous Auth identity; notes ≤ 280 characters with a no-personal-info hint; authenticated Edge Function validates writes and rate-limits server-side; readers receive aggregates only | QA-10, AI-07 pending |
 | People captured incidentally in photos | Yes (collection) | Frame on the signboard; blur faces and plates; keep raw photos out of the public repo | Pending |
 | Children's or sensitive data | No | — | N/A |
 
