@@ -1,6 +1,7 @@
 package app.commutenity.domain
 
 import app.commutenity.data.sample.SampleQuestions
+import app.commutenity.data.sample.SampleTripSource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -58,6 +59,64 @@ class QaTest {
         val opened = reduceQa(SampleQuestions.initial(), QaEvent.OpenThread("sample-board"))
         val next = reduceQa(opened, QaEvent.SaveDraft)
         assertEquals("Write a comment before posting.", next.saveError)
+    }
+
+    private val ayalaTrip = QaTrip(
+        key = SampleTripSource.keyFor("ayala-center", "dela-rosa"),
+        route = QaRoute("ayala-center", "dela-rosa", "Ayala Center", "Dela Rosa St"),
+    )
+
+    @Test
+    fun evidenceCountsOnlyAnswersTiedToThatTrip() {
+        val start = SampleQuestions.initial()
+        assertEquals(1, start.evidenceFor(ayalaTrip.key))
+        assertEquals(0, start.evidenceFor(SampleTripSource.keyFor("dela-rosa", "ayala-center")))
+    }
+
+    @Test
+    fun tripLinkShowsOnlyThatPairUntilShowAll() {
+        val filtered = reduceQa(SampleQuestions.initial(), QaEvent.Open(ayalaTrip, onlyTrip = true))
+        assertEquals(listOf("sample-optimal"), filtered.visibleThreads().map { it.id })
+        assertEquals(2, reduceQa(filtered, QaEvent.ShowAll).visibleThreads().size)
+    }
+
+    @Test
+    fun workedChipOnlyTiesAnswersInAThreadAboutTheTripOnScreen() {
+        val open = reduceQa(SampleQuestions.initial(), QaEvent.Open(ayalaTrip))
+
+        val other = reduceQa(open, QaEvent.OpenThread("sample-board"))
+        assertFalse(reduceQa(other, QaEvent.ToggleWorked).markWorked)
+
+        val same = reduceQa(open, QaEvent.OpenThread("sample-optimal"))
+        val posted = reduceQa(
+            reduceQa(reduceQa(same, QaEvent.ToggleWorked), QaEvent.Draft("Gumana")),
+            QaEvent.SaveDraft,
+        )
+        assertEquals(2, posted.evidenceFor(ayalaTrip.key))
+        assertEquals(ayalaTrip.key, posted.threads.first { it.id == "sample-optimal" }.comments.last().workedTrip)
+    }
+
+    @Test
+    fun onePhoneCountsAsOneRiderForATrip() {
+        var state = reduceQa(SampleQuestions.initial(), QaEvent.Open(ayalaTrip))
+        state = reduceQa(state, QaEvent.OpenThread("sample-optimal"))
+        repeat(3) {
+            state = reduceQa(reduceQa(reduceQa(state, QaEvent.ToggleWorked), QaEvent.Draft("Gumana $it")), QaEvent.SaveDraft)
+        }
+        assertEquals(2, state.evidenceFor(ayalaTrip.key))
+        assertTrue(state.alreadyMarkedWorked())
+        assertFalse(state.canMarkWorked(state.threads.first { it.id == "sample-optimal" }))
+        assertEquals(1, state.threads.first { it.id == "sample-optimal" }.comments.count { it.mine && it.workedTrip != null })
+    }
+
+    @Test
+    fun questionAskedFromATripListStaysInThatList() {
+        val filtered = reduceQa(SampleQuestions.initial(), QaEvent.Open(ayalaTrip, onlyTrip = true))
+        val asked = reduceQa(
+            reduceQa(reduceQa(filtered, QaEvent.StartQuestion), QaEvent.Draft("May jeep pa ba?")),
+            QaEvent.SaveDraft,
+        )
+        assertEquals("May jeep pa ba?", asked.visibleThreads().first().question.body)
     }
 
     @Test

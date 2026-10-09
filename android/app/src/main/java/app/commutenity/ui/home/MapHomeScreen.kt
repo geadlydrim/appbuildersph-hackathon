@@ -44,6 +44,8 @@ import app.commutenity.domain.Sheet
 import app.commutenity.domain.TripResult
 import app.commutenity.domain.TripSource
 import app.commutenity.domain.canOpenTrip
+import app.commutenity.domain.outsideField
+import app.commutenity.domain.peekMessage
 import app.commutenity.ui.map.MapLibreSurface
 import app.commutenity.ui.map.MapSurface
 import app.commutenity.ui.theme.LocalCommuteColors
@@ -60,6 +62,7 @@ fun MapHomeScreen(
     source: TripSource,
     onEvent: (HomeEvent) -> Unit,
     onOpenQuestions: () -> Unit = {},
+    workedCount: Int = 0,
     onMenu: () -> Unit = {},
     onMic: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
@@ -114,6 +117,7 @@ fun MapHomeScreen(
                     field = field,
                     query = state.query,
                     rows = source.search(field, state.query),
+                    myLocationName = source.myLocation.name,
                     showClear = when (field) {
                         Field.A -> state.origin != null
                         Field.B -> state.destination != null
@@ -205,14 +209,19 @@ fun MapHomeScreen(
             )
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 when {
-                    state.sheet == Sheet.Notice -> NotInDataMessage(
-                        onChangeDestination = { onEvent(HomeEvent.Focus(Field.B)) },
-                    )
+                    state.sheet == Sheet.Notice -> {
+                        val field = outsideField(state) ?: Field.B
+                        NotInDataMessage(
+                            onChangeDestination = { onEvent(HomeEvent.Focus(field)) },
+                            changeLabel = if (field == Field.A) "Change start" else "Change destination",
+                        )
+                    }
                     trip != null && state.sheet == Sheet.Half -> BestTripContent(
                         trip = trip.trip,
                         onOpenQuestions = onOpenQuestions,
+                        workedCount = workedCount,
                     )
-                    else -> PeekCopy()
+                    else -> PeekCopy(peekMessage(state))
                 }
             }
         }

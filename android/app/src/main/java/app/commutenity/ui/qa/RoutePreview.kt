@@ -48,8 +48,10 @@ fun RoutePreview(route: QaRoute, modifier: Modifier = Modifier, height: Dp = 200
                 .offset(y = -CropTop.dp * scale),
         ) {
             PlaceholderMap.Content(showTrip = true, modifier = Modifier.fillMaxSize())
-            PreviewPin("A", x = 270f, y = 334f, scale = scale, a = true)
-            PreviewPin("B", x = 90f, y = 234f, scale = scale, a = false)
+            // shortcut: the placeholder map only has the Ayala and Dela Rosa spots; swap when the route is reversed.
+            val reversed = route.fromId == "dela-rosa"
+            PreviewPin("A", x = if (reversed) 90f else 270f, y = if (reversed) 234f else 334f, scale = scale, a = true)
+            PreviewPin("B", x = if (reversed) 270f else 90f, y = if (reversed) 334f else 234f, scale = scale, a = false)
         }
         Text(
             text = "${route.from} → ${route.to} · sample map",

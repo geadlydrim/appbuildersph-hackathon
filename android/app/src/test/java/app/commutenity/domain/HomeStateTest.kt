@@ -174,6 +174,59 @@ class HomeStateTest {
         assertFalse(next.asking)
     }
 
+    @Test
+    fun askKeepsTheDirectionTheRiderWrote() {
+        val match = matchAsk("from Dela Rosa St to Ayala Center", source)
+        assertEquals("Dela Rosa St", match.origin?.name)
+        assertEquals("Ayala Center", match.destination?.name)
+    }
+
+    @Test
+    fun askReadsTagalogCuesInEitherOrder() {
+        val match = matchAsk("Paano pumunta sa Dela Rosa St galing Ayala Center?", source)
+        assertEquals("Ayala Center", match.origin?.name)
+        assertEquals("Dela Rosa St", match.destination?.name)
+    }
+
+    @Test
+    fun askWithOnePlaceAndNoFromCueIsTheDestination() {
+        val match = matchAsk("how do I get to Dela Rosa St", source)
+        assertNull(match.origin)
+        assertEquals("Dela Rosa St", match.destination?.name)
+        val start = matchAsk("galing Ayala Center", source)
+        assertEquals("Ayala Center", start.origin?.name)
+        assertNull(start.destination)
+    }
+
+    @Test
+    fun samePlaceForBothEndsShowsNoTrip() {
+        val origin = reduce(HomeState(), HomeEvent.UseMyLocation, source)
+        val searching = reduce(origin, HomeEvent.Focus(Field.B), source)
+        val next = reduce(searching, HomeEvent.Pick(source.myLocation), source)
+        assertEquals(Sheet.Peek, next.sheet)
+        assertFalse(canOpenTrip(next))
+        assertEquals("Start and destination are the same place. Change one.", peekMessage(next))
+    }
+
+    @Test
+    fun collapsedTripSaysHowToBringItBack() {
+        val collapsed = reduce(bothSet(), HomeEvent.SettleSheet(Sheet.Peek), source)
+        assertEquals("Ayala Center → Dela Rosa St. Swipe up to see the trip.", peekMessage(collapsed))
+        assertEquals("Pick A and B on the map.", peekMessage(HomeState()))
+    }
+
+    @Test
+    fun noticeAsksToChangeTheEndThatIsOutsideMakati() {
+        val outside = source.search(Field.A, "Outside").filterIsInstance<SearchRow.PlaceRow>().single().place
+        val searching = reduce(bothSet(), HomeEvent.Focus(Field.A), source)
+        val next = reduce(searching, HomeEvent.Pick(outside), source)
+        assertEquals(Sheet.Notice, next.sheet)
+        assertEquals(Field.A, outsideField(next))
+        val editing = reduce(next, HomeEvent.Focus(Field.A), source)
+        assertEquals("Not in my data yet. Only Makati is covered for now.", peekMessage(editing))
+        assertEquals(Field.B, outsideField(reduce(reduce(bothSet(), HomeEvent.Focus(Field.B), source), HomeEvent.Pick(outside), source)))
+    }
+
     private fun bothSet(): HomeState {
         val origin = reduce(HomeState(), HomeEvent.UseMyLocation, source)
         val searching = reduce(origin, HomeEvent.Focus(Field.B), source)
