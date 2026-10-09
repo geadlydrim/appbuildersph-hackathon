@@ -36,8 +36,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import app.commutenity.ui.qa.QaScreen
 import app.commutenity.ui.theme.CommuteNityTheme
+import android.content.pm.ApplicationInfo
+import androidx.lifecycle.lifecycleScope
+import app.commutenity.ai.LlmSelfTest
+import app.commutenity.ai.LocalLlm
 
 class MainActivity : ComponentActivity() {
+    private val llm by lazy { LocalLlm(applicationContext) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
@@ -45,6 +51,11 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         val source = SampleTripSource()
+        llm.start(lifecycleScope)
+        val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        if (debuggable && intent.getBooleanExtra("llm_selftest", false)) {
+            LlmSelfTest.run(llm, lifecycleScope)
+        }
         setContent {
             CommuteNityTheme {
                 var state by remember { mutableStateOf(HomeState()) }
@@ -123,5 +134,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        if (isFinishing) llm.close()
+        super.onDestroy()
     }
 }
