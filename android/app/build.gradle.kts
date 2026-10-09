@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,16 +8,18 @@ plugins {
 
 android {
     namespace = "app.commutenity"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "app.commutenity"
-        minSdk = 26
+        minSdk = 31
         targetSdk = 35
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
         versionCode = 1
         versionName = "0.1.0"
-        // LiteRT-LM ships native code; the demo phone is arm64.
-        ndk { abiFilters += "arm64-v8a" }
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -29,10 +33,18 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
-
     buildFeatures {
         compose = true
+    }
+
+    androidResources {
+        noCompress += "pmtiles"
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
@@ -43,7 +55,11 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.activity.compose)
-    implementation(libs.litertlm)
+    implementation(libs.maplibre.android)
+    implementation(libs.litertlm.android)
     debugImplementation(libs.compose.ui.tooling)
     testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.ext.junit)
 }
