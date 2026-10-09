@@ -17,7 +17,6 @@ object TripAnswer {
         if (rides.any { it.board.isBlank() || it.alight.isBlank() }) return ""
 
         val parts = mutableListOf<String>()
-        if (trip.unverified) parts += if (taglish) "Hindi pa beripikado (OpenStreetMap):" else "Unverified (OpenStreetMap):"
         if (trip.sample) parts += "Sample:"
 
         trip.legs.forEachIndexed { index, leg ->
@@ -38,8 +37,13 @@ object TripAnswer {
         }
 
         parts += closing(trip, taglish)
+        // Directions first; the honesty note closes the answer.
+        if (trip.unverified) parts += if (taglish) OSM_NOTE_TAGLISH else OSM_NOTE_ENGLISH
         return parts.joinToString(" ")
     }
+
+    const val OSM_NOTE_ENGLISH = "Bus route from OpenStreetMap; not yet checked by riders."
+    const val OSM_NOTE_TAGLISH = "Ruta ng bus mula sa OpenStreetMap; hindi pa nasusuri ng mga sumasakay."
 
     /** The "walk, no ride needed" trip has one Walk leg and no ride; any other ride-less trip gets nothing. */
     private fun walkOnlyAnswer(trip: Trip, taglish: Boolean): String {

@@ -125,11 +125,15 @@ class TripAnswerTest {
     }
 
     @Test
-    fun anUnverifiedTripIsPrefixedWithItsSource() {
+    fun anUnverifiedTripStartsWithDirectionsAndEndsWithItsSource() {
         val osm = trip.copy(unverified = true)
-        assertTrue(TripAnswer.compose(osm).startsWith("Unverified (OpenStreetMap): Walk ~540 m"))
-        assertTrue(TripAnswer.compose(osm, taglish = true).startsWith("Hindi pa beripikado (OpenStreetMap): Maglakad"))
-        assertTrue(!TripAnswer.compose(trip).contains("Unverified"))
+        val english = TripAnswer.compose(osm)
+        val taglish = TripAnswer.compose(osm, taglish = true)
+        assertTrue(english, english.startsWith("Walk ~540 m"))
+        assertTrue(english, english.endsWith(TripAnswer.OSM_NOTE_ENGLISH))
+        assertTrue(taglish, taglish.startsWith("Maglakad"))
+        assertTrue(taglish, taglish.endsWith(TripAnswer.OSM_NOTE_TAGLISH))
+        assertTrue(!TripAnswer.compose(trip).contains("OpenStreetMap"))
     }
 
     @Test
