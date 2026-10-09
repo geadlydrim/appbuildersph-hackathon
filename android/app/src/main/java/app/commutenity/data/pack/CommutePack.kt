@@ -41,6 +41,12 @@ data class CommutePack(
         /** Real OpenStreetMap data that the team has not verified. */
         const val SOURCE_OSM = "osm"
 
+        /** Published information (e.g. an official stop list) the team has not ridden or verified itself. */
+        const val SOURCE_PUBLIC = "public"
+
+        /** Data the team collected by riding. */
+        const val SOURCE_COLLECTED = "collected"
+
         fun parse(json: String): CommutePack {
             val root = JSONObject(json)
             return CommutePack(
@@ -72,6 +78,7 @@ data class CommutePack(
                         mode = route.optStringOrNull("mode").orEmpty(),
                         signboards = route.strings("signboards"),
                         sourceClass = route.optStringOrNull("source_class") ?: SOURCE_KNOWN,
+                        fareRule = route.optStringOrNull("fare_rule"),
                     )
                 },
                 segments = root.objects("segments").map { segment ->
@@ -129,6 +136,8 @@ data class PackRoute(
     val mode: String,
     val signboards: List<String>,
     val sourceClass: String = CommutePack.SOURCE_KNOWN,
+    /** Fare table rule (see [FareRules]); when set, the fare is computed per ride from its distance. */
+    val fareRule: String? = null,
 )
 
 data class PackSegment(

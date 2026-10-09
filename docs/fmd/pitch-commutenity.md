@@ -15,7 +15,7 @@
 
 * **The Problem (Pain & Scarcity):** 14 million commuters face an unmapped informal transit system. At the curb, they face four scarcities: **zero signal** in underpasses, **zero prepaid load** for data, **zero seconds** before a jeep leaves, and **zero public signs**. Google Maps fails; the cloud abandons commuters when they need it most.
 * **The Solution (Local AI):** CommuteNity puts Makati's transit help on the phone: an offline map (bundled PMTiles) with a real road line, and an on-device AI (Gemma 4 E2B) that understands Taglish questions typed in, and English questions spoken.
-* **The Demo (Proof):** 100% Airplane Mode. Ask in words and get a real trip: **₱12 jeep, 16 minutes, 0 transfers, "Cheapest", signboard "LRT"**, the walk, the ride on Gil Puyat Ave, and the "para" point, drawn along the road. Then the **right-jeep check** ("Tama ba tong jeep?") and rider Q&A evidence (sample data, marked in the app).
+* **The Demo (Proof):** 100% Airplane Mode. Ask in words and get a real trip: **₱14 jeep, 16 minutes, 0 transfers, "Cheapest", signboard "LRT"**, the walk, the ride on Gil Puyat Ave, and the "para" point, drawn along the road. Then the **right-jeep check** ("Tama ba tong jeep?") and rider Q&A evidence (sample data, marked in the app).
 * **The Grounding Rule:** Code decides facts (fares, routes, stops); AI only reads the question. The AI never invents a fare or a route.
 * **The Ask:** Back the team bringing Local AI where it matters most: to the everyday Filipino commuter standing in the rain with zero load.
 
@@ -43,7 +43,7 @@
 
 1. **0:00–0:10 (Offline map, AI loading → ready):** Airplane Mode icon visible. App opens on the offline Makati map; the AI status goes from loading to ready. *(The AI takes ~16 s after opening the app; open it beforehand or trim the wait in the edit.)*  
    *Caption:* *"Airplane Mode is ON. Offline Makati map. The AI runs on this phone."*
-2. **0:10–0:22 (Ask by text, Taglish):** Type *"Paano pumunta sa Dela Rosa galing V.A. Rufino?"* Pins A and B are placed; the trip card shows **₱12, 16 min, 0 transfers, "Cheapest", signboard "LRT"**; the line is drawn on Gil Puyat Ave.  
+2. **0:10–0:22 (Ask by text, Taglish):** Type *"Paano pumunta sa Dela Rosa galing V.A. Rufino?"* Pins A and B are placed; the trip card shows **₱14, 16 min, 0 transfers, "Cheapest", signboard "LRT"**; the line is drawn on Gil Puyat Ave.  
    *Caption:* *"Ask in Taglish. Pins, fare, minutes, signboard, and the road line."*
 3. **0:22–0:28 (Answer sentence, Taglish toggle):** Read the answer sentence on the trip card, then toggle English ↔ Taglish.  
    *Caption:* *"The answer comes from the trip's own facts. Not made up by the AI."*

@@ -1,0 +1,213 @@
+{
+ "meta": {
+  "version": "0.1.0-carousel",
+  "built_at": "2026-10-09T23:05:07Z",
+  "coverage": {
+   "name": "EDSA Carousel stops in Makati"
+  },
+  "sources": [
+   "Wikipedia, \"EDSA Carousel\" stops table, accessed 2026-10-10",
+   "© OpenStreetMap contributors (ODbL): Carousel relation 10183711 geometry and stop/place coordinates, via Overpass API, fetched 2026-10-09"
+  ],
+  "shape_precision": 6,
+  "minutes_est_m_per_min": 120,
+  "notes": "Operating Carousel stops in/at Makati: Guadalupe (Guadalupe Bridge, Mandaluyong-Makati boundary, 15.80 km from Monumento), Buendia (EDSA median), Ayala / One Ayala (18.80 km; southbound boards inside One Ayala, northbound at the curbside). Magallanes and Estrella are not open; Tramo is southbound-only and in Pasay, so it is left out. Not ridden by the team: source_class public. minutes is null; minutes_est = ceil(distance_m / 120). Geometry: OSM southbound line, Buendia -> Tramo cut at One Ayala; northbound is the reversed line. fare_php is null: routes carry fare_rule bus_aircon, so the fare is computed per ride (consecutive segments of one route) from the ride's total distance_m using the owner's fare table supplied 2026-10-10: air-conditioned bus 18 PHP for the first 5 km plus 2.98 PHP per succeeding km."
+ },
+ "places": [
+  {
+   "id": "carousel-place-guadalupe",
+   "name": "EDSA Carousel Guadalupe",
+   "aliases": [
+    "Carousel Guadalupe",
+    "Guadalupe Carousel"
+   ],
+   "lat": 14.5682641,
+   "lng": 121.0458523,
+   "kind": "station",
+   "stop_ids": [
+    "carousel-guadalupe"
+   ],
+   "source_class": "public"
+  },
+  {
+   "id": "carousel-place-buendia",
+   "name": "EDSA Carousel Buendia",
+   "aliases": [
+    "Carousel Buendia",
+    "Buendia Carousel"
+   ],
+   "lat": 14.5550009,
+   "lng": 121.0349221,
+   "kind": "station",
+   "stop_ids": [
+    "carousel-buendia"
+   ],
+   "source_class": "public"
+  },
+  {
+   "id": "carousel-place-ayala",
+   "name": "EDSA Carousel Ayala",
+   "aliases": [
+    "Carousel Ayala",
+    "Ayala Carousel",
+    "One Ayala Carousel"
+   ],
+   "lat": 14.550286,
+   "lng": 121.028161,
+   "kind": "station",
+   "stop_ids": [
+    "carousel-ayala"
+   ],
+   "source_class": "public"
+  }
+ ],
+ "stops": [
+  {
+   "id": "carousel-guadalupe",
+   "name": "Guadalupe (EDSA Carousel)",
+   "lat": 14.5682641,
+   "lng": 121.0458523,
+   "modes": [
+    "bus"
+   ],
+   "notes": "On Guadalupe Bridge, Mandaluyong-Makati boundary. Position: OSM Carousel stop node."
+  },
+  {
+   "id": "carousel-buendia",
+   "name": "Buendia (EDSA Carousel)",
+   "lat": 14.5550009,
+   "lng": 121.0349221,
+   "modes": [
+    "bus"
+   ],
+   "notes": "Makati, EDSA median. Position: OSM Carousel stop node."
+  },
+  {
+   "id": "carousel-ayala",
+   "name": "Ayala / One Ayala (EDSA Carousel)",
+   "lat": 14.550286,
+   "lng": 121.028161,
+   "modes": [
+    "bus"
+   ],
+   "notes": "Southbound boards inside One Ayala; northbound at the curbside. Position: OSM One Ayala (osm-w1117016729), 19 m from the OSM Carousel line."
+  }
+ ],
+ "routes": [
+  {
+   "id": "carousel-sb",
+   "name": "EDSA Carousel (southbound)",
+   "mode": "bus",
+   "signboards": [
+    "EDSA Carousel",
+    "Route 1",
+    "PITX"
+   ],
+   "fare_rule": "bus_aircon",
+   "source_class": "public"
+  },
+  {
+   "id": "carousel-nb",
+   "name": "EDSA Carousel (northbound)",
+   "mode": "bus",
+   "signboards": [
+    "EDSA Carousel",
+    "Route 1",
+    "Monumento"
+   ],
+   "fare_rule": "bus_aircon",
+   "source_class": "public"
+  }
+ ],
+ "segments": [
+  {
+   "route_id": "carousel-sb",
+   "seq": 1,
+   "from_stop_id": "carousel-guadalupe",
+   "to_stop_id": "carousel-buendia",
+   "fare_php": null,
+   "minutes": null,
+   "minutes_est": 17,
+   "distance_m": 1942,
+   "shape": {
+    "polyline": "osdxZwt`{eFdYxF|H|AxaAdQd~AzZfg@`NnUxHd\\nNf[xOj]rTtq@fk@|_@vb@j_BrqBviAxwApZ|_@tL`NbPxLbx@taA~RxWh_@rh@|Zd`@fDbDnEzFtC`DfHdK`CtD",
+    "engine": "osm-route-geometry",
+    "profile": null,
+    "generated_at": "2026-10-09T23:05:07Z"
+   },
+   "provenance": {
+    "source_class": "public",
+    "source": "EDSA Carousel stops: Wikipedia stops table (accessed 2026-10-10); geometry: OpenStreetMap relation 10183711",
+    "verified_by": null,
+    "verified_at": null
+   }
+  },
+  {
+   "route_id": "carousel-sb",
+   "seq": 2,
+   "from_stop_id": "carousel-buendia",
+   "to_stop_id": "carousel-ayala",
+   "fare_php": null,
+   "minutes": null,
+   "minutes_est": 8,
+   "distance_m": 938,
+   "shape": {
+    "polyline": "qvjwZsikzeFxG`MdDlEbJ~JbLfPdZn_@pxAjhBj_@vj@fWza@`Xb_@d[~_@lKrJdFbFhGdGxOpThCpIuAjAgCxBeDtCgMxK",
+    "engine": "osm-route-geometry",
+    "profile": null,
+    "generated_at": "2026-10-09T23:05:07Z"
+   },
+   "provenance": {
+    "source_class": "public",
+    "source": "EDSA Carousel stops: Wikipedia stops table (accessed 2026-10-10); geometry: OpenStreetMap relation 10183711",
+    "verified_by": null,
+    "verified_at": null
+   }
+  },
+  {
+   "route_id": "carousel-nb",
+   "seq": 1,
+   "from_stop_id": "carousel-ayala",
+   "to_stop_id": "carousel-buendia",
+   "fare_php": null,
+   "minutes": null,
+   "minutes_est": 8,
+   "distance_m": 938,
+   "shape": {
+    "polyline": "_wawZok~yeFfMyKdDuCfCyBtAkAiCqIyOqTiGeGeFcFmKsJe[_`@aXc_@gW{a@k_@wj@qxAkhBeZo_@cLgPcJ_KeDmEyGaM",
+    "engine": "osm-route-geometry",
+    "profile": null,
+    "generated_at": "2026-10-09T23:05:07Z"
+   },
+   "provenance": {
+    "source_class": "public",
+    "source": "EDSA Carousel stops: Wikipedia stops table (accessed 2026-10-10); geometry: OpenStreetMap relation 10183711",
+    "verified_by": null,
+    "verified_at": null
+   }
+  },
+  {
+   "route_id": "carousel-nb",
+   "seq": 2,
+   "from_stop_id": "carousel-buendia",
+   "to_stop_id": "carousel-guadalupe",
+   "fare_php": null,
+   "minutes": null,
+   "minutes_est": 17,
+   "distance_m": 1942,
+   "shape": {
+    "polyline": "qvjwZsikzeFaCuDgHeKuCaDoE{FgDcD}Ze`@i_@sh@_SyWcx@uaAcPyLuLaNqZ}_@wiAywAk_BsqB}_@wb@uq@gk@k]sTg[yOe\\oNoUyHgg@aNe~A{ZyaAeQ}H}AeYyF",
+    "engine": "osm-route-geometry",
+    "profile": null,
+    "generated_at": "2026-10-09T23:05:07Z"
+   },
+   "provenance": {
+    "source_class": "public",
+    "source": "EDSA Carousel stops: Wikipedia stops table (accessed 2026-10-10); geometry: OpenStreetMap relation 10183711",
+    "verified_by": null,
+    "verified_at": null
+   }
+  }
+ ],
+ "transfers": []
+}

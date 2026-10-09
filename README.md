@@ -23,7 +23,7 @@ Verified on the demo phone (POCO X6 5G, Snapdragon 7s Gen 2) in **airplane mode*
 - **Ask by text:** Taglish or English, read by the on-device AI. "Paano pumunta sa Dela Rosa galing V.A. Rufino?" sets A and B and shows the trip.
 - **Ask by voice:** English, on-device speech recognition; same path as typing.
 - **The real trip** from V.A. Rufino St to Dela Rosa St, Pio del Pilar, drawn along the road on Gil Puyat Ave:
-  - The card shows: jeep **₱12**, **16 min** in all (7 min on board), 0 transfers, labelled "Cheapest", signboard "LRT" / "Buendia - LRT".
+  - The card shows: jeep **₱14**, **16 min** in all (7 min on board), 0 transfers, labelled "Cheapest", signboard "LRT" / "Buendia - LRT".
   - Steps: walk ~540 m, ride, walk ~100 m, then say "para" at Gil Puyat Ave near Osmeña Hwy / PNR.
   - A short answer sentence in English or Taglish, built from those facts.
 - **"Is this the right jeep?":** e.g. "Tama ba tong jeep? Buendia LRT nakalagay" gives "Yes, ride this"; "PASAY GUADALUPE" gives "No, look for "LRT" or "Buendia - LRT"".
@@ -119,7 +119,9 @@ Kotlin 2.4.21, Jetpack Compose (BOM 2024.10.01), Android Gradle Plugin 8.13.2, G
 
 ### Data and sources
 
-- **Hero trip** (`data/pack/hero-trip.source.json`): **team-generated** from the team's own route knowledge (`known`, from memory). Fares ₱12 jeep / ₱15 bus and about 7 min on board were not checked on a ride during the event. Stop points come from team-supplied plus codes and OpenStreetMap.
+- **Hero trip** (`data/pack/hero-trip.source.json`): **team-generated** from the team's own route knowledge (`known`). The jeep fare is ₱14, the traditional-jeep minimum from the team's fare table (first 4 km). The ₱15 bus fare and about 7 min on board are from memory and were not checked on a ride during the event. Stop points come from team-supplied plus codes and OpenStreetMap.
+- **Fare table** (team-supplied, 2026-10-10): air-conditioned bus ₱18 for the first 5 km + ₱2.98/km; ordinary bus ₱15 + ₱2.49/km; traditional jeep ₱14 for the first 4 km + ₱2.00/km; modern jeep ₱17 + ₱2.40/km. Used for the hero jeep and the EDSA Carousel; fares are worked out per ride from its distance.
+- **EDSA Carousel in Makati** (`data/pack/carousel-makati.source.json`, built by `data/pack/carousel.py`): the operating stops Guadalupe, Buendia and Ayala (One Ayala), both directions, from [Wikipedia's EDSA Carousel stops table](https://en.wikipedia.org/wiki/EDSA_Carousel). Road line from OpenStreetMap. Fare by the air-con bus rule (₱18 within Makati); minutes are estimates.
 - **Road line:** OSRM driving route over OpenStreetMap data (ODbL), stored in `data/pack/`.
 - **OSM routes and places** (`data/pack/osm-makati.source.json`, built by `data/pack/osm_import.py` from Overpass): bus routes, stops and route geometry, plus places inside Makati's OSM boundary. © OpenStreetMap contributors (ODbL). Not verified by the team: OSM fares are not used ("Fare unknown"), and minutes are estimates (120 m/min). **Sakay.ph data is not used:** its Terms of Service forbid extracting or reusing it.
 - **Map:** Makati extract of the Protomaps basemap (`makati-20261009-z14.pmtiles`), © OpenStreetMap contributors (ODbL), with attribution shown on the map. Map fonts and icons are from [protomaps/basemaps-assets](https://github.com/protomaps/basemaps-assets): Noto Sans glyphs under the SIL Open Font License, and icons derived from MIT-licensed tangrams/icons. The style is based on [protomaps/basemaps](https://github.com/protomaps/basemaps).
