@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -58,6 +59,7 @@ fun MapHomeScreen(
     state: HomeState,
     source: TripSource,
     onEvent: (HomeEvent) -> Unit,
+    onOpenQuestions: () -> Unit = {},
     modifier: Modifier = Modifier,
     map: MapSurface = PlaceholderMap,
     designStatusBar: Boolean = false,
@@ -105,6 +107,18 @@ fun MapHomeScreen(
         ) {
             WordmarkRow()
             OfflineBadge(Modifier.padding(top = 8.dp))
+            Text(
+                text = "Mga tanong",
+                color = colors.ink,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .clip(RoundedCornerShape(99.dp))
+                    .background(colors.surface)
+                    .clickable(onClick = onOpenQuestions)
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+            )
             val field = state.activeField
             if (field != null) {
                 PlaceSearchCard(
@@ -179,7 +193,10 @@ fun MapHomeScreen(
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 when {
                     state.sheet == Sheet.Notice -> NotInDataMessage()
-                    trip != null && state.sheet == Sheet.Half -> BestTripContent(trip.trip)
+                    trip != null && state.sheet == Sheet.Half -> BestTripContent(
+                        trip = trip.trip,
+                        onOpenQuestions = onOpenQuestions,
+                    )
                     else -> PeekCopy()
                 }
             }

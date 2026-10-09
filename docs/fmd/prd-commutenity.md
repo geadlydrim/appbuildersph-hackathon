@@ -4,7 +4,7 @@
 **Date:** 2026-10-09
 **Version:** 0.4
 **Owner:** Project owner
-**Status:** Draft. Re-scoped to Makati City only, with a map-first trip builder ([D20](state.md#5-decisions) to [D29](state.md#5-decisions)). The hero trip pair is set by [D30](state.md#5-decisions), and PRD-F8 (ask in words) is release-critical per [D31](state.md#5-decisions).
+**Status:** Draft. Re-scoped to Makati City only, with a map-first trip builder ([D20](state.md#5-decisions) to [D29](state.md#5-decisions)). The hero trip pair is set by [D30](state.md#5-decisions), and PRD-F8 (ask in words) is release-critical per [D31](state.md#5-decisions). PRD-F12 is a mock Q&A screen only: no login and no accounts.
 **Last reconciled:** 2026-10-09
 **IDEA:** [Idea brief](idea-commutenity.md) · **Scope:** [MVP scope](mvp-scope.md) · **Stories:** [User stories](user-stories.md)
 
@@ -33,6 +33,7 @@ Definitions: [IDEA §2](idea-commutenity.md#2-who-its-for). These are target rol
 | PRD-F4 | Online refresh and cache | When online, fetch and cache the latest pack, map pack, community suggestions and vote aggregates, and first/last-mile foot routes. Shows status. Nothing on the answer path needs it. | Must | T1 |
 | PRD-F5 | Alternatives on request | Other ranked candidates, labelled Algorithm or Community, with reason lines and vote counts | Must | T1 |
 | PRD-F6 | Community contributions with local-first sync | Suggest a trip (structured legs plus a note) and vote "this worked / didn't". Stored locally and synced through the secondary backend when online ([D17](state.md#5-decisions)). | Must | T1 |
+| PRD-F12 | Community Q&A | **Mock data only. There is no login and no account.** Every question and every answer on this screen is sample text, including anything the rider types during the session. It is not a post from another person, and it does not sync. A question or answer may name one place. Answers are flat. Up and down only mark usefulness on this phone, and pressing the same way again clears the mark. A vote never writes a fare, stop, or route into the commute pack. If the map is missing, the place name still shows. This is not the parked social feed ([PRD-F11](#3-features-and-priorities)). | Should | Proposed, mock shell |
 | PRD-F7 | In-trip tracking | Offline GPS snapped to the active trip's shape: on-route or off-route status, current leg, distance and stops to the para point, and a para alert before the alight stop. | Must | T2 |
 | PRD-F8 | Ask in words | An on-device LLM turns "How to get from X to Y?" into point A and point B, and turns "Is this the correct vehicle?" into the correct-vehicle check ([D27](state.md#5-decisions)). Phrasing stays grounded in the computed trip. **Release-critical for the 10:00 AM submission and part of the MVP ([D31](state.md#5-decisions)).** | Must | T3 (label kept; part of the MVP per D31) |
 | PRD-F9 | Voice questions | On-device speech-to-text (Whisper) feeding PRD-F8 | Should | T3 |
@@ -44,6 +45,7 @@ Definitions: [IDEA §2](idea-commutenity.md#2-who-its-for). These are target rol
 These are owned by [user stories](user-stories.md):
 - US-01 to US-03 (T0)
 - US-04 to US-08 (T1)
+- US-15 (PRD-F12, proposed)
 - US-09 and US-10 (T2)
 - US-11 to US-13 (T3)
 - US-14 (T4)
@@ -61,6 +63,8 @@ Design reference: [DSD](dsd-commutenity.md). The map is the home screen; the tri
 | Alternatives sheet | "Show alternatives" | — | "No other trips yet. Suggest one?" | — | Ranked list with Algorithm/Community labels and votes; picking one redraws the map |
 | Suggest trip | From the card or alternatives | — | — | Invalid leg, with the reason | "Saved on your phone · will sync" |
 | Vote | On any trip | — | — | — | Vote state shown; unsynced marker |
+| Community Q&A (PRD-F12) | From a trip, or from "Mga tanong" | — | No threads: "Wala pang naka-save na tanong." | Map tiles missing: the place name still shows. | A sample banner stays on screen: "Sample data. Walang account at walang login." Questions and answers are marked Sample. A place name may sit on a question or an answer. |
+| Ask or answer (PRD-F12) | "Magtanong" or "Sumagot" | — | — | Empty text is not saved | "Na-save sa phone mo · sample lang, walang login." The new text is still marked Sample. Nothing is sent to a server. |
 | Refresh and sync status | Top bar | Refreshing or syncing | Nothing new | Offline or failed; the app keeps working on cached data and retries later | "Updated" or "Synced", with a timestamp and the pack and map versions |
 | Active trip (tracking) | "Start trip" on the best-trip card | "Naghahanap ng GPS…" | — | GPS unavailable or permission denied: trip stays viewable without tracking; GPS lost mid-trip shows the last known status as stale | Position on the route, "On route", current leg, distance and stops to the para point, ongoing notification |
 | Off route | Tracking sees a deviation past the threshold | — | — | — | "You may be off route" with distance from the route; clears when the rider returns |
@@ -99,7 +103,7 @@ flowchart TD
     T -.F8.-> K[Correct-vehicle check]
 ```
 
-The app has no user-facing accounts. Contributions use an internal anonymous Auth identity and sync through the server-side validation boundary ([D17](state.md#5-decisions)). GPS tracks never leave the phone ([SDD §5](sdd-commutenity.md#5-security-and-privacy)).
+The app has no user-facing accounts. **Community Q&A (PRD-F12) does not add one.** The questions and answers there are mock data. There is no login, no profile, and no identity. Suggest-and-vote contributions, which are a different feature, still use an internal anonymous Auth identity and sync through the server-side validation boundary ([D17](state.md#5-decisions)). GPS tracks never leave the phone ([SDD §5](sdd-commutenity.md#5-security-and-privacy)).
 
 ### 5.6 Instrumentation
 
@@ -133,6 +137,7 @@ All inference runs on the phone ([SDD §8](sdd-commutenity.md#8-ai-architecture-
 - **Speech (PRD-F9):** Whisper transcribes on the phone. The transcript is shown for confirmation before parsing.
 - **No OCR, no TTS** ([D26](state.md#5-decisions)).
 - **No cloud fallback** for any of these.
+- **Community Q&A (PRD-F12):** the current screen is mock data and has no login. The assistant must not quote a question or an answer from it as a rider report or as a pack fact. Fares, stops, and the drawn trip still come only from the pack and from validated route suggestions.
 
 ## 8. Dependencies
 

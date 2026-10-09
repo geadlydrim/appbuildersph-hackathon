@@ -1,6 +1,7 @@
 package app.commutenity.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -63,7 +64,11 @@ fun NotInDataMessage(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun BestTripContent(trip: Trip, modifier: Modifier = Modifier) {
+fun BestTripContent(
+    trip: Trip,
+    onOpenQuestions: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalCommuteColors.current
     Column(modifier.padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {
@@ -88,6 +93,15 @@ fun BestTripContent(trip: Trip, modifier: Modifier = Modifier) {
                 StepRow(leg = leg, last = index == trip.legs.lastIndex)
             }
         }
+        Text(
+            text = "Mga tanong",
+            color = colors.ink,
+            fontWeight = FontWeight.Bold,
+            fontSize = 15.sp,
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .clickable(onClick = onOpenQuestions),
+        )
     }
 }
 
