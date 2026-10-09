@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "version": "fixture-1",
+    "coverage": { "name": "Makati City" }
+  },
+  "places": [
+    {
+      "id": "ayala-center",
+      "name": "Ayala Center",
+      "aliases": ["Ayala", "Glorietta"],
+      "lat": 14.549312,
+      "lng": 121.027062,
+      "kind": "landmark",
+      "stop_ids": ["ayala-stop"],
+      "provenance": {
+        "source_class": "mock",
+        "source": "test fixture"
+      }
+    },
+    {
+      "id": "dela-rosa-pio-del-pilar",
+      "name": "Dela Rosa Street",
+      "aliases": ["Dela Rosa", "Pio del Pilar"],
+      "lat": 14.557063,
+      "lng": 121.008188,
+      "kind": "area",
+      "stop_ids": ["dela-rosa-stop"],
+      "provenance": {
+        "source_class": "mock",
+        "source": "test fixture"
+      }
+    }
+  ]
+}
