@@ -48,15 +48,19 @@ fun matchAsk(text: String, source: TripSource): AskMatch {
         return AskMatch(null, null, "Write a question first.")
     }
     val places = source.search(Field.B, "").filterIsInstance<SearchRow.PlaceRow>().map { it.place }
-    val origin = places.firstOrNull { place ->
-        normalized.contains(place.name.lowercase()) ||
-            (place.area.isNotEmpty() && normalized.contains(place.area.lowercase()))
+    val mentions = places.mapNotNull { firstMention(normalized, it) }.sortedBy { it.start }.take(2)
+    val cues = mentions.mapIndexed { i, mention ->
+        lastCue(normalized.substring(if (i == 0) 0 else mentions[i - 1].end, mention.start))
     }
-    val destination = places.firstOrNull { place ->
-        place != origin && (
-            normalized.contains(place.name.lowercase()) ||
-                (place.area.isNotEmpty() && normalized.contains(place.area.lowercase()))
-            )
+    var origin: Place? = null
+    var destination: Place? = null
+    when (mentions.size) {
+        1 -> if (cues[0] == Cue.From) origin = mentions[0].place else destination = mentions[0].place
+        2 -> {
+            val reversed = (cues[0] == Cue.To && cues[1] != Cue.To) || (cues[1] == Cue.From && cues[0] != Cue.From)
+            origin = mentions[if (reversed) 1 else 0].place
+            destination = mentions[if (reversed) 0 else 1].place
+        }
     }
     val feedback = when {
         origin == null && destination == null ->
@@ -69,6 +73,33 @@ fun matchAsk(text: String, source: TripSource): AskMatch {
             "Sample match for the destination only. The start is still missing."
     }
     return AskMatch(origin, destination, feedback)
+}
+
+private enum class Cue { From, To }
+
+private data class Mention(val place: Place, val start: Int, val end: Int)
+
+private val fromCue = Regex("\\b(from|galing|mula)\\b")
+private val toCue = Regex("\\b(to|papunta|pumunta|punta|patungo)\\b")
+
+private fun firstMention(text: String, place: Place): Mention? =
+    listOf(place.name, place.area)
+        .filter { it.isNotEmpty() }
+        .mapNotNull { key ->
+            val at = text.indexOf(key.lowercase())
+            if (at < 0) null else Mention(place, at, at + key.length)
+        }
+        .minByOrNull { it.start }
+
+/** The cue word closest before a place decides its end: "galing X" is the start, "papunta X" the destination. */
+private fun lastCue(before: String): Cue? {
+    val from = fromCue.findAll(before).lastOrNull()?.range?.first ?: -1
+    val to = toCue.findAll(before).lastOrNull()?.range?.first ?: -1
+    return when {
+        from < 0 && to < 0 -> null
+        from > to -> Cue.From
+        else -> Cue.To
+    }
 }
 
 fun reduce(state: HomeState, event: HomeEvent, source: TripSource): HomeState {
@@ -139,6 +170,7 @@ private fun settle(state: HomeState, source: TripSource): HomeState {
     val destination = state.destination
     val sheet = when {
         origin == null || destination == null -> Sheet.Peek
+        origin.id == destination.id -> Sheet.Peek
         source.resolve(origin, destination) is TripResult.NotInData -> Sheet.Notice
         else -> Sheet.Half
     }
@@ -160,5 +192,23 @@ private fun submitAsk(state: HomeState, source: TripSource): HomeState {
 fun canOpenTrip(state: HomeState): Boolean {
     val origin = state.origin ?: return false
     val destination = state.destination ?: return false
-    return origin.inMakati && destination.inMakati
+    return origin.inMakati && destination.inMakati && origin.id != destination.id
+}
+
+fun peekMessage(state: HomeState): String {
+    val origin = state.origin
+    val destination = state.destination
+    return when {
+        origin == null || destination == null -> "Pick A and B on the map."
+        origin.id == destination.id -> "Start and destination are the same place. Change one."
+        outsideField(state) != null -> "Not in my data yet. Only Makati is covered for now."
+        else -> "${origin.name} → ${destination.name}. Swipe up to see the trip."
+    }
+}
+
+/** Which end the not-in-data notice should ask the rider to change. */
+fun outsideField(state: HomeState): Field? = when {
+    state.origin?.inMakati == false -> Field.A
+    state.destination?.inMakati == false -> Field.B
+    else -> null
 }

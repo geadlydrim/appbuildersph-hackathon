@@ -27,6 +27,11 @@ import app.commutenity.domain.HomeEvent
 import app.commutenity.domain.HomeState
 import app.commutenity.domain.QaEvent
 import app.commutenity.domain.reduce
+import app.commutenity.domain.QaRoute
+import app.commutenity.domain.QaTrip
+import app.commutenity.domain.TripResult
+import app.commutenity.domain.canOpenTrip
+import app.commutenity.domain.evidenceFor
 import app.commutenity.domain.reduceQa
 import app.commutenity.ui.home.HomeMenuDrawer
 import app.commutenity.ui.home.MapHomeScreen
@@ -36,8 +41,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import app.commutenity.ui.qa.QaScreen
 import app.commutenity.ui.theme.CommuteNityTheme
+import android.content.pm.ApplicationInfo
+import androidx.lifecycle.lifecycleScope
+import app.commutenity.ai.LlmSelfTest
+import app.commutenity.ai.LocalLlm
 
 class MainActivity : ComponentActivity() {
+    private val llm by lazy { LocalLlm(applicationContext) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
@@ -45,6 +56,11 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         val source = SampleTripSource()
+        llm.start(lifecycleScope)
+        val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        if (debuggable && intent.getBooleanExtra("llm_selftest", false)) {
+            LlmSelfTest.run(llm, lifecycleScope)
+        }
         setContent {
             CommuteNityTheme {
                 var state by remember { mutableStateOf(HomeState()) }
@@ -86,9 +102,20 @@ class MainActivity : ComponentActivity() {
                 }
                 val drawerState = rememberDrawerState(DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
-                val openQuestions = { questions = reduceQa(questions, QaEvent.Open) }
+                val origin = state.origin
+                val destination = state.destination
+                val shownTrip = if (canOpenTrip(state) && origin != null && destination != null) {
+                    (source.resolve(origin, destination) as? TripResult.Ready)?.let {
+                        QaTrip(it.trip.key, QaRoute(origin.id, destination.id, origin.name, destination.name))
+                    }
+                } else {
+                    null
+                }
                 Box(Modifier.fillMaxSize()) {
-                    HomeMenuDrawer(drawerState = drawerState, onOpenQuestions = openQuestions) {
+                    HomeMenuDrawer(
+                        drawerState = drawerState,
+                        onOpenQuestions = { questions = reduceQa(questions, QaEvent.Open(shownTrip)) },
+                    ) {
                         MapHomeScreen(
                             state = state,
                             source = source,
@@ -96,7 +123,10 @@ class MainActivity : ComponentActivity() {
                                 if (state.listening && (event == HomeEvent.CloseAsk || event == HomeEvent.SubmitAsk)) speech.cancel()
                                 dispatch(event)
                             },
-                            onOpenQuestions = openQuestions,
+                            onOpenQuestions = {
+                                questions = reduceQa(questions, QaEvent.Open(shownTrip, onlyTrip = true))
+                            },
+                            workedCount = shownTrip?.let { questions.evidenceFor(it.key) } ?: 0,
                             onMenu = { scope.launch { drawerState.open() } },
                             onMic = if (voiceAvailable) {
                                 {
@@ -123,5 +153,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        if (isFinishing) llm.close()
+        super.onDestroy()
     }
 }
