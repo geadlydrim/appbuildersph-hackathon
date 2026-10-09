@@ -155,10 +155,9 @@ class PackTripSourceOsmTest {
         val english = TripAnswer.compose(trip)
         val taglish = TripAnswer.compose(trip, taglish = true)
 
-        assertTrue(english, english.startsWith("Unverified (OpenStreetMap): "))
-        assertTrue(taglish, taglish.startsWith("Hindi pa beripikado (OpenStreetMap): "))
+        assertTrue(english, english.endsWith("Fare unknown, ~22 min (est.) in all. " + TripAnswer.OSM_NOTE_ENGLISH))
+        assertTrue(taglish, taglish.endsWith(TripAnswer.OSM_NOTE_TAGLISH))
         assertTrue(english, english.contains("Walk ~150 m to Fixture Stop 7 (150 m from stop 4)."))
-        assertTrue(english, english.endsWith("Fare unknown, ~22 min (est.) in all."))
 
         val tripNumbers = buildList<String> {
             add(trip.fare)
