@@ -28,3 +28,19 @@ Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `
 ### Domain docs
 
 Single-context: root `GLOSSARY.md` + `docs/adr/`. See `docs/agents/domain.md`.
+
+### Repo skills
+
+These skills are vendored in `.agents/skills/` so every teammate's agent uses the same versions:
+
+| Skill | Use it for |
+|---|---|
+| `wayfinder` | Working the decision map (issue #1) |
+| `grilling` + `domain-modeling` | Grilling tickets; updating `GLOSSARY.md` and ADRs |
+| `research` | Research tickets (findings go on `research/<name>` branches) |
+| `prototype` | The throwaway LLM spike |
+| `to-tickets` | Turning decisions into build issues |
+| `triage` | Labelling incoming issues |
+| `commit` | Splitting work into Conventional Commits (run its script with `sh`, not `bash`, on Windows) |
+
+The repo copy of `domain-modeling` writes `GLOSSARY.md` / `GLOSSARY-MAP.md` instead of upstream's `CONTEXT.md`, to match `docs/agents/domain.md`. When a skill and a `docs/agents/*.md` file disagree, the docs file wins.
