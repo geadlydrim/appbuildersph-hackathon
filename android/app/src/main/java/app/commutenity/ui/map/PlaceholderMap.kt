@@ -69,7 +69,7 @@ object PlaceholderMap : MapSurface {
         destination: Place?,
         onTap: ((lat: Double, lng: Double) -> Unit)?,
         path: TripPath?,
-        onLongPress: ((field: Field, lat: Double, lng: Double) -> Unit)?,
+        onMovePin: ((field: Field, lat: Double, lng: Double) -> Unit)?,
     ) {
         val colors = LocalCommuteColors.current
         val paths = remember {

@@ -1,7 +1,11 @@
 package app.commutenity.ui.map
 
 import android.content.Context
+import android.graphics.PointF
+import android.os.SystemClock
 import android.util.Log
+import android.view.HapticFeedbackConstants
+import android.view.MotionEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -96,23 +100,26 @@ object MapLibreSurface : MapSurface {
         destination: Place?,
         onTap: ((lat: Double, lng: Double) -> Unit)?,
         path: TripPath?,
-        onLongPress: ((field: Field, lat: Double, lng: Double) -> Unit)?,
+        onMovePin: ((field: Field, lat: Double, lng: Double) -> Unit)?,
     ) {
         val context = LocalContext.current
         val lifecycleOwner = LocalLifecycleOwner.current
         val colors = LocalCommuteColors.current
         val density = LocalDensity.current
-        // Visible band when both ends are set: below the search card and ask bar, above the half-open
-        // trip sheet (520 dp) on the home screen.
+        // Visible band when both ends are set: below the one-line trip summary and ask bar (they end
+        // near 182 dp), above the half-open trip sheet (520 dp) on the home screen.
         val fitSide = with(density) { 48.dp.roundToPx() }
-        val fitTop = with(density) { 300.dp.roundToPx() }
+        val fitTop = with(density) { 200.dp.roundToPx() }
         val fitBottom = with(density) { 560.dp.roundToPx() }
         val latestOnTap by rememberUpdatedState(onTap)
-        val latestOnLongPress by rememberUpdatedState(onLongPress)
+        val latestOnMovePin by rememberUpdatedState(onMovePin)
         val latestOrigin by rememberUpdatedState(origin)
         val latestDestination by rememberUpdatedState(destination)
-        // How close to a pin a long-press must land to grab it.
+        // How close to a pin a long-press must land to grab it, and how far the finger must then move
+        // for the drop to count as a move (a plain hold leaves the pin and its name alone).
         val pinGrabRadiusPx = with(density) { 60.dp.toPx() }
+        val dragSlopPx = with(density) { 12.dp.toPx() }
+        val drag = remember { PinDrag() }
         // The loaded style; null until the map is ready. Pin updates wait for it.
         var style by remember { mutableStateOf<Style?>(null) }
         var maplibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
@@ -182,8 +189,10 @@ object MapLibreSurface : MapSurface {
                         latestOnTap?.invoke(point.latitude, point.longitude)
                         latestOnTap != null
                     }
+                    // Hold a pin, then drag it: the map stops panning, the pin follows the finger, and it
+                    // is placed where the finger lifts.
                     map.addOnMapLongClickListener { point ->
-                        val callback = latestOnLongPress ?: return@addOnMapLongClickListener false
+                        if (latestOnMovePin == null) return@addOnMapLongClickListener false
                         val pressed = map.projection.toScreenLocation(point)
                         val nearest = listOf(Field.A to latestOrigin, Field.B to latestDestination)
                             .mapNotNull { (field, place) ->
@@ -195,9 +204,38 @@ object MapLibreSurface : MapSurface {
                         if (nearest == null || nearest.second > pinGrabRadiusPx) {
                             false
                         } else {
-                            callback(nearest.first, point.latitude, point.longitude)
+                            drag.field = nearest.first
+                            drag.startX = pressed.x
+                            drag.startY = pressed.y
+                            map.uiSettings.isScrollGesturesEnabled = false
+                            mapView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                             true
                         }
+                    }
+                    // Observe the touches only (return false) so MapLibre's gesture detectors stay in
+                    // sync; panning is switched off while a pin is held, so the map stays still.
+                    mapView.setOnTouchListener { _, event ->
+                        val field = drag.field ?: return@setOnTouchListener false
+                        val at = map.projection.fromScreenLocation(PointF(event.x, event.y))
+                        when (event.actionMasked) {
+                            MotionEvent.ACTION_MOVE -> showPins(
+                                loaded,
+                                if (field == Field.A) at else latestOrigin?.latLng(),
+                                if (field == Field.B) at else latestDestination?.latLng(),
+                            )
+                            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                                drag.field = null
+                                map.uiSettings.isScrollGesturesEnabled = true
+                                val moved = hypot(event.x - drag.startX, event.y - drag.startY) > dragSlopPx
+                                if (event.actionMasked == MotionEvent.ACTION_UP && moved) {
+                                    drag.holdCameraUntil = SystemClock.uptimeMillis() + HOLD_CAMERA_MS
+                                    latestOnMovePin?.invoke(field, at.latitude, at.longitude)
+                                } else {
+                                    showPins(loaded, latestOrigin?.latLng(), latestDestination?.latLng())
+                                }
+                            }
+                        }
+                        false
                     }
                     maplibreMap = map
                     style = loaded
@@ -212,17 +250,15 @@ object MapLibreSurface : MapSurface {
         }
 
         // Redraw the A/B pins at their coordinates, and frame them (and the trip, when there is one),
-        // whenever either end or the trip changes.
+        // whenever either end or the trip changes. A pin the rider just dragged never moves the camera:
+        // they placed it on purpose in the view they chose.
         LaunchedEffect(style, origin, destination, path) {
             val loaded = style ?: return@LaunchedEffect
             val map = maplibreMap ?: return@LaunchedEffect
             val a = origin?.latLng()
             val b = destination?.latLng()
-            loaded.getSourceAs<GeoJsonSource>(PINS_SOURCE)?.setGeoJson(
-                FeatureCollection.fromFeatures(
-                    listOfNotNull(a?.let { pinFeature(it, "A") }, b?.let { pinFeature(it, "B") }),
-                ),
-            )
+            showPins(loaded, a, b)
+            if (SystemClock.uptimeMillis() < drag.holdCameraUntil) return@LaunchedEffect
             val framed = path?.allPoints().orEmpty().map { it.latLng() } + listOfNotNull(a, b)
             when {
                 path != null && framed.size >= 2 -> map.animateCamera(
@@ -246,6 +282,23 @@ object MapLibreSurface : MapSurface {
 }
 
 private const val PINS_SOURCE = "commutenity-pins"
+
+/** After a pin is dropped, the trip recomputes; camera fits are skipped for this long. */
+private const val HOLD_CAMERA_MS = 1500L
+
+/** The pin being dragged, if any. Touched only on the main thread (MapLibre and touch callbacks). */
+private class PinDrag {
+    var field: Field? = null
+    var startX = 0f
+    var startY = 0f
+    var holdCameraUntil = 0L
+}
+
+private fun showPins(style: Style, a: LatLng?, b: LatLng?) {
+    style.getSourceAs<GeoJsonSource>(PINS_SOURCE)?.setGeoJson(
+        FeatureCollection.fromFeatures(listOfNotNull(a?.let { pinFeature(it, "A") }, b?.let { pinFeature(it, "B") })),
+    )
+}
 
 private fun Place.latLng(): LatLng? {
     val la = lat ?: return null
