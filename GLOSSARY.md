@@ -1,13 +1,13 @@
 # CommuteNity
 
-An on-device commute assistant for Metro Manila riders. It answers trip questions offline from data stored on the phone, and gets better from community contributions when the phone is online.
+An on-device commute assistant for Makati City riders. It builds trips on a map from data stored on the phone, works offline, tracks the rider along the trip, refreshes its data and gets better from community contributions when the phone is online.
 
 ## Language
 
 ### Commute data
 
 **Commute pack**:
-The versioned bundle of places, stops, routes, segments, and transfers stored on the phone. It is the only source of facts in an answer.
+The versioned bundle of places, stops, routes, segments, transfers, and road shapes stored on the phone. It is the only source of facts in an answer. The offline map is separate (see **Map pack**).
 _Avoid_: dataset, database, catalog
 
 **Place**:
@@ -23,7 +23,7 @@ One transit line that a single vehicle type runs, e.g. a specific jeepney line o
 _Avoid_: line (in prose), path
 
 **Segment**:
-One stop-to-stop piece of a route, carrying its fare and minutes.
+One stop-to-stop piece of a route, carrying its fare, minutes, and road shape.
 _Avoid_: edge, hop
 
 **Transfer**:
@@ -31,17 +31,39 @@ A walk between two nearby stops that links routes.
 _Avoid_: connection
 
 **Corridor**:
-A stretch of the city whose routes and stops the pack covers in depth. The demo runs on corridors.
+A stretch of the city whose routes and stops the pack covers in depth. For this event the pack covers Makati City only ([D20](docs/fmd/state.md#5-decisions)); the term survives from the superseded corridor scope.
 _Avoid_: area, zone
 
 **Source class**:
 Where a fact came from. `collected` means verified during the event, `known` means team knowledge, and `mock` means synthetic. Mock facts are always marked as sample data.
 _Avoid_: real/fake, verified flag
 
+**Road shape**:
+The stored road-following polyline of a segment, precomputed at data-build time and drawn by the phone. Rail shapes follow track geometry.
+_Avoid_: path, line, geometry (in prose)
+
+**Map pack**:
+The offline Makati vector-tile map file (PMTiles) that the phone renders. Bundled or downloaded once; kept fresh by a **Refresh**.
+_Avoid_: tiles, map download, basemap
+
+**Refresh**:
+An online fetch-and-cache of the latest commute pack, map pack, community suggestions, and vote aggregates. Trip computation, ranking, and tracking never wait on it.
+_Avoid_: sync (that word is for contributions), update, download
+
+### Trip building
+
+**Trip builder**:
+The map screen where the rider sets Point A and Point B by tapping, dragging, searching pack places, or using their location.
+_Avoid_: route planner, route picker, search box
+
+**Point A / Point B**:
+The rider's start and end on the map. A may be set from the phone's location. Each resolves to nearby pack stops, plus a walk to or from the pin.
+_Avoid_: origin/destination pin, from/to
+
 ### Answers
 
 **Trip**:
-A door-to-door plan from an origin place to a destination place, made of legs.
+A door-to-door plan from Point A to Point B (or an origin place to a destination place), made of legs.
 _Avoid_: route, journey, itinerary, trip option
 
 **Leg**:
@@ -63,6 +85,28 @@ _Avoid_: other routes
 **Para point**:
 The stop or landmark where a rider gets off a leg.
 _Avoid_: drop-off, destination (for a leg)
+
+### Riding
+
+**Active trip**:
+The trip the rider has started following. Tracking runs against it.
+_Avoid_: current route, ongoing journey
+
+**Tracking**:
+While a trip is active, a foreground service reads GPS (no data needed) and snaps each fix to the trip's polyline: nearest point, progress along the trip, current leg. It is not turn-by-turn navigation.
+_Avoid_: navigation, live location, GPS routing
+
+**On route / off route**:
+The tracking status. Off route means the fix stayed farther than the off-route distance from the trip's polyline for the off-route time (config; proposed 100 m for 30 s).
+_Avoid_: lost, deviated
+
+**Para alert**:
+The notice raised once, about 300 m (config) before the alight stop: vibration, a heads-up notification, and an on-screen banner. It is not spoken.
+_Avoid_: reminder, stop announcement
+
+**Correct-vehicle check**:
+The rider types or says the signboard text or route name, and a deterministic fuzzy match against the active trip's legs answers "Yes, ride this", "No, look for '…'", or "Not sure, check the signboard". The LLM only extracts the text; it never decides the verdict.
+_Avoid_: signboard scan, OCR check, vehicle detection
 
 ### Community
 
