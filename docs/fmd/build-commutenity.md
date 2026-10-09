@@ -35,14 +35,14 @@ Start with [state](state.md), then read only the doc your workstream needs.
 
 ## 2. Team Workstreams
 
-Four people ([D12](state.md#5-decisions)). Names are assigned at CP0 ([A8](state.md#4-open-assumptions)).
+Four people ([D12](state.md#5-decisions)). Owners per [D19](state.md#5-decisions).
 
-| Role | Owns |
-|---|---|
-| **P1: Android app** | Compose UI, navigation, Room, feature flags, setup and model download, sync client plus backend (2 tables), APK builds, `demo-safe-*` tags |
-| **P2: On-device AI** | LLM runtime (CP1), parser and phrasing prompts, embedding resolver, latency; later T3 OCR and T4 speech |
-| **P3: Routing and ranker** | Candidate generator, scorer, feature spec, ranker training and eval in `ml/`, Kotlin parity, AI-06 |
-| **P4: Data, evals and story** | Pack (corridors, stops, fares, minutes, aliases, signboards), mock-data generator, validator, eval sets, labelling sessions, QA runs, README disclosures, pitch, video, post |
+| Role | Owner | Owns |
+|---|---|---|
+| **P1: Android app** | geadlydrim (Keanu) | Compose UI, navigation, Room, feature flags, setup and model download, sync client plus backend (2 tables), APK builds, `demo-safe-*` tags |
+| **P2: On-device AI** | pablo-pica | LLM runtime (CP1), parser and phrasing prompts, embedding resolver, latency; later T3 OCR and T4 speech |
+| **P3: Routing and ranker** | storms23 (Jeff) | Candidate generator, scorer, feature spec, ranker training and eval in `ml/`, Kotlin parity, AI-06 |
+| **P4: Data, evals and story** | Jrabara101 | Pack (corridors, stops, fares, minutes, aliases, signboards), mock-data generator, validator, eval sets, labelling sessions, QA runs, README disclosures, pitch, video, post |
 
 Work comes from GitHub issues. Decisions go through the wayfinder map, not chat.
 

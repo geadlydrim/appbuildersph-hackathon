@@ -29,6 +29,7 @@ Append-only. One row per meaningful action or decision. Never edit past rows.
 | 15 | 2026-10-09 | Owner decision: use Supabase anonymous Auth and one authenticated Edge Function for local-first contribution sync. It validates and rate-limits mutations server-side; only suggestions and vote aggregates are readable. | state D17 (A9 closed), SDD §4–§5, data plan §2.1, CLR, BUILD | D17 |
 | 16 | 2026-10-09 | Owner decision: ranker labelling uses three-candidate JSON scenarios and strict top-3 rankings from four teammates. A deterministic pair split protects held-out `known` evaluation; pairwise logistic regression with preference interactions exports JSON for Kotlin. | state D18 (A11 closed), data plan §§4–6, SDD §3, QAD AI-06, GLOSSARY | D18 |
 | 17 | 2026-10-09 | P3 review of the ranker training plan: the pairwise examples had only one label class, so logistic regression could not be fitted. Each pair is now also emitted mirrored and trained without an intercept (exported `intercept` is `0.0`); D18 is otherwise unchanged. | data plan §4.2 | — |
+| 18 | 2026-10-09 | Owner decision: P1 geadlydrim, P2 pablo-pica, P3 storms23, P4 Jrabara101. The LLM speed test is assigned to P2 as the first build task. Repaired special characters corrupted in the issue bodies by non-UTF-8 edits. | state D19 (A8 closed), BUILD §2 | D19 |
 
 ---
 
