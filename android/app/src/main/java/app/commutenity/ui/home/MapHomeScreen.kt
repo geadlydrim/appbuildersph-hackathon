@@ -44,8 +44,8 @@ import app.commutenity.domain.Sheet
 import app.commutenity.domain.TripResult
 import app.commutenity.domain.TripSource
 import app.commutenity.domain.canOpenTrip
+import app.commutenity.ui.map.MapLibreSurface
 import app.commutenity.ui.map.MapSurface
-import app.commutenity.ui.map.PlaceholderMap
 import app.commutenity.ui.theme.LocalCommuteColors
 import app.commutenity.ui.theme.PlusJakarta
 import kotlinx.coroutines.launch
@@ -63,7 +63,7 @@ fun MapHomeScreen(
     onMenu: () -> Unit = {},
     onMic: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
-    map: MapSurface = PlaceholderMap,
+    map: MapSurface = MapLibreSurface,
     designStatusBar: Boolean = false,
 ) {
     val colors = LocalCommuteColors.current
