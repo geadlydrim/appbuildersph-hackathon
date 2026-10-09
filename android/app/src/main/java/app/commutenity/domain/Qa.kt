@@ -24,6 +24,8 @@ data class QaState(
     val draft: String = "",
     val threads: List<QaThread> = emptyList(),
     val votes: Map<String, QaVote> = emptyMap(),
+    val saveError: String? = null,
+    val savedNotice: Boolean = false,
 )
 
 sealed interface QaEvent {
@@ -41,16 +43,16 @@ sealed interface QaEvent {
 
 fun reduceQa(state: QaState, event: QaEvent): QaState {
     return when (event) {
-        QaEvent.Open -> state.copy(open = true, threadId = null, composer = QaComposer.None, draft = "")
-        QaEvent.Close -> state.copy(open = false, threadId = null, composer = QaComposer.None, draft = "")
-        is QaEvent.OpenThread -> state.copy(threadId = event.id, composer = QaComposer.None, draft = "")
-        QaEvent.BackToList -> state.copy(threadId = null, composer = QaComposer.None, draft = "")
-        QaEvent.StartQuestion -> state.copy(composer = QaComposer.Question, draft = "")
+        QaEvent.Open -> state.copy(open = true, threadId = null, composer = QaComposer.None, draft = "", saveError = null, savedNotice = false)
+        QaEvent.Close -> state.copy(open = false, threadId = null, composer = QaComposer.None, draft = "", saveError = null, savedNotice = false)
+        is QaEvent.OpenThread -> state.copy(threadId = event.id, composer = QaComposer.None, draft = "", saveError = null, savedNotice = false)
+        QaEvent.BackToList -> state.copy(threadId = null, composer = QaComposer.None, draft = "", saveError = null, savedNotice = false)
+        QaEvent.StartQuestion -> state.copy(composer = QaComposer.Question, draft = "", saveError = null)
         QaEvent.StartAnswer -> {
-            if (state.threadId == null) state else state.copy(composer = QaComposer.Answer, draft = "")
+            if (state.threadId == null) state else state.copy(composer = QaComposer.Answer, draft = "", saveError = null)
         }
-        is QaEvent.Draft -> state.copy(draft = event.value)
-        QaEvent.CancelDraft -> state.copy(composer = QaComposer.None, draft = "")
+        is QaEvent.Draft -> state.copy(draft = event.value, saveError = null)
+        QaEvent.CancelDraft -> state.copy(composer = QaComposer.None, draft = "", saveError = null)
         QaEvent.SaveDraft -> saveDraft(state)
         is QaEvent.Vote -> state.copy(votes = toggleVote(state.votes, event.postId, event.vote))
     }
@@ -58,7 +60,9 @@ fun reduceQa(state: QaState, event: QaEvent): QaState {
 
 private fun saveDraft(state: QaState): QaState {
     val body = state.draft.trim()
-    if (body.isEmpty()) return state
+    if (body.isEmpty()) {
+        return state.copy(saveError = "Write a question or answer before saving.")
+    }
     val post = QaPost(
         id = "local-${state.threads.size}-${state.threads.sumOf { it.answers.size }}",
         body = body,
@@ -77,7 +81,7 @@ private fun saveDraft(state: QaState): QaState {
         }
         QaComposer.None -> state.threads
     }
-    return state.copy(threads = threads, composer = QaComposer.None, draft = "")
+    return state.copy(threads = threads, composer = QaComposer.None, draft = "", saveError = null, savedNotice = true)
 }
 
 private fun toggleVote(votes: Map<String, QaVote>, postId: String, vote: QaVote): Map<String, QaVote> {

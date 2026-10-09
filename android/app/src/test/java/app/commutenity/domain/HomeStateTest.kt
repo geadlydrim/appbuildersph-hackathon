@@ -2,6 +2,8 @@ package app.commutenity.domain
 
 import app.commutenity.data.sample.SampleTripSource
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -56,6 +58,45 @@ class HomeStateTest {
         val ride = trip.legs.filterIsInstance<Leg.Ride>().single()
         assertEquals("SIGNBOARD (TBD)", ride.signboard)
         assertEquals("Stop 1  →  Stop 2", ride.stops)
+    }
+
+    @Test
+    fun searchCanBeClosedWithoutPicking() {
+        val searching = reduce(HomeState(), HomeEvent.Focus(Field.A), source)
+        val closed = reduce(searching, HomeEvent.DismissSearch, source)
+        assertNull(closed.activeField)
+        assertEquals(Sheet.Peek, closed.sheet)
+    }
+
+    @Test
+    fun compactCardExpandsInsteadOfOpeningSearch() {
+        val trip = bothSet()
+        val expanded = reduce(trip, HomeEvent.ExpandCard, source)
+        assertTrue(expanded.cardExpanded)
+        assertNull(expanded.activeField)
+        assertEquals(Sheet.Half, expanded.sheet)
+    }
+
+    @Test
+    fun askSampleMatchSetsBothPinsAndSaysItIsNotTheModel() {
+        val asking = reduce(HomeState(), HomeEvent.OpenAsk, source)
+        val drafted = reduce(asking, HomeEvent.AskDraft("Ayala Center to Dela Rosa St"), source)
+        val next = reduce(drafted, HomeEvent.SubmitAsk, source)
+        assertEquals("Ayala Center", next.origin?.name)
+        assertEquals("Dela Rosa St", next.destination?.name)
+        assertEquals(Sheet.Half, next.sheet)
+        assertFalse(next.asking)
+        assertTrue(next.askFeedback!!.contains("not the on-device model"))
+    }
+
+    @Test
+    fun unmatchedAskStaysOpen() {
+        val asking = reduce(HomeState(), HomeEvent.OpenAsk, source)
+        val drafted = reduce(asking, HomeEvent.AskDraft("what's the weather"), source)
+        val next = reduce(drafted, HomeEvent.SubmitAsk, source)
+        assertTrue(next.asking)
+        assertNull(next.origin)
+        assertTrue(next.askFeedback!!.contains("Pick A and B on the map"))
     }
 
     private fun bothSet(): HomeState {

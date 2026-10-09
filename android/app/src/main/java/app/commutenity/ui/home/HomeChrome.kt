@@ -29,6 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import app.commutenity.R
@@ -139,7 +142,7 @@ fun TripBuilderCard(
             EndpointRow(
                 filled = origin != null,
                 dot = colors.pinA,
-                title = origin?.name ?: "Saan ka manggagaling?",
+                title = origin?.name ?: "Where from?",
                 onClick = { onField(Field.A) },
             )
             if (origin != null && origin.area.isNotEmpty()) {
@@ -153,7 +156,7 @@ fun TripBuilderCard(
             EndpointRow(
                 filled = destination != null,
                 dot = colors.pinB,
-                title = destination?.name ?: "Saan ka pupunta?",
+                title = destination?.name ?: "Where to?",
                 onClick = { onField(Field.B) },
             )
         }
@@ -191,7 +194,7 @@ private fun EndpointRow(
 }
 
 @Composable
-fun AskBar(modifier: Modifier = Modifier) {
+fun AskBar(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalCommuteColors.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
@@ -205,14 +208,14 @@ fun AskBar(modifier: Modifier = Modifier) {
                 interactionSource = interaction,
                 indication = null,
                 role = Role.Button,
-                onClick = {},
+                onClick = onClick,
             )
             .padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Magtanong…",
+            text = "Ask…",
             color = colors.muted.copy(alpha = if (pressed) 0.6f else 1f),
             fontSize = 14.sp,
         )
@@ -221,6 +224,77 @@ fun AskBar(modifier: Modifier = Modifier) {
                 .size(32.dp)
                 .background(colors.pinA, CircleShape),
         )
+    }
+}
+
+@Composable
+fun AskComposer(
+    draft: String,
+    feedback: String?,
+    onDraft: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalCommuteColors.current
+    val shape = RoundedCornerShape(16.dp)
+    Column(
+        modifier
+            .fillMaxWidth()
+            .shadow(4.dp, shape, ambientColor = colors.shadow, spotColor = colors.shadow)
+            .background(colors.surface, shape)
+            .padding(14.dp),
+    ) {
+        Text(
+            text = "Sample match only. This build has no on-device model.",
+            color = colors.muted,
+            fontSize = 12.sp,
+        )
+        BasicTextField(
+            value = draft,
+            onValueChange = onDraft,
+            singleLine = true,
+            textStyle = TextStyle(color = colors.ink, fontSize = 16.sp),
+            cursorBrush = SolidColor(colors.ink),
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .fillMaxWidth(),
+            decorationBox = { inner ->
+                if (draft.isEmpty()) {
+                    Text("Example: Ayala Center to Dela Rosa St", color = colors.faint, fontSize = 15.sp)
+                }
+                inner()
+            },
+        )
+        if (feedback != null) {
+            Text(
+                text = feedback,
+                color = colors.ink,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+        Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = "Find",
+                color = colors.paraOn,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(colors.ink)
+                    .clickable(onClick = onSubmit)
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+            )
+            Text(
+                text = "Close",
+                color = colors.ink,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClick = onClose)
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+            )
+        }
     }
 }
 

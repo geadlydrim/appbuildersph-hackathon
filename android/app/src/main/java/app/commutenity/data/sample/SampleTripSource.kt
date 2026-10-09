@@ -57,8 +57,8 @@ class SampleTripSource : TripSource {
                 fare = "₱XX",
                 minutes = "XX min",
                 transfers = "X",
-                distanceLine = "X.X km   ·   lakad X min",
-                reason = "Pinakakaunting lipat",
+                distanceLine = "X.X km   ·   walk X min",
+                reason = "Fewest transfers",
                 sample = true,
                 legs = listOf(
                     Leg.Walk("~XX m"),

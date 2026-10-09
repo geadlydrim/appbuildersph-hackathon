@@ -26,6 +26,7 @@ fun PlaceSearchCard(
     onQuery: (String) -> Unit,
     onRow: (SearchRow) -> Unit,
     onClear: () -> Unit,
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalCommuteColors.current
@@ -52,7 +53,7 @@ fun PlaceSearchCard(
             decorationBox = { inner ->
                 if (query.isEmpty()) {
                     Text(
-                        text = if (field == Field.A) "Saan ka manggagaling?" else "Saan ka pupunta?",
+                        text = if (field == Field.A) "Where from?" else "Where to?",
                         color = colors.faint,
                         fontSize = 16.sp,
                     )
@@ -60,9 +61,18 @@ fun PlaceSearchCard(
                 inner()
             },
         )
+        Text(
+            text = "Close",
+            color = colors.ink,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            modifier = Modifier
+                .clickable(onClick = onDismiss)
+                .padding(vertical = 6.dp),
+        )
         if (showClear) {
             Text(
-                text = "Alisin",
+                text = "Remove",
                 color = colors.pinA,
                 fontSize = 14.sp,
                 modifier = Modifier
@@ -74,7 +84,7 @@ fun PlaceSearchCard(
         rows.forEach { row ->
             when (row) {
                 SearchRow.UseMyLocation -> Text(
-                    text = "Gamitin ang location ko",
+                    text = "Use my location",
                     color = colors.ink,
                     fontSize = 15.sp,
                     modifier = Modifier
@@ -94,6 +104,14 @@ fun PlaceSearchCard(
                     }
                 }
             }
+        }
+        if (rows.none { it is SearchRow.PlaceRow }) {
+            Text(
+                text = "No match. Only Makati is in this data.",
+                color = colors.muted,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
         }
     }
 }

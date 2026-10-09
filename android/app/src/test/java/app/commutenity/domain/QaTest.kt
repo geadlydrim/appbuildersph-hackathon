@@ -23,15 +23,16 @@ class QaTest {
         val next = reduceQa(start, QaEvent.SaveDraft)
         assertEquals(start.threads.size, next.threads.size)
         assertEquals(QaComposer.Question, next.composer)
+        assertEquals("Write a question or answer before saving.", next.saveError)
     }
 
     @Test
     fun typedQuestionStaysSample() {
-        val start = SampleQuestions.initial().copy(composer = QaComposer.Question, draft = "Saan ang sakayan?")
+        val start = SampleQuestions.initial().copy(composer = QaComposer.Question, draft = "Where is the stop?")
         val next = reduceQa(start, QaEvent.SaveDraft)
         assertEquals(start.threads.size + 1, next.threads.size)
         assertTrue(next.threads.first().question.sample)
-        assertEquals("Saan ang sakayan?", next.threads.first().question.body)
+        assertEquals("Where is the stop?", next.threads.first().question.body)
     }
 
     @Test

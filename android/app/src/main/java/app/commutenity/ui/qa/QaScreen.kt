@@ -47,7 +47,7 @@ fun QaScreen(
             .padding(16.dp),
     ) {
         Text(
-            text = if (thread == null) "Mapa" else "Mga tanong",
+            text = if (thread == null) "← Back to map" else "← Questions",
             color = colors.ink,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
@@ -56,7 +56,7 @@ fun QaScreen(
             },
         )
         Text(
-            text = "Mga tanong",
+            text = "Questions",
             color = colors.ink,
             fontFamily = PlusJakarta,
             fontWeight = FontWeight.Bold,
@@ -64,7 +64,7 @@ fun QaScreen(
             modifier = Modifier.padding(top = 12.dp),
         )
         Text(
-            text = "Sample data. Walang account at walang login. Hindi ito totoong sagot ng rider.",
+            text = "Sample data. No account and no login. These are not real rider answers.",
             color = colors.ink,
             fontSize = 14.sp,
             lineHeight = 20.sp,
@@ -88,15 +88,16 @@ private fun QuestionList(state: QaState, onEvent: (QaEvent) -> Unit) {
     val colors = LocalCommuteColors.current
     if (state.composer == QaComposer.Question) {
         DraftBox(
-            label = "Magtanong",
+            label = "Ask",
             draft = state.draft,
             onDraft = { onEvent(QaEvent.Draft(it)) },
             onSave = { onEvent(QaEvent.SaveDraft) },
             onCancel = { onEvent(QaEvent.CancelDraft) },
+            error = state.saveError,
         )
     } else {
         Text(
-            text = "Magtanong",
+            text = "Ask",
             color = colors.paraOn,
             fontWeight = FontWeight.Bold,
             fontSize = 15.sp,
@@ -110,7 +111,7 @@ private fun QuestionList(state: QaState, onEvent: (QaEvent) -> Unit) {
     }
     if (state.threads.isEmpty()) {
         Text(
-            text = "Wala pang naka-save na tanong.",
+            text = "No saved questions yet.",
             color = colors.ink,
             fontSize = 16.sp,
             modifier = Modifier.padding(top = 20.dp),
@@ -137,7 +138,7 @@ private fun QuestionList(state: QaState, onEvent: (QaEvent) -> Unit) {
             )
             PlaceLine(thread.question.placeName)
             Text(
-                text = "${thread.answers.size} sagot · sample",
+                text = "${thread.answers.size} answers · sample",
                 color = colors.muted,
                 fontSize = 13.sp,
                 modifier = Modifier.padding(top = 6.dp),
@@ -154,16 +155,17 @@ private fun ThreadDetail(thread: QaThread, state: QaState, onEvent: (QaEvent) ->
     }
     if (state.composer == QaComposer.Answer) {
         DraftBox(
-            label = "Sumagot",
+            label = "Answer",
             draft = state.draft,
             onDraft = { onEvent(QaEvent.Draft(it)) },
             onSave = { onEvent(QaEvent.SaveDraft) },
             onCancel = { onEvent(QaEvent.CancelDraft) },
+            error = state.saveError,
         )
     } else {
         val colors = LocalCommuteColors.current
         Text(
-            text = "Sumagot",
+            text = "Answer",
             color = colors.ink,
             fontWeight = FontWeight.Bold,
             fontSize = 15.sp,
@@ -175,12 +177,14 @@ private fun ThreadDetail(thread: QaThread, state: QaState, onEvent: (QaEvent) ->
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         )
     }
-    Text(
-        text = "Na-save sa phone mo · sample lang, walang login.",
-        color = colorsMuted(),
-        fontSize = 13.sp,
-        modifier = Modifier.padding(top = 16.dp),
-    )
+    if (state.savedNotice) {
+        Text(
+            text = "Saved on this phone for this session only. Sample data, no login.",
+            color = colorsMuted(),
+            fontSize = 13.sp,
+            modifier = Modifier.padding(top = 16.dp),
+        )
+    }
 }
 
 @Composable
@@ -204,7 +208,7 @@ private fun PostCard(
     ) {
         SampleChip()
         Text(
-            text = if (answer) "Sagot" else "Tanong",
+            text = if (answer) "Answer" else "Question",
             color = colors.muted,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
@@ -244,7 +248,7 @@ private fun VoteRow(selected: QaVote?, onVote: (QaVote) -> Unit) {
         VoteChip("Up", selected == QaVote.Up) { onVote(QaVote.Up) }
         VoteChip("Down", selected == QaVote.Down) { onVote(QaVote.Down) }
         Text(
-            text = "Hindi binabago ang pamasahe",
+            text = "Does not change the fare",
             color = colors.faint,
             fontSize = 12.sp,
             modifier = Modifier.padding(top = 8.dp),
@@ -290,6 +294,7 @@ private fun DraftBox(
     onDraft: (String) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit,
+    error: String? = null,
 ) {
     val colors = LocalCommuteColors.current
     Column(
@@ -314,14 +319,17 @@ private fun DraftBox(
                 .padding(12.dp),
             decorationBox = { inner ->
                 if (draft.isEmpty()) {
-                    Text("Isulat dito", color = colors.faint, fontSize = 16.sp)
+                    Text("Write here", color = colors.faint, fontSize = 16.sp)
                 }
                 inner()
             },
         )
+        if (error != null) {
+            Text(error, color = colors.pinA, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+        }
         Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "I-save",
+                text = "Save",
                 color = colors.paraOn,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -331,7 +339,7 @@ private fun DraftBox(
                     .padding(horizontal = 14.dp, vertical = 10.dp),
             )
             Text(
-                text = "Kanselahin",
+                text = "Cancel",
                 color = colors.ink,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier

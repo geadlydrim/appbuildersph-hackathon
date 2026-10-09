@@ -16,13 +16,13 @@ object SampleQuestions {
             id = "sample-board",
             question = QaPost(
                 id = "sample-board-q",
-                body = "Saan sasakay papuntang Dela Rosa St galing Ayala Center?",
+                body = "Where do I board for Dela Rosa St from Ayala Center?",
                 placeName = "Ayala Center",
             ),
             answers = listOf(
                 QaPost(
                     id = "sample-board-a",
-                    body = "Sample lang: hanapin ang sakayan sa Station Rd. Hindi ito totoong sagot ng rider.",
+                    body = "Sample only: look for the stop on Station Rd. This is not a real rider answer.",
                     placeName = "Station Rd, San Lorenzo",
                 ),
             ),
@@ -31,13 +31,13 @@ object SampleQuestions {
             id = "sample-vehicle",
             question = QaPost(
                 id = "sample-vehicle-q",
-                body = "Tama ba ang jeep papuntang Pio del Pilar?",
+                body = "Is this the right jeep to Pio del Pilar?",
                 placeName = "Dela Rosa St",
             ),
             answers = listOf(
                 QaPost(
                     id = "sample-vehicle-a",
-                    body = "Sample lang: tingnan ang signboard. Walang login, kaya walang totoong boto dito.",
+                    body = "Sample only: check the signboard. There is no login, so these votes are not real.",
                     placeName = "Pio del Pilar",
                 ),
             ),

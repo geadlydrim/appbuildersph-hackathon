@@ -43,7 +43,7 @@ fun SheetHandle(modifier: Modifier = Modifier) {
 fun PeekCopy(modifier: Modifier = Modifier) {
     val colors = LocalCommuteColors.current
     Text(
-        text = "Pumili ng A at B sa mapa.",
+        text = "Pick A and B on the map.",
         color = colors.ink,
         fontWeight = FontWeight.Medium,
         fontSize = 15.sp,
@@ -52,15 +52,28 @@ fun PeekCopy(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun NotInDataMessage(modifier: Modifier = Modifier) {
+fun NotInDataMessage(onChangeDestination: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalCommuteColors.current
-    Text(
-        text = "Wala pa sa data ko 'yan. Makati lang muna ang covered.",
-        color = colors.ink,
-        fontSize = 16.sp,
-        lineHeight = 22.sp,
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-    )
+    Column(modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Text(
+            text = "Not in my data yet. Only Makati is covered for now.",
+            color = colors.ink,
+            fontSize = 16.sp,
+            lineHeight = 22.sp,
+        )
+        Text(
+            text = "Change destination",
+            color = colors.paraOn,
+            fontWeight = FontWeight.Bold,
+            fontSize = 15.sp,
+            modifier = Modifier
+                .padding(top = 12.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(colors.ink)
+                .clickable(onClick = onChangeDestination)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+        )
+    }
 }
 
 @Composable
@@ -72,9 +85,9 @@ fun BestTripContent(
     val colors = LocalCommuteColors.current
     Column(modifier.padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {
-            Stat(trip.fare, "Pamasahe", Modifier.weight(1f))
-            Stat(trip.minutes, "Oras", Modifier.weight(1f))
-            Stat(trip.transfers, "Lipat", Modifier.weight(1f))
+            Stat(trip.fare, "Fare", Modifier.weight(1f))
+            Stat(trip.minutes, "Time", Modifier.weight(1f))
+            Stat(trip.transfers, "Transfers", Modifier.weight(1f))
         }
         Text(
             text = trip.distanceLine,
@@ -94,7 +107,7 @@ fun BestTripContent(
             }
         }
         Text(
-            text = "Mga tanong",
+            text = "Questions",
             color = colors.ink,
             fontWeight = FontWeight.Bold,
             fontSize = 15.sp,

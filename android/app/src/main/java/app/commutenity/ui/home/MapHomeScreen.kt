@@ -108,7 +108,7 @@ fun MapHomeScreen(
             WordmarkRow()
             OfflineBadge(Modifier.padding(top = 8.dp))
             Text(
-                text = "Mga tanong",
+                text = "Questions",
                 color = colors.ink,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
@@ -137,18 +137,33 @@ fun MapHomeScreen(
                         }
                     },
                     onClear = { onEvent(HomeEvent.ClearActive) },
+                    onDismiss = { onEvent(HomeEvent.DismissSearch) },
                     modifier = Modifier.padding(top = 8.dp),
                 )
             } else {
                 TripBuilderCard(
                     origin = state.origin,
                     destination = state.destination,
-                    compact = canOpenTrip(state),
+                    compact = canOpenTrip(state) && !state.cardExpanded,
                     onField = { onEvent(HomeEvent.Focus(it)) },
-                    onExpand = { onEvent(HomeEvent.Focus(Field.A)) },
+                    onExpand = { onEvent(HomeEvent.ExpandCard) },
                     modifier = Modifier.padding(top = 8.dp),
                 )
-                AskBar(Modifier.padding(top = 8.dp))
+                if (state.asking) {
+                    AskComposer(
+                        draft = state.askDraft,
+                        feedback = state.askFeedback,
+                        onDraft = { onEvent(HomeEvent.AskDraft(it)) },
+                        onSubmit = { onEvent(HomeEvent.SubmitAsk) },
+                        onClose = { onEvent(HomeEvent.CloseAsk) },
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                } else {
+                    AskBar(
+                        onClick = { onEvent(HomeEvent.OpenAsk) },
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
             }
         }
         MyLocationButton(
@@ -170,9 +185,15 @@ fun MapHomeScreen(
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(colors.surface),
         ) {
+            val canDragSheet = !searching && state.sheet != Sheet.Notice && canOpenTrip(state)
             SheetHandle(
-                Modifier.pointerInput(state.sheet, searching) {
-                    if (searching || state.sheet == Sheet.Notice || !canOpenTrip(state)) return@pointerInput
+                Modifier
+                    .clickable(enabled = canDragSheet) {
+                        val next = if (state.sheet == Sheet.Half) Sheet.Peek else Sheet.Half
+                        onEvent(HomeEvent.SettleSheet(next))
+                    }
+                    .pointerInput(state.sheet, searching) {
+                    if (!canDragSheet) return@pointerInput
                     detectVerticalDragGestures(
                         onVerticalDrag = { _, dragAmount ->
                             val dragged = with(density) { dragAmount.toDp() }
@@ -192,7 +213,9 @@ fun MapHomeScreen(
             )
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 when {
-                    state.sheet == Sheet.Notice -> NotInDataMessage()
+                    state.sheet == Sheet.Notice -> NotInDataMessage(
+                        onChangeDestination = { onEvent(HomeEvent.Focus(Field.B)) },
+                    )
                     trip != null && state.sheet == Sheet.Half -> BestTripContent(
                         trip = trip.trip,
                         onOpenQuestions = onOpenQuestions,

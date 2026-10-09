@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
@@ -36,6 +37,14 @@ class MainActivity : ComponentActivity() {
             CommuteNityTheme {
                 var state by remember { mutableStateOf(HomeState()) }
                 var questions by remember { mutableStateOf(SampleQuestions.initial()) }
+                BackHandler(enabled = questions.open || state.asking || state.activeField != null) {
+                    when {
+                        questions.threadId != null -> questions = reduceQa(questions, QaEvent.BackToList)
+                        questions.open -> questions = reduceQa(questions, QaEvent.Close)
+                        state.asking -> state = reduce(state, HomeEvent.CloseAsk, source)
+                        state.activeField != null -> state = reduce(state, HomeEvent.DismissSearch, source)
+                    }
+                }
                 Box(Modifier.fillMaxSize()) {
                     MapHomeScreen(
                         state = state,
