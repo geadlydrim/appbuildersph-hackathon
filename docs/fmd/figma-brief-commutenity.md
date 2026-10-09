@@ -11,7 +11,7 @@
 
 ## 1. Purpose and how to use this brief
 
-**Audience:** an AI agent with Figma MCP tools. **Job:** update the EXISTING CommuteNity Figma file (made from the earlier, Metro Manila / ask-first docs) to the current direction ([D20](state.md#5-decisions)–[D31](state.md#5-decisions)): Makati City only, map-first trip builder, road-following lines, offline map, online refresh, in-trip tracking with para alert, the ask bar (ask in words and correct-vehicle check) as a secondary input that is part of the MVP ([D31](state.md#5-decisions)), voice optional, no OCR. The hero trip pair is fixed ([D30](state.md#5-decisions)): A = "Ayala Center", B = "Dela Rosa St" (Pio del Pilar).
+**Audience:** an AI agent with Figma MCP tools. **Job:** update the EXISTING CommuteNity Figma file (made from the earlier, Metro Manila / ask-first docs) to the current direction ([D20](state.md#5-decisions)–[D31](state.md#5-decisions)): Makati City only, map-first trip builder, road-following lines, offline map, online refresh, in-trip tracking with para alert, the ask bar (ask in words and correct-vehicle check) as a secondary input that is part of the MVP ([D31](state.md#5-decisions)), voice optional, no OCR. The hero trip pair is fixed ([D30](state.md#5-decisions), amended by [D37](state.md#5-decisions)): A = "V.A. Rufino St", B = "Dela Rosa St" (Pio del Pilar).
 
 Docs are canonical; Figma follows docs ([D29](state.md#5-decisions)). If this brief and the DSD disagree on behavior or copy, the DSD wins. If they disagree on Figma names or structure, this brief wins. Record any mismatch in the Change Report; do not ask.
 
@@ -53,7 +53,7 @@ Docs are canonical; Figma follows docs ([D29](state.md#5-decisions)). If this br
 | Alternatives sheet, Suggest route, Vote, Sync icon, Setup screen | Metro Manila content | Same jobs, renamed (section 4), Makati content (the [D30](state.md#5-decisions) pair names; leg values stay placeholders), map pack download in Setup |
 | Voice | T4 | T3, optional (STT only, transcript confirmed before use); cut before F8 |
 | Signboard text | Read by camera | Typed or spoken by the rider; still shown on `LegRow` as "Hanapin ang '…'" |
-| Sample content | Valenzuela–Recto hero trip | Makati hero pair from [D30](state.md#5-decisions): A = "Ayala Center", B = "Dela Rosa St". Legs (routes, fares, minutes) stay placeholders, marked `TBD (A13)` until the candidate trips are listed ([A13](state.md#4-open-assumptions)) |
+| Sample content | Valenzuela–Recto hero trip | Makati hero pair from [D30](state.md#5-decisions), amended by [D37](state.md#5-decisions): A = "V.A. Rufino St", B = "Dela Rosa St". Legs (routes, fares, minutes) stay placeholders, marked `TBD (A13)` until the candidate trips are listed ([A13](state.md#4-open-assumptions)) |
 
 ### 2.3 Removed: move to `99 Archive`
 
@@ -279,7 +279,7 @@ Taglish is the default display language; EN is the reference for review. `{x}` m
 
 | Token | Text |
 |---|---|
-| Origin (A) | `Ayala Center`, sublabel `Station Rd, San Lorenzo` |
+| Origin (A) | `V.A. Rufino St`, sublabel `Legazpi Village` |
 | Destination (B) | `Dela Rosa St`, sublabel `Pio del Pilar` |
 | Stops | `Stop 1 (TBD)`, `Stop 2 (TBD)`, … |
 | Landmark | `Landmark (TBD)` |
@@ -351,7 +351,7 @@ The pair names are real (D30) and carry no `SourceLabel sample`. Best trip legs,
 | Notifications denied | Allow notifications so the para alert can reach you. | I-allow ang notifications para maabisuhan ka sa para. |
 | `AskBar` collapsed | Ask… | Magtanong… |
 | `AskBar` hint | How do I get from {A} to {B}? | Paano pumunta sa {B} mula {A}? |
-| `AskBar` example (hero pair) | How to get from Ayala Center to Pio del Pilar? | Paano pumunta sa Dela Rosa St., Pio del Pilar galing Ayala Center? |
+| `AskBar` example (hero pair) | How to get from V.A. Rufino St to Pio del Pilar? | Paano pumunta sa Dela Rosa St., Pio del Pilar galing V.A. Rufino? |
 | `AskBar` loading | Loading model… {pct}% | Nilo-load ang model… {pct}% |
 | `AskBar` error | Can't load the AI model. | Hindi ma-load ang AI model. |
 | Ask understood | Understood: from {A} to {B} | Naintindihan: mula {A} papunta {B} |
@@ -425,7 +425,7 @@ The agent confirms each line in `Change Report › Checklist` as done, or lists 
 - [ ] Every map frame shows `AttributionLabel`; no straight line on any map except `dashed-walk-offline` with `WalkLabel`.
 - [ ] `SourceLabel sample` appears beside every placeholder value; no real fares, stops, or routes were invented.
 - [ ] `AskBar` is visible on `T0-01`, `T0-03`, `T0-04` and on every `T3` frame that shows the map home, as a secondary pill under or near `TripBuilderCard`, with the map trip builder still primary; no tier flag hides it in the MVP. F8 frames are tagged `MVP (D31)`, and only `T3-03` (voice) is tagged optional.
-- [ ] Pair names are `Ayala Center` (sublabel `Station Rd, San Lorenzo`) and `Dela Rosa St` (sublabel `Pio del Pilar`) on every frame that shows A and B; no `Place A (TBD)` / `Place B (TBD)` remains; only the legs are `TBD (A13)`.
+- [ ] Pair names are `V.A. Rufino St` (sublabel `Legazpi Village`) and `Dela Rosa St` (sublabel `Pio del Pilar`) on every frame that shows A and B; no `Place A (TBD)` / `Place B (TBD)` remains; only the legs are `TBD (A13)`.
 - [ ] Text sweep (section 2.3) returns zero hits for `Metro Manila`, `Valenzuela`, `Recto`, `OCR`, `Scan`, `camera` outside `99 Archive`.
 - [ ] Archived items are in `99 Archive` with the `ARCHIVED` prefix and a sticky with reason and D-ID; nothing was deleted.
 - [ ] Every frame has a `meta –` layer with Tier, PRD, US, QA, DSD, and States, and every PRD-F (F1–F9) and US (US-01–US-13) from section 4 is covered by at least one frame.

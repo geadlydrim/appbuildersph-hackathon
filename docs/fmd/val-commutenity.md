@@ -24,7 +24,7 @@
 
 **What we can honestly show at Demo Day:**
 - an offline demo on the phone, in airplane mode
-- the Makati hero trip, Ayala Center to Dela Rosa Street, Pio del Pilar ([D30](state.md#5-decisions)), on real roads, with `collected` or `known` facts
+- the Makati hero trip, V.A. Rufino St to Dela Rosa Street, Pio del Pilar ([D30](state.md#5-decisions), amended by [D37](state.md#5-decisions)), on real roads, with `collected` or `known` facts
 - tracking with a mock-location track if it isn't field-tested, labelled as simulated
 - real eval numbers from [QAD §7](qad-commutenity.md#7-ai-evaluation) and [data plan §6](data-commutenity.md#6-evaluation-sets), with sample sizes, for the on-device LLM (PRD-F8, in the MVP) and for whichever of voice and the ranker ships
 - team-sourced examples of confusing Makati trips, labelled as anecdote
@@ -53,7 +53,7 @@ Don't claim a competitor limitation in the pitch until it has been checked.
 
 The build window runs to the 8:00 AM Oct 10 feature freeze ([BUILD §1](build-commutenity.md#1-build-sequence)). The re-scope was decided at about 10:40 PM on Oct 9. Main uncertainties, in order:
 1. The offline Makati map on the demo phone: MapLibre with PMTiles ([A14](state.md#4-open-assumptions), FC-13).
-2. Pack data entry for Makati, including the candidate trips for the hero pair, Ayala Center to Dela Rosa St., Pio del Pilar ([D30](state.md#5-decisions), [A13](state.md#4-open-assumptions)), and the road-shape pipeline and its terms ([A15](state.md#4-open-assumptions)).
+2. Pack data entry for Makati, including the candidate trips for the hero pair, V.A. Rufino St to Dela Rosa St., Pio del Pilar ([D30](state.md#5-decisions), [D37](state.md#5-decisions), [A13](state.md#4-open-assumptions)), and the road-shape pipeline and its terms ([A15](state.md#4-open-assumptions)).
 3. GPS tracking accuracy in Makati and foreground-service reliability ([A16](state.md#4-open-assumptions), FC-16, FC-19).
 4. Refresh and the sync backend.
 5. The on-phone LLM runtime (PRD-F8, in the MVP per [D31](state.md#5-decisions); FC-4, FC-5), and STT if voice ships.
@@ -63,7 +63,7 @@ The build window runs to the 8:00 AM Oct 10 feature freeze ([BUILD §1](build-co
 | Assumption | Cheapest test | Success threshold | Failure → decision | Who |
 |---|---|---|---|---|
 | **Map spike:** MapLibre renders a Makati PMTiles file offline on the demo phone ([A14](state.md#4-open-assumptions)) | CP1 spike: load a `pmtiles extract` of Makati in a bare MapLibre Android app, airplane mode on | The map pans and zooms on the POCO with labels, the Makati extract size is recorded, and OSM attribution shows | Try the fallback: a MapLibre offline region from a provider whose terms allow offline. If neither works at CP1 (about 11:30 PM), tell the owner at once. T0 can't ship without a map. | Issue claimant |
-| The D30 hero pair (Ayala Center to Dela Rosa St., Pio del Pilar) has real alternatives ([A13](state.md#4-open-assumptions)) | List and verify the candidate trips for the pair from `collected` and `known` data | ≥ 2 genuinely different trips on the D30 pair, with `collected` or `known` facts | Tell the owner at once; the pair is an owner decision ([D30](state.md#5-decisions)) and revisiting it needs a new decision row | Issue claimant + team |
+| The D30 hero pair, amended by D37 (V.A. Rufino St to Dela Rosa St., Pio del Pilar) has real alternatives ([A13](state.md#4-open-assumptions)) | List and verify the candidate trips for the pair from `collected` and `known` data | ≥ 2 genuinely different trips on the D30 pair, with `collected` or `known` facts | Tell the owner at once; the pair is an owner decision ([D30](state.md#5-decisions)) and revisiting it needs a new decision row | Issue claimant + team |
 | **Shapes:** a routing engine gives plausible road shapes and its terms allow it ([A15](state.md#4-open-assumptions)) | Route every hero-trip segment through the engine and view the result on the map | Each shape starts and ends within N m of its stops, follows the known path, and is not a straight line (the QA-16 validator passes) | Use a self-hosted engine or a different one; hand-check or hand-fix the hero trip's shapes; mark the rest `mock` | Issue claimant |
 | Rail geometry is available for the Makati rail legs | Locate rail track geometry in OSM for the rail segments on the hero trip | Shapes follow the tracks | Draw the rail leg with stored station-to-station points, labelled as approximate | Issue claimant |
 | **Tracking:** on-route and para alert behave on mock tracks, then on a real trip ([A16](state.md#4-open-assumptions)) | Replay `on-route`, `deviate-return`, `blip`, `approach-alight`, and `gps-loss` GPX tracks ([QAD §2](qad-commutenity.md#2-data-and-environment)); then one real walk or ride in Makati, including the CBD and under MRT-3 or EDSA | QA-10 and QA-11 pass on mock tracks. On the real trip: no false off-route flag, and the alert fires once and in time to alight, with thresholds tuned (starting values: 100 m, 30 s, about 300 m). | Raise the thresholds or add a fix-accuracy filter. Past 6:30 AM, demo with a recorded mock route, labelled as simulated. | Issue claimant |

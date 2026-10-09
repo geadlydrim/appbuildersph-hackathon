@@ -57,7 +57,7 @@ Setting A and B computes the best trip on the phone, with no network, and opens 
 - Online: a foot route fetched via our server and cached, drawn as a solid `walk` `MapLine`.
 - Offline: a dashed straight `MapLine` (`dashed-walk-offline`) with a `WalkLabel` "walk ~N m". This is the only straight line the app draws.
 
-**Sample data:** a `SourceLabel` `sample` sits beside every value that comes from `mock` data. Real values never carry it ([QA-17](qad-commutenity.md#6-release-criteria)). The demo never hides it. The hero pair is real ([D30](state.md#5-decisions)): A = "Ayala Center" (Station Rd, San Lorenzo), B = "Dela Rosa St" (Pio del Pilar). Until the candidate trips are listed ([A13](state.md#4-open-assumptions)), the legs' routes, fares, and minutes in examples and mockups are placeholders marked `TBD (A13)` and carry `sample`.
+**Sample data:** a `SourceLabel` `sample` sits beside every value that comes from `mock` data. Real values never carry it ([QA-17](qad-commutenity.md#6-release-criteria)). The demo never hides it. The hero pair is real ([D30](state.md#5-decisions), amended by [D37](state.md#5-decisions)): A = "V.A. Rufino St" (Legazpi Village), B = "Dela Rosa St" (Pio del Pilar). Until the candidate trips are listed ([A13](state.md#4-open-assumptions)), the legs' routes, fares, and minutes in examples and mockups are placeholders marked `TBD (A13)` and carry `sample`.
 
 **Unknown values:** a missing fare or minutes shows "unknown" for that value and the total is marked unknown. Never show a partial total ([QA-19](qad-commutenity.md#6-release-criteria)).
 
@@ -87,7 +87,7 @@ Setting A and B computes the best trip on the phone, with no network, and opens 
 
 ### 1.6 Ask in words, voice, correct-vehicle check (T3)
 
-- **`AskBar`:** secondary input, part of the MVP ([D31](state.md#5-decisions)); the label "T3" is only the tier name. Collapsed pill "Magtanong…" with mic, under `TripBuilderCard`; expanded text field, mic, submit, and example questions built from pack places, e.g. "Paano pumunta sa Dela Rosa St., Pio del Pilar galing Ayala Center?" / "How to get from Ayala Center to Pio del Pilar?". Submitting sets pins A and B and shows what it understood as chips; an ambiguous place opens the place picker. Disabled with progress while the model loads. The model failing to load never blocks the map builder.
+- **`AskBar`:** secondary input, part of the MVP ([D31](state.md#5-decisions)); the label "T3" is only the tier name. Collapsed pill "Magtanong…" with mic, under `TripBuilderCard`; expanded text field, mic, submit, and example questions built from pack places, e.g. "Paano pumunta sa Dela Rosa St., Pio del Pilar galing V.A. Rufino?" / "How to get from V.A. Rufino St to Pio del Pilar?". Submitting sets pins A and B and shows what it understood as chips; an ambiguous place opens the place picker. Disabled with progress while the model loads. The model failing to load never blocks the map builder.
 - **Voice (`MicButton`, optional, F9):** listening, then transcribing; the transcript fills the field for confirmation before use ([D26](state.md#5-decisions)). Mic denied or nothing heard shows a message and leaves the text field usable. Voice is cut before the ask bar.
 - **Correct-vehicle check (MVP, F8):** from a jeepney, bus, or UV `LegRow` (on the best-trip sheet and from tracking mode), "Tama ba 'tong sasakyan?" opens a text field (or mic) for the signboard text or route name. The `VerdictCard` returns `ride`, `wrong`, or `unsure` from a deterministic text match ([D27](state.md#5-decisions)). The LLM never decides the verdict.
 
@@ -207,6 +207,6 @@ Before the demo, check:
 - OSM attribution visible on every map screen, including tracking mode
 - no straight line on the map except the labelled offline walk
 - `sample` marker shown only on mock values
-- the `AskBar` is visible under `TripBuilderCard` on the map home and best-trip screens, and the hero question ("How to get from Ayala Center to Pio del Pilar?") sets A = "Ayala Center" and B = "Dela Rosa St" ([D30](state.md#5-decisions), [D31](state.md#5-decisions))
+- the `AskBar` is visible under `TripBuilderCard` on the map home and best-trip screens, and the hero question ("How to get from V.A. Rufino St to Pio del Pilar?") sets A = "V.A. Rufino St" and B = "Dela Rosa St" ([D30](state.md#5-decisions), [D37](state.md#5-decisions), [D31](state.md#5-decisions))
 
 No P0 or P1 UI defects may be open. Covered by QAD [QA-18](qad-commutenity.md#6-release-criteria), with QA-01..QA-14 and QA-17 for the behavior behind each state.
