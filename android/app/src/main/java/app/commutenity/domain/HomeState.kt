@@ -1,5 +1,8 @@
 package app.commutenity.domain
 
+const val VOICE_HEARD_FEEDBACK = "Heard by voice. Fix any words, then tap Find."
+private const val VOICE_NOT_HEARD_FEEDBACK = "I didn't catch that. Try again or type your question."
+
 data class HomeState(
     val origin: Place? = null,
     val destination: Place? = null,
@@ -10,6 +13,7 @@ data class HomeState(
     val asking: Boolean = false,
     val askDraft: String = "",
     val askFeedback: String? = null,
+    val listening: Boolean = false,
 )
 
 sealed interface HomeEvent {
@@ -24,6 +28,11 @@ sealed interface HomeEvent {
     data object CloseAsk : HomeEvent
     data class AskDraft(val value: String) : HomeEvent
     data object SubmitAsk : HomeEvent
+    data object VoiceStart : HomeEvent
+    data class VoicePartial(val text: String) : HomeEvent
+    data class VoiceResult(val text: String) : HomeEvent
+    data class VoiceError(val message: String) : HomeEvent
+    data object VoiceStop : HomeEvent
     data class SettleSheet(val sheet: Sheet) : HomeEvent
 }
 
@@ -68,6 +77,7 @@ fun reduce(state: HomeState, event: HomeEvent, source: TripSource): HomeState {
             activeField = event.field,
             cardExpanded = true,
             asking = false,
+            listening = false,
             query = when (event.field) {
                 Field.A -> state.origin?.name.orEmpty()
                 Field.B -> state.destination?.name.orEmpty()
@@ -95,11 +105,27 @@ fun reduce(state: HomeState, event: HomeEvent, source: TripSource): HomeState {
             settle(next.copy(activeField = null, query = ""), source)
         }
         HomeEvent.DismissSearch -> state.copy(activeField = null, query = "")
-        HomeEvent.ExpandCard -> state.copy(cardExpanded = true, asking = false, activeField = null)
+        HomeEvent.ExpandCard -> state.copy(cardExpanded = true, asking = false, listening = false, activeField = null)
         HomeEvent.OpenAsk -> state.copy(asking = true, askDraft = "", askFeedback = null, activeField = null)
-        HomeEvent.CloseAsk -> state.copy(asking = false, askDraft = "", askFeedback = null)
+        HomeEvent.CloseAsk -> state.copy(asking = false, listening = false, askDraft = "", askFeedback = null)
         is HomeEvent.AskDraft -> state.copy(askDraft = event.value, askFeedback = null)
-        HomeEvent.SubmitAsk -> submitAsk(state, source)
+        HomeEvent.SubmitAsk -> submitAsk(state, source).copy(listening = false)
+        HomeEvent.VoiceStart -> state.copy(
+            asking = true,
+            listening = true,
+            askDraft = "",
+            askFeedback = null,
+            activeField = null,
+        )
+        is HomeEvent.VoicePartial -> if (state.listening) state.copy(askDraft = event.text) else state
+        is HomeEvent.VoiceResult -> state.copy(
+            listening = false,
+            asking = true,
+            askDraft = event.text.trim(),
+            askFeedback = if (event.text.isNotBlank()) VOICE_HEARD_FEEDBACK else VOICE_NOT_HEARD_FEEDBACK,
+        )
+        is HomeEvent.VoiceError -> state.copy(listening = false, asking = true, askFeedback = event.message)
+        HomeEvent.VoiceStop -> state.copy(listening = false)
         is HomeEvent.SettleSheet -> {
             if (state.activeField != null) state
             else if (canOpenTrip(state)) state.copy(sheet = event.sheet)

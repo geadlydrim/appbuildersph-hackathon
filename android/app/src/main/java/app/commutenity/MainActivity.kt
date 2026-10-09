@@ -1,6 +1,13 @@
 package app.commutenity
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Color
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
+import app.commutenity.voice.OnDeviceSpeech
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -42,12 +49,38 @@ class MainActivity : ComponentActivity() {
             CommuteNityTheme {
                 var state by remember { mutableStateOf(HomeState()) }
                 var questions by remember { mutableStateOf(SampleQuestions.initial()) }
+                val context = LocalContext.current
+                val speech = remember { OnDeviceSpeech(context) }
+                DisposableEffect(Unit) { onDispose { speech.destroy() } }
+                val voiceAvailable = remember { OnDeviceSpeech.isAvailable(context) }
+                // Recognizer callbacks arrive later; `state` is a delegate so this always reduces the latest value.
+                fun dispatch(event: HomeEvent) {
+                    state = reduce(state, event, source)
+                }
+                fun startVoice() {
+                    dispatch(HomeEvent.VoiceStart)
+                    speech.start(
+                        onPartial = { dispatch(HomeEvent.VoicePartial(it)) },
+                        onResult = { dispatch(HomeEvent.VoiceResult(it)) },
+                        onError = { dispatch(HomeEvent.VoiceError(it)) },
+                    )
+                }
+                val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                    if (granted) {
+                        startVoice()
+                    } else {
+                        dispatch(HomeEvent.VoiceError("Microphone permission is off. You can still type your question."))
+                    }
+                }
                 BackHandler(enabled = questions.open || state.asking || state.activeField != null) {
                     when {
                         questions.threadId != null -> questions = reduceQa(questions, QaEvent.BackToList)
                         questions.asking -> questions = reduceQa(questions, QaEvent.CancelDraft)
                         questions.open -> questions = reduceQa(questions, QaEvent.Close)
-                        state.asking -> state = reduce(state, HomeEvent.CloseAsk, source)
+                        state.asking -> {
+                            if (state.listening) speech.cancel()
+                            state = reduce(state, HomeEvent.CloseAsk, source)
+                        }
                         state.activeField != null -> state = reduce(state, HomeEvent.DismissSearch, source)
                     }
                 }
@@ -59,9 +92,26 @@ class MainActivity : ComponentActivity() {
                         MapHomeScreen(
                             state = state,
                             source = source,
-                            onEvent = { event: HomeEvent -> state = reduce(state, event, source) },
+                            onEvent = { event: HomeEvent ->
+                                if (state.listening && (event == HomeEvent.CloseAsk || event == HomeEvent.SubmitAsk)) speech.cancel()
+                                dispatch(event)
+                            },
                             onOpenQuestions = openQuestions,
                             onMenu = { scope.launch { drawerState.open() } },
+                            onMic = if (voiceAvailable) {
+                                {
+                                    if (state.listening) {
+                                        speech.stop()
+                                        dispatch(HomeEvent.VoiceStop)
+                                    } else if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                                        startVoice()
+                                    } else {
+                                        micPermission.launch(Manifest.permission.RECORD_AUDIO)
+                                    }
+                                }
+                            } else {
+                                null
+                            },
                         )
                     }
                     if (questions.open) {
