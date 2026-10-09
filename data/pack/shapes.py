@@ -1,4 +1,7 @@
+import json
 import math
+import os
+import time
 
 EARTH_RADIUS_M = 6_371_000
 
@@ -158,3 +161,65 @@ def check_segment(
         _fail("straight-line shape")
     if abs(distance_m - length_m(points)) > 1:
         _fail("distance_m does not match length")
+
+
+def fill_hero(source_path: str, cache_path: str, fetch) -> None:
+    # shortcut: car profile and this one hero file only. A via list is the next step if the trimmed end is farther than 30 m from the stop.
+    if os.path.exists(cache_path):
+        with open(cache_path, encoding="utf-8") as cached:
+            body = cached.read()
+    else:
+        body = fetch()
+        cache_dir = os.path.dirname(cache_path)
+        if cache_dir:
+            os.makedirs(cache_dir, exist_ok=True)
+        with open(cache_path, "w", encoding="utf-8") as cached:
+            cached.write(body)
+        with open(cache_path, encoding="utf-8") as cached:
+            body = cached.read()
+
+    geometry = json.loads(body)["routes"][0]["geometry"]
+    points = decode_polyline(geometry, 6)
+
+    with open(source_path, encoding="utf-8") as source_file:
+        source = json.load(source_file)
+
+    stops = {stop["id"]: stop for stop in source["stops"]}
+    end_stop = stops[source["segments"][0]["to_stop_id"]]
+    end = (end_stop["lat"], end_stop["lng"])
+    trimmed = trim_overshoot(points, end)
+    if _distance_m(trimmed[-1], end) > SNAP_M:
+        raise ShapeError("BLOCKED: trimmed end farther than 30 m from the get-off stop")
+
+    polyline = encode_polyline(trimmed, 6)
+    distance = length_m(trimmed)
+    generated_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(os.path.getmtime(cache_path)))
+    shape = {
+        "polyline": polyline,
+        "engine": "osrm",
+        "profile": "driving",
+        "generated_at": generated_at,
+    }
+    for segment in source["segments"]:
+        segment["shape"] = shape
+        segment["distance_m"] = distance
+
+    credit = (
+        f"OSRM demo server, driving profile, polyline6, fetched {generated_at}. "
+        "OpenStreetMap ODbL."
+    )
+    if credit not in source["meta"]["sources"]:
+        source["meta"]["sources"].append(credit)
+
+    with open(source_path, "w", encoding="utf-8") as source_file:
+        json.dump(source, source_file, indent=2, ensure_ascii=False)
+        source_file.write("\n")
+
+    geojson_path = os.path.join(os.path.dirname(source_path) or ".", "hero-ride.geojson")
+    geojson = {
+        "type": "LineString",
+        "coordinates": [[lng, lat] for lat, lng in trimmed],
+    }
+    with open(geojson_path, "w", encoding="utf-8") as geojson_file:
+        json.dump(geojson, geojson_file, indent=2)
+        geojson_file.write("\n")
