@@ -56,7 +56,11 @@ import app.commutenity.domain.QaPost
 import app.commutenity.domain.QaState
 import app.commutenity.domain.QaThread
 import app.commutenity.domain.QaVote
+import app.commutenity.domain.alreadyMarkedWorked
+import app.commutenity.domain.canMarkWorked
+import app.commutenity.domain.isAboutTrip
 import app.commutenity.domain.scoreOf
+import app.commutenity.domain.visibleThreads
 import app.commutenity.ui.theme.LocalCommuteColors
 import app.commutenity.ui.theme.PlusJakarta
 
@@ -142,15 +146,42 @@ private fun QuestionList(state: QaState, onEvent: (QaEvent) -> Unit) {
         )
     }
     if (state.savedNotice) SavedNotice()
-    if (state.threads.isEmpty()) {
+    val route = state.trip?.route
+    if (state.onlyTrip && route != null) {
+        Row(
+            Modifier.padding(top = 16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "For ${route.from} → ${route.to}",
+                color = colors.ink,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = "Show all",
+                color = colors.ink,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(99.dp))
+                    .background(colors.sample)
+                    .clickable(role = Role.Button) { onEvent(QaEvent.ShowAll) }
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            )
+        }
+    }
+    val threads = state.visibleThreads()
+    if (threads.isEmpty()) {
         Text(
-            text = "No saved questions yet.",
+            text = if (state.onlyTrip) "No questions for this trip yet." else "No saved questions yet.",
             color = colors.ink,
             fontSize = 16.sp,
             modifier = Modifier.padding(top = 20.dp),
         )
     }
-    state.threads.forEach { thread ->
+    threads.forEach { thread ->
         PostCard(
             post = thread.question,
             state = state,
@@ -183,7 +214,21 @@ private fun ThreadDetail(thread: QaThread, state: QaState, onEvent: (QaEvent) ->
         focus = state.focusComment,
         focusRequester = focusRequester,
         showButtons = state.draft.isNotEmpty() || state.saveError != null,
+        worked = state.markWorked,
+        onToggleWorked = if (state.canMarkWorked(thread)) {
+            { onEvent(QaEvent.ToggleWorked) }
+        } else {
+            null
+        },
     )
+    if (state.isAboutTrip(thread) && state.alreadyMarkedWorked()) {
+        Text(
+            text = "You said this trip worked. One phone counts once.",
+            color = colors.muted,
+            fontSize = 13.sp,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+    }
     if (state.savedNotice) SavedNotice()
     if (thread.comments.isEmpty()) {
         Text(
@@ -262,6 +307,15 @@ private fun CommentCard(comment: QaPost, state: QaState, onEvent: (QaEvent) -> U
             lineHeight = 21.sp,
             modifier = Modifier.padding(top = 6.dp),
         )
+        if (comment.workedTrip != null) {
+            Text(
+                text = "This trip worked · sample",
+                color = colors.ink,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+        }
         val vote = state.votes[comment.id]
         Row(
             Modifier.padding(top = 4.dp),
@@ -425,6 +479,8 @@ private fun DraftBox(
     focus: Boolean = false,
     focusRequester: FocusRequester = remember { FocusRequester() },
     showButtons: Boolean = true,
+    worked: Boolean = false,
+    onToggleWorked: (() -> Unit)? = null,
 ) {
     val colors = LocalCommuteColors.current
     val focusManager = LocalFocusManager.current
@@ -449,12 +505,26 @@ private fun DraftBox(
             .background(colors.surface)
             .padding(12.dp),
     ) {
+        if (onToggleWorked != null) {
+            Text(
+                text = "This trip worked",
+                color = if (worked) colors.paraOn else colors.ink,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(99.dp))
+                    .background(if (worked) colors.ink else colors.sample)
+                    .clickable(onClick = onToggleWorked)
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+            )
+        }
         BasicTextField(
             value = draft,
             onValueChange = onDraft,
             textStyle = TextStyle(color = colors.ink, fontSize = 16.sp),
             cursorBrush = SolidColor(colors.ink),
             modifier = Modifier
+                .padding(top = if (onToggleWorked != null) 8.dp else 0.dp)
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
                 .onFocusChanged { focused = it.isFocused }

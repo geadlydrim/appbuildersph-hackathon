@@ -54,6 +54,7 @@ class SampleTripSource : TripSource {
         if (!origin.inMakati || !destination.inMakati) return TripResult.NotInData
         return TripResult.Ready(
             Trip(
+                key = keyFor(origin.id, destination.id),
                 fare = "₱XX",
                 minutes = "XX min",
                 transfers = "X",
@@ -72,5 +73,9 @@ class SampleTripSource : TripSource {
                 ),
             ),
         )
+    }
+
+    companion object {
+        fun keyFor(originId: String, destinationId: String) = "sample:$originId>$destinationId"
     }
 }

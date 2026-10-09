@@ -12,6 +12,8 @@ data class Place(
 )
 
 data class Trip(
+    /** Stable candidate key; rider evidence ties to this, never to display text. */
+    val key: String,
     val fare: String,
     val minutes: String,
     val transfers: String,
