@@ -103,7 +103,7 @@ Setting A and B computes the best trip on the phone, with no network, and opens 
 - **Sample data marker:** the `sample` `SourceLabel`. Visible but quiet.
 - **Verdict colors:** ride is green, wrong is red, unsure is neutral. Each always has a text label and an icon.
 - **Status colors** reuse existing tokens, with no new hues: on route = verdict ride; off route = verdict wrong; GPS lost = verdict unsure (neutral); para alert = primary container; refresh failed = verdict wrong; refreshing = primary; synced and offline = neutral.
-- **Map lines:** 5 dp with a 2 dp casing in the surface color so lines read on any map tile; walk-offline is dashed (4 dp dash, 6 dp gap). Proposed values; tune on the POCO X6 Pro.
+- **Map lines:** 5 dp with a 2 dp casing in the surface color so lines read on any map tile; walk-offline is dashed (4 dp dash, 6 dp gap). Proposed values; tune on the POCO X6 5G.
 - **Type:** bundled fonts only (no downloadable fonts at runtime). Headings use a geometric display face (Plus Jakarta Sans by default; Space Grotesk if the Figma file already uses it), bold; body uses the system sans (Roboto).
 - **Dark mode:** follows the system, including the map style. The amber keeps the same perceived lightness.
 - **Shapes:** Material 3 shape scale (4 / 8 / 12 / 16 / 28 dp).

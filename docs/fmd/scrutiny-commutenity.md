@@ -12,7 +12,7 @@
 
 **Decision: PROCEED WITH FIXES.**
 
-The theme fit is still strong: the whole trip works in airplane mode, and GPS tracking works without data. The risk got bigger with the re-scope. At about 10:40 PM, roughly 11 hours remain before the 10:00 AM code freeze. On top of the pack, the Android app, and the sync backend, a team of 4 now has to deliver five parts nobody has proven on the POCO X6 Pro:
+The theme fit is still strong: the whole trip works in airplane mode, and GPS tracking works without data. The risk got bigger with the re-scope. At about 10:40 PM, roughly 11 hours remain before the 10:00 AM code freeze. On top of the pack, the Android app, and the sync backend, a team of 4 now has to deliver five parts nobody has proven on the POCO X6 5G:
 - an offline Makati map (MapLibre with PMTiles)
 - a road-shape precompute pipeline
 - a foreground tracking service with map-matching
@@ -54,13 +54,13 @@ The map is the first thing a judge sees, so a map that fails sinks T0. The fixes
 | FC-10 | Feasibility | Whisper-class models on the phone transcribe Taglish acceptably | Unverified | — | Minor (T3 voice only, cut first) |
 | FC-11 | Problem | Riders often lack signal or data at the moment they need to decide | Unverified; plausible from team experience. GPS still works without data, which helps the tracking story. | — | Significant for the pitch |
 | FC-12 | Rules | Mock data is allowed | Owner-reported organizer allowance. It is not in the written briefing. | Owner, 2026-10-09 | Significant. Mitigation: label everything and disclose it; confirm in Telegram if unsure. |
-| FC-13 | Feasibility | MapLibre Native Android renders a local PMTiles file offline on the POCO X6 Pro, and the Makati extract is small enough to bundle or download once ([A14](state.md#4-open-assumptions)) | Unverified; CP1 map spike. Protomaps documents `pmtiles extract` for regional cutouts ([Protomaps downloads](https://docs.protomaps.com/basemaps/downloads)), which covers the extract, not MapLibre Android's PMTiles support. | — | **Fatal to T0** unless the fallback works (a MapLibre offline region from a provider whose terms allow offline) |
+| FC-13 | Feasibility | MapLibre Native Android renders a local PMTiles file offline on the POCO X6 5G, and the Makati extract is small enough to bundle or download once ([A14](state.md#4-open-assumptions)) | Unverified; CP1 map spike. Protomaps documents `pmtiles extract` for regional cutouts ([Protomaps downloads](https://docs.protomaps.com/basemaps/downloads)), which covers the extract, not MapLibre Android's PMTiles support. | — | **Fatal to T0** unless the fallback works (a MapLibre offline region from a provider whose terms allow offline) |
 | FC-14 | Data | Shapes precomputed through an open routing engine are allowed by its terms and are plausible paths for jeepney, bus, UV, and walk legs ([A15](state.md#4-open-assumptions)) | Unverified. The OSRM wiki limits its public demo server to reasonable, non-commercial use at 1 request per second, with no guarantees ([OSRM demo server](https://github.com/Project-OSRM/osrm-backend/wiki/Demo-server)); GraphHopper terms are unchecked. A driving profile may not follow the real jeepney path. | — | Significant (fall back to a self-hosted engine, or hand-checked shapes for the hero trip only) |
 | FC-15 | Rules | Protomaps and OSM data may be bundled in the APK or hosted by us with only OSM attribution | Partly verified: Protomaps calls its basemap an ODbL Produced Work needing OSM attribution. The OSMF tile policy forbids offline use of `tile.openstreetmap.org` ([OSMF policy](https://operations.osmfoundation.org/policies/tiles/)), so we don't use it. Unchecked: the basemap style, fonts, and sprites; whether stored shapes are a derivative database. | [CLR §5](clr-commutenity.md#5-ip-provenance-and-disclosure) | Significant |
 | FC-16 | Feasibility | GPS in Makati is accurate enough for an off-route flag (more than 100 m for at least 30 s) and a para alert about 300 m before the stop ([A16](state.md#4-open-assumptions)) | Unverified. Ayala CBD high-rises and MRT-3 or EDSA overhead are likely to degrade it. [INFERENCE] | — | Significant (wrong alert on a physical-world path; fall back to a labelled simulated route) |
 | FC-17 | Data | Makati has at least 2 genuinely different candidate trips between the D30 pair (Ayala Center to Dela Rosa St., Pio del Pilar) that the team can verify ([A13](state.md#4-open-assumptions)) | Unverified; the pair is decided ([D30](state.md#5-decisions)), the candidate trips are listed and verified by P4 and the team before pack v0 | — | Significant (no real alternatives makes "best trip" and "alternatives" look trivial) |
-| FC-18 | Rules | The demo satisfies "a meaningful part of AI inference executes locally" | **Mitigated by [D31](state.md#5-decisions).** The T0–T2 path has no learned model (map-matching, ordering, and the para alert are deterministic), but PRD-F8 (the on-device LLM) is release-critical and part of the MVP. Any LLM speed-test failure falls back to on-device inference only; never a cloud model. The claim still needs F8 to pass on the demo phone. | [JUDGING](JUDGING.md#rules) | **Fatal** if F8 and every on-device fallback fail on the demo phone |
-| FC-19 | Feasibility | A foreground service keeps tracking with the screen off on the POCO X6 Pro (HyperOS) | Unverified. Vendor battery limits are a known risk on Android phones. [INFERENCE] | — | Significant (QA-11 background case) |
+| FC-18 | Rules | The demo satisfies "a meaningful part of AI inference executes locally" | **Mitigated by [D31](state.md#5-decisions) and [D32](state.md#5-decisions).** The T0–T2 path has no learned model (map-matching, ordering, and the para alert are deterministic), but PRD-F8 (the on-device LLM) is release-critical and part of the MVP. The F8 parser passed the LLM speed test on the demo phone (Gemma 4 E2B, worst p95 2.84 s, 10/10 exact on 10 questions); the claim still needs F8 merged and passing US-11 and US-12. Any later failure falls back to on-device inference only; never a cloud model. | [JUDGING](JUDGING.md#rules); [RESULTS](https://github.com/geadlydrim/appbuildersph-hackathon/blob/prototype/llm-speed-test/spikes/llm-speed-test/RESULTS.md) | **Fatal** if F8 and every on-device fallback fail on the demo phone |
+| FC-19 | Feasibility | A foreground service keeps tracking with the screen off on the POCO X6 5G (HyperOS) | Unverified. Vendor battery limits are a known risk on Android phones. [INFERENCE] | — | Significant (QA-11 background case) |
 
 ### 2.1 Reference Integrity
 
@@ -71,7 +71,7 @@ External sources read on 2026-10-09: the OSMF tile policy, the Protomaps basemap
 | Gap | Needed by | Treatment |
 |---|---|---|
 | Offline map not proven on our phone | T0 | A14; CP1 map spike (P1) |
-| LLM runtime and model not proven on our phone | PRD-F8 (MVP) | A4; the LLM speed test (issue #8) picks the F8 model and runtime, with D31 fallbacks |
+| LLM runtime and model | PRD-F8 (MVP) | Decided and measured on our phone ([D32](state.md#5-decisions)): Gemma 4 E2B on LiteRT-LM with the hybrid parser. Still to prove: the 30-question eval |
 | The D30 pair's candidate trips not yet listed or verified, and no pair minutes | Pack, demo | A13 (before pack v0); data plan §3 |
 | No road shapes, and the routing engine's terms are unread | Pack v0 | A15 (P4, before pack v0); QA-16 |
 | GPS behaviour in Makati unknown | T2 | A16 (P3, during T2) |
@@ -131,6 +131,6 @@ External sources read on 2026-10-09: the OSMF tile policy, the Protomaps basemap
 
 ## 7. Blocking Questions
 
-None block the docs. Building T0 is blocked on A13 (the candidate trips for the D30 pair), A14, and A15 ([state](state.md#4-open-assumptions)); the hero pair itself is decided ([D30](state.md#5-decisions)). PRD-F8 is also blocked on A4 (model and runtime choice).
+None block the docs. Building T0 is blocked on A13 (the candidate trips for the D30 pair), A14, and A15 ([state](state.md#4-open-assumptions)); the hero pair itself is decided ([D30](state.md#5-decisions)). The PRD-F8 model and runtime are decided ([D32](state.md#5-decisions)).
 
 **Owner question (answered):** the owner has decided that a submission whose MVP has no learned model is not acceptable. [D31](state.md#5-decisions) makes PRD-F8 (the LLM) release-critical for the 10:00 AM submission, with voice (PRD-F9) and the ranker giving way to it, not the reverse. This amends the strict tier order in [D28](state.md#5-decisions).
