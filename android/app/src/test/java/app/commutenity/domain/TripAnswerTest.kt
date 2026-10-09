@@ -21,7 +21,7 @@ class TripAnswerTest {
         assertEquals("jeepney", ride.mode)
         assertEquals("Gil Puyat Ave (San Antonio)", ride.board)
         assertEquals("Gil Puyat Ave near Osmeña Hwy / PNR", ride.alight)
-        assertEquals("₱12", ride.fare)
+        assertEquals("₱14", ride.fare)
         assertEquals("7 min", ride.minutes)
         assertEquals("7 min", (trip.legs.first() as Leg.Walk).minutes)
     }
@@ -33,7 +33,7 @@ class TripAnswerTest {
                 "Ride the jeep marked \"LRT\". " +
                 "Get off at Gil Puyat Ave near Osmeña Hwy / PNR (say \"para\"). " +
                 "Walk ~100 m to your stop. " +
-                "₱12, about ${trip.minutes} in all.",
+                "₱14, about ${trip.minutes} in all.",
             TripAnswer.compose(trip),
         )
     }
@@ -45,7 +45,7 @@ class TripAnswerTest {
                 "Sumakay ng jeep na may karatulang \"LRT\". " +
                 "Bumaba sa Gil Puyat Ave near Osmeña Hwy / PNR (sabihin \"para\"). " +
                 "Maglakad ~100 m. " +
-                "₱12, mga ${trip.minutes} lahat.",
+                "₱14, mga ${trip.minutes} lahat.",
             TripAnswer.compose(trip, taglish = true),
         )
     }
@@ -179,6 +179,6 @@ class TripAnswerTest {
     @Test
     fun unknownTimeIsNotPrintedAsATime() {
         val answer = TripAnswer.compose(trip.copy(minutes = "Time unknown"))
-        assertTrue(answer.endsWith("₱12."))
+        assertTrue(answer.endsWith("₱14."))
     }
 }

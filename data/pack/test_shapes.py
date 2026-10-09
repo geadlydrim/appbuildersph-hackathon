@@ -93,7 +93,7 @@ class ShapeTest(unittest.TestCase):
             assert rides[0]["shape"]["polyline"] == rides[1]["shape"]["polyline"]
             assert rides[0]["shape"]["engine"] == "osrm"
             assert rides[0]["shape"]["profile"] == "driving"
-            assert rides[0]["fare_php"] == 12 and rides[1]["fare_php"] == 15
+            assert rides[0]["fare_php"] == 14 and rides[1]["fare_php"] == 15
             assert rides[0]["minutes"] == 7 and rides[1]["minutes"] == 7
             points = decode_polyline(rides[0]["shape"]["polyline"], 6)
             assert (14.55750, 121.00684) not in [(round(p[0], 5), round(p[1], 5)) for p in points]

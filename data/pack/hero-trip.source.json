@@ -100,7 +100,7 @@
       "seq": 1,
       "from_stop_id": "gil-puyat-h267",
       "to_stop_id": "gil-puyat-osmena",
-      "fare_php": 12,
+      "fare_php": 14,
       "minutes": 7,
       "distance_m": 848,
       "shape": {
@@ -111,7 +111,7 @@
       },
       "provenance": {
         "source_class": "known",
-        "source": "owner, from memory: fare ₱12, 6–7 min on board",
+        "source": "owner, traditional jeep minimum fare ₱14 for the first 4 km (fare table supplied 2026-10-10); 6–7 min on board",
         "verified_by": "geadlydrim",
         "verified_at": null
       }

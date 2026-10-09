@@ -85,7 +85,7 @@ class PackTripSourceTest {
     fun resolvesHeroTripWithCheapestJeepFirst() {
         val trip = ready(source.resolve(rufino, delaRosa))
 
-        assertEquals("₱12", trip.fare)
+        assertEquals("₱14", trip.fare)
         assertEquals("Cheapest", trip.reason)
         assertEquals("0", trip.transfers)
         assertEquals(false, trip.sample)
@@ -94,7 +94,7 @@ class PackTripSourceTest {
         val ride = trip.legs[1] as Leg.Ride
         assertTrue(ride.signboard.contains("LRT"))
         assertEquals("Gil Puyat Ave (San Antonio)  →  Gil Puyat Ave near Osmeña Hwy / PNR", ride.stops)
-        assertEquals("₱12  ·  7 min", ride.fareAndMinutes)
+        assertEquals("₱14  ·  7 min", ride.fareAndMinutes)
         assertEquals("~540 m", (trip.legs[0] as Leg.Walk).meters)
         assertEquals("Gil Puyat Ave near Osmeña Hwy / PNR", (trip.legs[3] as Leg.Para).landmark)
         assertTrue(trip.key.startsWith("jeep-buendia-lrt#1"))
@@ -118,7 +118,7 @@ class PackTripSourceTest {
     @Test
     fun cheapestPreferenceStillPicksTheJeep() {
         val trip = ready(source.resolve(rufino, delaRosa, TripPreference.Cheapest))
-        assertEquals("₱12", trip.fare)
+        assertEquals("₱14", trip.fare)
         assertEquals("Cheapest", trip.reason)
         assertTrue(trip.key.startsWith("jeep-buendia-lrt"))
     }
@@ -148,7 +148,7 @@ class PackTripSourceTest {
         val pin = Place("pin", "Pinned spot", "", inMakati = true, lat = 14.5585, lng = 121.0180)
         val trip = source.candidates(pin, delaRosa).first { it.key != "walk" }
 
-        assertEquals("₱12", trip.fare)
+        assertEquals("₱14", trip.fare)
         val walk = trip.legs.first() as Leg.Walk
         assertTrue(walk.meters, walk.meters.startsWith("~4"))
     }
@@ -200,7 +200,7 @@ class PackTripSourceTest {
             val trips = source.candidates(atBoardStop, atAlightStop, preference)
             assertEquals(preference.name, listOf("jeep-buendia-lrt#1", "walk", "bus-buendia-lrt#1"), trips.map { it.key })
         }
-        assertEquals("₱12", ready(source.resolve(atBoardStop, atAlightStop)).fare)
+        assertEquals("₱14", ready(source.resolve(atBoardStop, atAlightStop)).fare)
         assertEquals("11 min", source.candidates(atBoardStop, atAlightStop)[1].minutes)
     }
 
@@ -218,7 +218,7 @@ class PackTripSourceTest {
             val trips = source.candidates(rufino, delaRosa, preference)
             assertTrue(preference.name, trips.none { it.key == "walk" })
             assertTrue(preference.name, trips.first().key.startsWith("jeep-buendia-lrt"))
-            assertEquals(preference.name, "₱12", trips.first().fare)
+            assertEquals(preference.name, "₱14", trips.first().fare)
         }
     }
 

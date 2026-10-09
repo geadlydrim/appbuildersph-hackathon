@@ -57,6 +57,11 @@ val copyPackAssets = tasks.register<Copy>("copyPackAssets") {
         into("pack")
         rename { "osm-makati.json" }
     }
+    // EDSA Carousel stops in Makati (optional, same as the OSM import).
+    from("${rootDir}/../data/pack/carousel-makati.source.json") {
+        into("pack")
+        rename { "carousel-makati.json" }
+    }
     from("${rootDir}/../data/mock/rider-qa.json") {
         into("mock")
     }

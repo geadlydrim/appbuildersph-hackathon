@@ -58,11 +58,11 @@ class PackTripSourceOsmTest {
         val alone = ready(PackTripSource(hero).resolve(rufino, delaRosa))
 
         assertEquals(alone, trip)
-        assertEquals("₱12", trip.fare)
+        assertEquals("₱14", trip.fare)
         assertEquals("Cheapest", trip.reason)
         assertEquals("0", trip.transfers)
         assertFalse(trip.unverified)
-        assertEquals("₱12  ·  7 min", (trip.legs[1] as Leg.Ride).fareAndMinutes)
+        assertEquals("₱14  ·  7 min", (trip.legs[1] as Leg.Ride).fareAndMinutes)
         assertFalse(trip.minutes.contains("est."))
 
         val keys = heroSource.candidates(rufino, delaRosa).map { it.key }

@@ -36,6 +36,8 @@ SEGMENT_MIN_M = 50
 SEGMENT_MAX_M = 6000
 M_PER_MIN = 120
 PLACE_CAP = 400
+# The EDSA Carousel is built separately by carousel.py: OSM's stop list skips Ayala.
+EXCLUDED_RELATIONS = {10183711, 9453755}
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_OUT = os.path.join(HERE, "osm-makati.source.json")
@@ -316,6 +318,8 @@ def build_routes(elements, generated_at):
     stats = {"fetched": len(relations), "kept": 0, "skipped": Counter(), "dropped": Counter()}
     routes, segments, stops = [], [], {}
     for rel in sorted(relations, key=lambda r: r["id"]):
+        if rel["id"] in EXCLUDED_RELATIONS:
+            continue
         tags = rel.get("tags", {})
         rel_id = f"osm-r{rel['id']}"
         line, reason = chain_ways(way_geometries(rel))

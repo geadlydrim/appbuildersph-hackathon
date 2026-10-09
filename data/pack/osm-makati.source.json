@@ -4210,15 +4210,6 @@
    ]
   },
   {
-   "id": "osm-n10303501517",
-   "name": "Tramo",
-   "lat": 14.5380449,
-   "lng": 121.0037733,
-   "modes": [
-    "bus"
-   ]
-  },
-  {
    "id": "osm-n10314671143",
    "name": "Naval Station Jose Francisco",
    "lat": 14.5279821,
@@ -5596,15 +5587,6 @@
    ]
   },
   {
-   "id": "osm-n1784541904",
-   "name": "Taft Avenue",
-   "lat": 14.537718,
-   "lng": 120.9985378,
-   "modes": [
-    "bus"
-   ]
-  },
-  {
    "id": "osm-n251845708",
    "name": "Florence Way",
    "lat": 14.5346618,
@@ -5672,15 +5654,6 @@
    "name": "Circuit Makati",
    "lat": 14.5752264,
    "lng": 121.0192651,
-   "modes": [
-    "bus"
-   ]
-  },
-  {
-   "id": "osm-n3611904129",
-   "name": "Taft Avenue",
-   "lat": 14.5375473,
-   "lng": 120.9994468,
    "modes": [
     "bus"
    ]
@@ -5843,15 +5816,6 @@
    "name": "Tomas Claudio",
    "lat": 14.526283,
    "lng": 120.9970172,
-   "modes": [
-    "bus"
-   ]
-  },
-  {
-   "id": "osm-n6542649635",
-   "name": "Buendia",
-   "lat": 14.5550009,
-   "lng": 121.0349221,
    "modes": [
     "bus"
    ]
@@ -6064,24 +6028,6 @@
    ]
   },
   {
-   "id": "osm-n7666737324",
-   "name": "Guadalupe",
-   "lat": 14.5682641,
-   "lng": 121.0458523,
-   "modes": [
-    "bus"
-   ]
-  },
-  {
-   "id": "osm-n7666737325",
-   "name": "Guadalupe",
-   "lat": 14.5685035,
-   "lng": 121.0460286,
-   "modes": [
-    "bus"
-   ]
-  },
-  {
    "id": "osm-n7796074313",
    "name": "Gate 2",
    "lat": 14.5345279,
@@ -6199,15 +6145,6 @@
    ]
   },
   {
-   "id": "osm-n8449214893",
-   "name": "Buendia",
-   "lat": 14.5551623,
-   "lng": 121.0352755,
-   "modes": [
-    "bus"
-   ]
-  },
-  {
    "id": "osm-n878208507",
    "name": "Leveriza",
    "lat": 14.5538116,
@@ -6244,17 +6181,6 @@
     "61",
     "Ayala Center",
     "Route 59: Ayala–Southwoods"
-   ],
-   "source_class": "osm"
-  },
-  {
-   "id": "osm-r10183711",
-   "name": "Route 1: EDSA Carousel",
-   "mode": "bus",
-   "signboards": [
-    "1",
-    "PITX",
-    "Route 1: EDSA Carousel"
    ],
    "source_class": "osm"
   },
@@ -7519,17 +7445,6 @@
    "source_class": "osm"
   },
   {
-   "id": "osm-r9453755",
-   "name": "Route 1: EDSA Carousel",
-   "mode": "bus",
-   "signboards": [
-    "1",
-    "Monumento",
-    "Route 1: EDSA Carousel"
-   ],
-   "source_class": "osm"
-  },
-  {
    "id": "osm-r9552776",
    "name": "Route 7: Fairview–PITX via Quezon Avenue, Commonwealth",
    "mode": "bus",
@@ -8786,50 +8701,6 @@
    }
   },
   {
-   "route_id": "osm-r9453755",
-   "seq": 1,
-   "from_stop_id": "osm-n3611904129",
-   "to_stop_id": "osm-n8449214893",
-   "fare_php": null,
-   "minutes": null,
-   "minutes_est": 38,
-   "distance_m": 4496,
-   "shape": {
-    "polyline": "ushvZm`fxeFfA{e@zEy]?uFOuOSqIGyDi@kKOsBUiCwCqc@qCab@sBwZaJsi@cJ{tAMcQkHgjAqBqO}Dwl@oBq[g^efFkNwyAqB}RCU{CoQcDsPuB{JcD_MyCyLoIm[{CoJuC{JgSon@aGcQsGwQo\\k~@ef@q{@iGeKse@aq@yd@uo@ebFunGsbAenAap@sz@yKsNmJ_S{TwXoA}AwFoH}F}HyGcJu[{a@kF{FsGcJ{C}DkVmY{`@kf@}QwQskBe`Cw\\y]mh@co@mIkK{]wc@",
-    "engine": "osm-route-geometry",
-    "profile": null,
-    "generated_at": "2026-10-09T22:29:52Z"
-   },
-   "provenance": {
-    "source_class": "osm",
-    "source": "OpenStreetMap relation 9453755",
-    "verified_by": null,
-    "verified_at": null
-   }
-  },
-  {
-   "route_id": "osm-r9453755",
-   "seq": 2,
-   "from_stop_id": "osm-n8449214893",
-   "to_stop_id": "osm-n7666737325",
-   "fare_php": null,
-   "minutes": null,
-   "minutes_est": 17,
-   "distance_m": 1939,
-   "shape": {
-    "polyline": "s`kwZw_lzeFqB{CqBmCecAstAuOyRkSqVsVwY}HeJ_Yi[ad@uj@{jDkjEu_@ya@as@cl@{^mTk[uO}[qNaV_Iig@{Me_BwZqaAiR}HyA_j@aK",
-    "engine": "osm-route-geometry",
-    "profile": null,
-    "generated_at": "2026-10-09T22:29:52Z"
-   },
-   "provenance": {
-    "source_class": "osm",
-    "source": "OpenStreetMap relation 9453755",
-    "verified_by": null,
-    "verified_at": null
-   }
-  },
-  {
    "route_id": "osm-r9552776",
    "seq": 1,
    "from_stop_id": "osm-n1723298741",
@@ -9111,72 +8982,6 @@
    "provenance": {
     "source_class": "osm",
     "source": "OpenStreetMap relation 10183363",
-    "verified_by": null,
-    "verified_at": null
-   }
-  },
-  {
-   "route_id": "osm-r10183711",
-   "seq": 1,
-   "from_stop_id": "osm-n7666737324",
-   "to_stop_id": "osm-n6542649635",
-   "fare_php": null,
-   "minutes": null,
-   "minutes_est": 17,
-   "distance_m": 1942,
-   "shape": {
-    "polyline": "osdxZwt`{eFdYxF|H|AxaAdQd~AzZfg@`NnUxHd\\nNf[xOj]rTtq@fk@|_@vb@j_BrqBviAxwApZ|_@tL`NbPxLbx@taA~RxWh_@rh@|Zd`@fDbDnEzFtC`DfHdK`CtD",
-    "engine": "osm-route-geometry",
-    "profile": null,
-    "generated_at": "2026-10-09T22:29:52Z"
-   },
-   "provenance": {
-    "source_class": "osm",
-    "source": "OpenStreetMap relation 10183711",
-    "verified_by": null,
-    "verified_at": null
-   }
-  },
-  {
-   "route_id": "osm-r10183711",
-   "seq": 2,
-   "from_stop_id": "osm-n6542649635",
-   "to_stop_id": "osm-n10303501517",
-   "fare_php": null,
-   "minutes": null,
-   "minutes_est": 35,
-   "distance_m": 4170,
-   "shape": {
-    "polyline": "qvjwZsikzeFxG`MdDlEbJ~JbLfPdZn_@pxAjhBj_@vj@fWza@`Xb_@d[~_@lKrJdFbFhGdGxOpThCpIuAjAgCxBeDtCqZvWu@n@lDlEfDhEhEnFla@}]dCwBrAkApEfCz_@|e@dGtBfKxIj}@biA|UxZjNjPdZr]vt@j}@t`CnyCno@tx@lTrYvc@vt@dKlPvGzJbJzOjYzj@xF`MtGfOhBhE~CvH~FhObGvP|DdLhUjr@`Kh^lFrSlI`\\tEvS~DtUvApOf@`HdBjMnApLfCpZ\\jDbEjb@tFjr@lJpvAdCtb@?xMpBta@r@lNfBhXlEhp@|@~LT|DHvAn@`KbH|jA|@`O`@|HxArUz@tNJ|A",
-    "engine": "osm-route-geometry",
-    "profile": null,
-    "generated_at": "2026-10-09T22:29:52Z"
-   },
-   "provenance": {
-    "source_class": "osm",
-    "source": "OpenStreetMap relation 10183711",
-    "verified_by": null,
-    "verified_at": null
-   }
-  },
-  {
-   "route_id": "osm-r10183711",
-   "seq": 3,
-   "from_stop_id": "osm-n10303501517",
-   "to_stop_id": "osm-n1784541904",
-   "fare_php": null,
-   "minutes": null,
-   "minutes_est": 5,
-   "distance_m": 568,
-   "shape": {
-    "polyline": "yrivZynnxeFhCpc@xDll@lGf_AF`An@rLdFv[F~Dg@|u@aEpjA",
-    "engine": "osm-route-geometry",
-    "profile": null,
-    "generated_at": "2026-10-09T22:29:52Z"
-   },
-   "provenance": {
-    "source_class": "osm",
-    "source": "OpenStreetMap relation 10183711",
     "verified_by": null,
     "verified_at": null
    }

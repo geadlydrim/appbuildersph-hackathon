@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "version": "0.0.0-carousel-fixture",
+    "built_at": "2026-10-10T00:00:00Z",
+    "shape_precision": 6,
+    "notes": "Test fixture, not real geography. Route fx-a (bus_aircon): 1.9 km + 1.1 km = 3.0 km. Route fx-b (bus_aircon): 3.1 km + 3.1 km = 6.2 km. Route fx-c has no fare_rule and a per-segment fare."
+  },
+  "places": [
+    { "id": "fx-pa1", "name": "Fixture A1", "aliases": [], "lat": 14.600, "lng": 121.03, "stop_ids": ["fx-a1"], "source_class": "public" },
+    { "id": "fx-pa3", "name": "Fixture A3", "aliases": [], "lat": 14.6275, "lng": 121.03, "stop_ids": ["fx-a3"], "source_class": "public" },
+    { "id": "fx-pb1", "name": "Fixture B1", "aliases": [], "lat": 14.700, "lng": 121.03, "stop_ids": ["fx-b1"], "source_class": "public" },
+    { "id": "fx-pb3", "name": "Fixture B3", "aliases": [], "lat": 14.756, "lng": 121.03, "stop_ids": ["fx-b3"], "source_class": "public" },
+    { "id": "fx-pc1", "name": "Fixture C1", "aliases": [], "lat": 14.800, "lng": 121.03, "stop_ids": ["fx-c1"], "source_class": "public" },
+    { "id": "fx-pc3", "name": "Fixture C3", "aliases": [], "lat": 14.8275, "lng": 121.03, "stop_ids": ["fx-c3"], "source_class": "public" }
+  ],
+  "stops": [
+    { "id": "fx-a1", "name": "Fixture A Stop 1", "lat": 14.600, "lng": 121.03 },
+    { "id": "fx-a2", "name": "Fixture A Stop 2", "lat": 14.6171, "lng": 121.03 },
+    { "id": "fx-a3", "name": "Fixture A Stop 3", "lat": 14.6275, "lng": 121.03 },
+    { "id": "fx-b1", "name": "Fixture B Stop 1", "lat": 14.700, "lng": 121.03 },
+    { "id": "fx-b2", "name": "Fixture B Stop 2", "lat": 14.728, "lng": 121.03 },
+    { "id": "fx-b3", "name": "Fixture B Stop 3", "lat": 14.756, "lng": 121.03 },
+    { "id": "fx-c1", "name": "Fixture C Stop 1", "lat": 14.800, "lng": 121.03 },
+    { "id": "fx-c2", "name": "Fixture C Stop 2", "lat": 14.8171, "lng": 121.03 },
+    { "id": "fx-c3", "name": "Fixture C Stop 3", "lat": 14.8275, "lng": 121.03 }
+  ],
+  "routes": [
+    { "id": "fx-a", "name": "Fixture Carousel A", "mode": "bus", "signboards": ["Fixture A"], "fare_rule": "bus_aircon", "source_class": "public" },
+    { "id": "fx-b", "name": "Fixture Carousel B", "mode": "bus", "signboards": ["Fixture B"], "fare_rule": "bus_aircon", "source_class": "public" },
+    { "id": "fx-c", "name": "Fixture Plain Bus C", "mode": "bus", "signboards": ["Fixture C"], "source_class": "public" }
+  ],
+  "segments": [
+    {
+      "route_id": "fx-a", "seq": 1, "from_stop_id": "fx-a1", "to_stop_id": "fx-a2",
+      "fare_php": null, "minutes": null, "minutes_est": 16, "distance_m": 1900,
+      "provenance": { "source_class": "public", "source": "Test fixture", "verified_by": null, "verified_at": null }
+    },
+    {
+      "route_id": "fx-a", "seq": 2, "from_stop_id": "fx-a2", "to_stop_id": "fx-a3",
+      "fare_php": null, "minutes": null, "minutes_est": 10, "distance_m": 1100,
+      "provenance": { "source_class": "public", "source": "Test fixture", "verified_by": null, "verified_at": null }
+    },
+    {
+      "route_id": "fx-b", "seq": 1, "from_stop_id": "fx-b1", "to_stop_id": "fx-b2",
+      "fare_php": null, "minutes": null, "minutes_est": 26, "distance_m": 3100,
+      "provenance": { "source_class": "public", "source": "Test fixture", "verified_by": null, "verified_at": null }
+    },
+    {
+      "route_id": "fx-b", "seq": 2, "from_stop_id": "fx-b2", "to_stop_id": "fx-b3",
+      "fare_php": null, "minutes": null, "minutes_est": 26, "distance_m": 3100,
+      "provenance": { "source_class": "public", "source": "Test fixture", "verified_by": null, "verified_at": null }
+    },
+    {
+      "route_id": "fx-c", "seq": 1, "from_stop_id": "fx-c1", "to_stop_id": "fx-c2",
+      "fare_php": 9, "minutes": null, "minutes_est": 16, "distance_m": 1900,
+      "provenance": { "source_class": "public", "source": "Test fixture", "verified_by": null, "verified_at": null }
+    },
+    {
+      "route_id": "fx-c", "seq": 2, "from_stop_id": "fx-c2", "to_stop_id": "fx-c3",
+      "fare_php": 8, "minutes": null, "minutes_est": 10, "distance_m": 1100,
+      "provenance": { "source_class": "public", "source": "Test fixture", "verified_by": null, "verified_at": null }
+    }
+  ],
+  "transfers": []
+}

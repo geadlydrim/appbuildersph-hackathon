@@ -108,7 +108,7 @@ class TripFinderTest {
         assertEquals(listOf("alpha", "beta"), TripFinder(graph).find(request).map { it.candidateKey })
         assertEquals(
             listOf("beta", "alpha"),
-            TripFinder(graph) { key -> if (key == "beta") 2 else 0 }.find(request).map { it.candidateKey },
+            TripFinder(graph, netVotes = { key -> if (key == "beta") 2 else 0 }).find(request).map { it.candidateKey },
         )
     }
 
@@ -122,8 +122,8 @@ class TripFinderTest {
         )
         val request = TripRequest(setOf("a"), setOf("d"))
 
-        val highVotes = TripFinder(graph) { key -> if (key == "beta") 10 else 3 }.find(request)
-        val lowVotes = TripFinder(graph) { key -> if (key == "alpha") -10 else -3 }.find(request)
+        val highVotes = TripFinder(graph, netVotes = { key -> if (key == "beta") 10 else 3 }).find(request)
+        val lowVotes = TripFinder(graph, netVotes = { key -> if (key == "alpha") -10 else -3 }).find(request)
 
         assertEquals(listOf("alpha", "beta"), highVotes.map { it.candidateKey })
         assertEquals(listOf("alpha", "beta"), lowVotes.map { it.candidateKey })
@@ -138,7 +138,7 @@ class TripFinderTest {
             ),
         )
 
-        val result = TripFinder(graph) { key -> if (key == "slow") 3 else -3 }
+        val result = TripFinder(graph, netVotes = { key -> if (key == "slow") 3 else -3 })
             .find(TripRequest(setOf("a"), setOf("d")))
 
         assertEquals(listOf("quick", "slow"), result.map { it.candidateKey })
@@ -149,7 +149,7 @@ class TripFinderTest {
         val graph = TripGraph(
             listOf(
                 RideEdge("bus-edge", "bus-1", "a", "b", minutes = 7, farePhp = 15),
-                RideEdge("jeep-edge", "jeep-1", "a", "b", minutes = 7, farePhp = 12),
+                RideEdge("jeep-edge", "jeep-1", "a", "b", minutes = 7, farePhp = 14),
             ),
         )
         val finder = TripFinder(graph)
@@ -158,7 +158,7 @@ class TripFinderTest {
             val result = finder.find(TripRequest(setOf("a"), setOf("b"), preference))
 
             assertEquals(listOf("jeep-edge", "bus-edge"), result.map { it.candidateKey })
-            assertEquals(listOf(12, 15), result.map { it.totalFarePhp })
+            assertEquals(listOf(14, 15), result.map { it.totalFarePhp })
         }
     }
 
@@ -224,7 +224,7 @@ class TripFinderTest {
     @Test
     fun findEqualsRankOfGenerateForEveryPreference() {
         val request = TripRequest(setOf("a"), setOf("d"))
-        val voted = TripFinder(finderGraph) { key -> if (key == "unknown-fare|unknown-fare-end") 2 else 0 }
+        val voted = TripFinder(finderGraph, netVotes = { key -> if (key == "unknown-fare|unknown-fare-end") 2 else 0 })
         for (subject in listOf(finder, voted)) {
             val generated = subject.generate(request)
             for (preference in Preference.values()) {
@@ -268,5 +268,54 @@ class TripFinderTest {
         assertEquals(listOf("ride-1|walk-b-c|ride-2"), finder.find(TripRequest(setOf("a"), setOf("d"))).map { it.candidateKey })
         assertEquals(emptyList<TripCandidate>(), finder.find(TripRequest(setOf("b"), setOf("c"))))
         assertEquals(emptyList<TripCandidate>(), finder.find(TripRequest(setOf("x"), setOf("b"))))
+    }
+
+    private val twoRoutes = TripGraph(
+        listOf(
+            RideEdge("r1-1", "route-1", "a", "b", minutes = 5, farePhp = 7, distanceMeters = 1000),
+            RideEdge("r1-2", "route-1", "b", "c", minutes = 5, farePhp = 7, distanceMeters = 1500),
+            RideEdge("r2-1", "route-2", "c", "d", minutes = 5, farePhp = 9, distanceMeters = 2000),
+        ),
+    )
+
+    @Test
+    fun defaultFareSumsEveryEdge() {
+        assertEquals(23, TripFinder(twoRoutes).find(TripRequest(setOf("a"), setOf("d"))).single().totalFarePhp)
+    }
+
+    @Test
+    fun rideFareIsAppliedOncePerRunOfOneRoute() {
+        val runs = mutableListOf<Pair<String, List<String>>>()
+        val finder = TripFinder(twoRoutes, rideFare = { routeId, rides ->
+            runs += routeId to rides.map { it.id }
+            if (routeId == "route-1") 18 else rides.sumOf { it.farePhp!! }
+        })
+
+        val candidate = finder.find(TripRequest(setOf("a"), setOf("d"))).single()
+
+        assertEquals(27, candidate.totalFarePhp)
+        assertEquals(listOf("route-1" to listOf("r1-1", "r1-2"), "route-2" to listOf("r2-1")), runs)
+    }
+
+    @Test
+    fun aNullRideFareMakesTheTotalUnknown() {
+        val finder = TripFinder(twoRoutes, rideFare = { routeId, _ -> if (routeId == "route-1") null else 9 })
+        assertNull(finder.find(TripRequest(setOf("a"), setOf("d"))).single().totalFarePhp)
+    }
+
+    @Test
+    fun aWalkBetweenTwoRidesOnOneRouteEndsTheRun() {
+        val graph = TripGraph(
+            listOf(
+                RideEdge("first", "route-1", "a", "b", minutes = 5, farePhp = 7),
+                WalkEdge("walk", "b", "c", minutes = 2, transferOnly = true),
+                RideEdge("second", "route-1", "c", "d", minutes = 5, farePhp = 7),
+            ),
+        )
+        var runs = 0
+        val finder = TripFinder(graph, rideFare = { _, rides -> runs++; rides.sumOf { it.farePhp!! } })
+
+        assertEquals(14, finder.find(TripRequest(setOf("a"), setOf("d"))).single().totalFarePhp)
+        assertEquals(2, runs)
     }
 }

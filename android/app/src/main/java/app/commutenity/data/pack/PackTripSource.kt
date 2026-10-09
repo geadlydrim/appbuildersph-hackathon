@@ -44,20 +44,33 @@ class PackTripSource(
     private val segmentsByEdgeId = pack.segments.associateBy { edgeId(it) }
     private val signboardsByRoute = pack.routes.associate { it.id to it.signboards }
     private val modeByRoute = pack.routes.associate { it.id to it.mode }
+    private val fareRuleByRoute = pack.routes.mapNotNull { route -> route.fareRule?.let { route.id to it } }.toMap()
     private val graphSegments = pack.segments.filter { it.fromStopId in stopsById && it.toStopId in stopsById }
 
     /** Everything: every ride plus walking links between nearby stops, so riders can transfer on foot. */
     private val finder: TripFinder
 
-    /** The hero pair only ever sees the team's own (non-OSM) rides and no generated walking links. */
+    /** The hero pair only ever sees the team's own (known or collected) rides and no generated walking links. */
     private val heroFinder: TripFinder
 
     init {
         val allRides = graphSegments.map { rideEdge(it) }
-        val heroRides = graphSegments.filter { it.sourceClass != CommutePack.SOURCE_OSM }.map { rideEdge(it) }
+        val heroRides = graphSegments.filter { it.sourceClass == CommutePack.SOURCE_KNOWN || it.sourceClass == CommutePack.SOURCE_COLLECTED }
+            .map { rideEdge(it) }
         val linkedStopIds = graphSegments.flatMapTo(hashSetOf()) { listOf(it.fromStopId, it.toStopId) }
-        finder = TripFinder(TripGraph(allRides + walkLinks(linkedStopIds)), netVotes)
-        heroFinder = TripFinder(TripGraph(heroRides), netVotes)
+        finder = TripFinder(TripGraph(allRides + walkLinks(linkedStopIds)), netVotes, ::fareOfRide)
+        heroFinder = TripFinder(TripGraph(heroRides), netVotes, ::fareOfRide)
+    }
+
+    /**
+     * Fare of one ride (consecutive edges on [routeId]). A route with a `fare_rule` is priced from the ride's total
+     * distance; any other route adds up its segments' own fares, unknown when one is missing.
+     */
+    private fun fareOfRide(routeId: String, ride: List<RideEdge>): Int? {
+        val rule = fareRuleByRoute[routeId]
+        if (rule != null) return FareRules.fare(rule, ride.sumOf { it.distanceMeters })
+        if (ride.any { it.farePhp == null }) return null
+        return ride.sumOf { it.farePhp!! }
     }
 
     /** Unranked finder output per stop pair; ranking (which reads the current votes) runs on every call. */
@@ -261,8 +274,7 @@ class PackTripSource(
                 val rideSegments = ride.map { segmentsByEdgeId.getValue(it.id) }
                 val from = stopsById.getValue(first.fromStopId)
                 val to = stopsById.getValue(ride.last().toStopId)
-                val fares = rideSegments.map { it.farePhp }
-                val fareText = if (fares.any { it == null }) "Fare unknown" else "₱${fares.sumOf { it!! }}"
+                val fareText = fareOfRide(first.routeId, ride)?.let { "₱$it" } ?: "Fare unknown"
                 val times = rideSegments.map { it.minutes ?: it.minutesEst }
                 val rideEstimated = rideSegments.any { it.minutes == null && it.minutesEst != null }
                 val minutesLeg = if (times.any { it == null }) "" else minutesText(times.sumOf { it!! }, rideEstimated)
@@ -374,6 +386,7 @@ class PackTripSource(
         private const val WALK_KEY = WALK_ONLY_TRIP_KEY
         private const val HERO_ASSET_PATH = "pack/hero-trip.json"
         private const val OSM_ASSET_PATH = "pack/osm-makati.json"
+        private const val CAROUSEL_ASSET_PATH = "pack/carousel-makati.json"
         private const val EARTH_RADIUS_M = 6_371_000.0
         private const val METERS_PER_DEGREE = 111_195.0
         private const val TRANSFER_WALK_M = 200.0
@@ -384,15 +397,18 @@ class PackTripSource(
         const val HERO_ORIGIN_ID = "va-rufino"
         const val HERO_DESTINATION_ID = "dela-rosa-pio-del-pilar"
 
-        /** The hero pack, plus the OpenStreetMap pack when it is bundled and valid; trips still work without it. */
+        /** The hero pack, plus the optional OpenStreetMap and EDSA Carousel packs when bundled and valid; trips still work without them. */
         fun fromAssets(context: Context, netVotes: (String) -> Int = { 0 }): PackTripSource {
             val hero = CommutePack.parse(readAsset(context, HERO_ASSET_PATH))
-            val pack = try {
-                hero.merge(CommutePack.parse(readAsset(context, OSM_ASSET_PATH)))
-            } catch (e: Exception) {
-                Log.w(LOG_TAG, "OpenStreetMap pack unavailable; using the hero pack only", e)
-                hero
-            }
+            val pack = listOf(OSM_ASSET_PATH to "OpenStreetMap", CAROUSEL_ASSET_PATH to "EDSA Carousel")
+                .fold(hero) { merged, (path, label) ->
+                    try {
+                        merged.merge(CommutePack.parse(readAsset(context, path)))
+                    } catch (e: Exception) {
+                        Log.w(LOG_TAG, "$label pack unavailable; skipping it", e)
+                        merged
+                    }
+                }
             return PackTripSource(pack, netVotes)
         }
 

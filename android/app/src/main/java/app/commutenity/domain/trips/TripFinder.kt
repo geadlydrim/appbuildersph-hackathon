@@ -55,10 +55,18 @@ data class TripCandidate(
     val minutesEstimated: Boolean = false,
 )
 
-/** Finds and ranks loopless trips without relying on Android or a network connection. */
+/**
+ * Finds and ranks loopless trips without relying on Android or a network connection.
+ *
+ * [rideFare] prices one ride: a run of consecutive ride edges on [routeId]. A null result means the fare is unknown.
+ * The default adds up the edges' own fares.
+ */
 class TripFinder(
     private val graph: TripGraph,
     private val netVotes: (candidateKey: String) -> Int = { 0 },
+    private val rideFare: (routeId: String, rides: List<RideEdge>) -> Int? = { _, rides ->
+        if (rides.any { it.farePhp == null }) null else rides.sumOf { it.farePhp!! }
+    },
 ) {
     private val edges = graph.edges
     private val outgoing: Map<String, List<Int>> = edges.indices.groupBy { edges[it].fromStopId }
@@ -70,7 +78,7 @@ class TripFinder(
      * Every loopless candidate for [request], unranked. Depends only on the graph and the request's stops, so
      * the result can be cached and re-ranked with [rank] as votes change.
      */
-    fun generate(request: TripRequest): List<TripCandidate> = kShortestPaths(request).map { it.toCandidate() }
+    fun generate(request: TripRequest): List<TripCandidate> = kShortestPaths(request).map { it.toCandidate(rideFare) }
 
     /** Orders [candidates] for [preference] using the current net votes and keeps the best few. */
     fun rank(candidates: List<TripCandidate>, preference: Preference): List<TripCandidate> =
@@ -211,14 +219,18 @@ class TripFinder(
         val cost = legs.sumOf { it.minutes } + TRANSFER_PENALTY_MINUTES * legs.transferCount()
         private val key = legs.joinToString("|") { it.id }
 
-        fun toCandidate(): TripCandidate {
+        fun toCandidate(rideFare: (String, List<RideEdge>) -> Int?): TripCandidate {
             val rides = legs.filterIsInstance<RideEdge>()
-            val hasUnknownFare = rides.any { it.farePhp == null }
+            var totalFare: Int? = 0
+            for (run in legs.rideRuns()) {
+                val fare = rideFare(run.first().routeId, run)
+                totalFare = if (fare == null || totalFare == null) null else totalFare + fare
+            }
             return TripCandidate(
                 candidateKey = key,
                 legs = legs,
                 totalMinutes = legs.sumOf { it.minutes },
-                totalFarePhp = if (hasUnknownFare) null else rides.sumOf { it.farePhp!! },
+                totalFarePhp = totalFare,
                 totalDistanceMeters = legs.sumOf { it.distanceMeters },
                 transfers = legs.transferCount(),
                 walkMinutes = legs.filterIsInstance<WalkEdge>().sumOf { it.minutes },
@@ -275,5 +287,19 @@ class TripFinder(
 
         fun List<TripEdge>.transferCount(): Int =
             filterIsInstance<RideEdge>().zipWithNext().count { (first, second) -> first.routeId != second.routeId }
+
+        /** Consecutive ride edges on the same route, grouped: each run is one ride. A walk or a route change ends a run. */
+        fun List<TripEdge>.rideRuns(): List<List<RideEdge>> {
+            val runs = mutableListOf<MutableList<RideEdge>>()
+            var previous: TripEdge? = null
+            for (edge in this) {
+                if (edge is RideEdge) {
+                    val last = previous as? RideEdge
+                    if (last != null && last.routeId == edge.routeId) runs.last().add(edge) else runs += mutableListOf(edge)
+                }
+                previous = edge
+            }
+            return runs
+        }
     }
 }
