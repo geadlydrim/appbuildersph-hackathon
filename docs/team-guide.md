@@ -118,7 +118,7 @@ gh issue edit <number> --add-assignee @me
 
 | Ticket | Who |
 |---|---|
-| [Roles: who owns each workstream?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/2) | Project owner, first. It takes about 5 minutes. |
+| [Who owns each workstream?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/11) | Project owner, first. It takes about 5 minutes. |
 | [Which phone presents the demo?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/3) | **Everyone, now.** Comment with your phone's model, chip, RAM, Android version, and free storage. |
 | [Which corridors does the pack cover?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/6) | Whoever knows the commutes best (the data owner) |
 | [Which sync backend?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/9) | Android owner |
