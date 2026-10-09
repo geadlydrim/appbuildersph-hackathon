@@ -2,7 +2,7 @@
 
 **Project:** CommuteNity
 **Date:** 2026-10-09
-**Version:** 0.3
+**Version:** 0.4
 **Owner:** Implementer
 **Status:** Draft
 **Last reconciled:** 2026-10-09
@@ -11,7 +11,7 @@
 
 ## 1. Purpose and how to use this brief
 
-**Audience:** an AI agent with Figma MCP tools. **Job:** update the EXISTING CommuteNity Figma file (made from the earlier, Metro Manila / ask-first docs) to the current direction ([D20](state.md#5-decisions)–[D29](state.md#5-decisions)): Makati City only, map-first trip builder, road-following lines, offline map, online refresh, in-trip tracking with para alert, ask bar and voice as secondary (T3), no OCR.
+**Audience:** an AI agent with Figma MCP tools. **Job:** update the EXISTING CommuteNity Figma file (made from the earlier, Metro Manila / ask-first docs) to the current direction ([D20](state.md#5-decisions)–[D31](state.md#5-decisions)): Makati City only, map-first trip builder, road-following lines, offline map, online refresh, in-trip tracking with para alert, the ask bar (ask in words and correct-vehicle check) as a secondary input that is part of the MVP ([D31](state.md#5-decisions)), voice optional, no OCR. The hero trip pair is fixed ([D30](state.md#5-decisions)): A = "Ayala Center", B = "Dela Rosa St" (Pio del Pilar).
 
 Docs are canonical; Figma follows docs ([D29](state.md#5-decisions)). If this brief and the DSD disagree on behavior or copy, the DSD wins. If they disagree on Figma names or structure, this brief wins. Record any mismatch in the Change Report; do not ask.
 
@@ -39,20 +39,21 @@ Docs are canonical; Figma follows docs ([D29](state.md#5-decisions)). If this br
 | OSM attribution on every map frame | [§1.7](dsd-commutenity.md#17-osm-attribution) | T0 |
 | Refresh and sync status | [§1.4](dsd-commutenity.md#14-refresh-and-sync-status-t1) | T1 |
 | Tracking mode: progress, current leg, on/off-route banner, para alert (banner + vibration + notification) | [§1.5](dsd-commutenity.md#15-active-trip-tracking-mode-t2) | T2 |
-| Correct-vehicle check (text match, three verdicts) | [§1.6](dsd-commutenity.md#16-ask-in-words-voice-correct-vehicle-check-t3) | T3 |
-| STT mic states with transcript confirmation | §1.6 | T3 |
+| Correct-vehicle check (text match, three verdicts) | [§1.6](dsd-commutenity.md#16-ask-in-words-voice-correct-vehicle-check-t3) | T3 label, MVP ([D31](state.md#5-decisions)) |
+| Ask in words: `AskBar` visible under `TripBuilderCard` on the map home; "understood" chips | §1.1, §1.6 | T3 label, MVP ([D31](state.md#5-decisions)) |
+| STT mic states with transcript confirmation | §1.6 | T3, optional |
 
 ### 2.2 Changed
 
 | Item | From | To |
 |---|---|---|
-| Ask bar | Primary, top of an ask-first home | Secondary (T3): compact pill above the sheet, hidden in T0–T2 frames |
+| Ask bar | Primary, top of an ask-first home | Secondary input, MVP ([D31](state.md#5-decisions)): compact `AskBar` pill under or near `TripBuilderCard`, visible on the MVP map frames; the map trip builder stays primary |
 | Best-route card | Full-width card on the ask home | `TripSheet` content over the map |
 | Place picker | Separate ambiguity screen | `T0-02 Place Search` (search and ambiguity in one screen) |
-| Alternatives sheet, Suggest route, Vote, Sync icon, Setup screen | Metro Manila content | Same jobs, renamed (section 4), Makati placeholder content, map pack download in Setup |
-| Voice | T4 | T3 (STT only, transcript confirmed before use) |
+| Alternatives sheet, Suggest route, Vote, Sync icon, Setup screen | Metro Manila content | Same jobs, renamed (section 4), Makati content (the [D30](state.md#5-decisions) pair names; leg values stay placeholders), map pack download in Setup |
+| Voice | T4 | T3, optional (STT only, transcript confirmed before use); cut before F8 |
 | Signboard text | Read by camera | Typed or spoken by the rider; still shown on `LegRow` as "Hanapin ang '…'" |
-| Sample content | Valenzuela–Recto hero trip | Makati placeholder hero trip, marked TBD ([A13](state.md#4-open-assumptions)) |
+| Sample content | Valenzuela–Recto hero trip | Makati hero pair from [D30](state.md#5-decisions): A = "Ayala Center", B = "Dela Rosa St". Legs (routes, fares, minutes) stay placeholders, marked `TBD (A13)` until the candidate trips are listed ([A13](state.md#4-open-assumptions)) |
 
 ### 2.3 Removed: move to `99 Archive`
 
@@ -75,7 +76,7 @@ Old surfaces (from the earlier DSD v0.2 and PRD §5) and their new homes. Match 
 | Old surface | New frame or component |
 |---|---|
 | Top bar | Top overlay on `T0-01 Home – Map` (`OfflineBadge`, `RefreshStatus`) |
-| Ask bar | `AskBar` component, shown on `T3-01 Ask Bar – States` |
+| Ask bar | `AskBar` component, shown on `T0-01 Home – Map` and the other MVP map frames (D31), and in its states on `T3-01 Ask Bar – States` |
 | Best-route card | `TripSheet` (`T0-03 Best Trip – Sheet`) |
 | Place picker | `T0-02 Place Search` |
 | Alternatives sheet | `T1-03 Alternatives – List` |
@@ -99,11 +100,11 @@ Create, rename, or reorder pages to exactly this list. Use the en dash in `Scree
 | 4 | `03 Screens – T0` | Frames `T0-01`..`T0-04` |
 | 5 | `04 Screens – T1` | Frames `T1-01`..`T1-06` |
 | 6 | `05 Screens – T2` | Frames `T2-01`..`T2-04` |
-| 7 | `06 Screens – T3` | Frames `T3-01`..`T3-05` |
+| 7 | `06 Screens – T3` | Frames `T3-01`..`T3-05`. The page keeps its name. Per [D31](state.md#5-decisions) the ask-in-words frames (`T3-01`, `T3-02`) and the correct-vehicle frames (`T3-04`, `T3-05`) are MVP; only the voice frame (`T3-03`) is optional |
 | 8 | `07 Flows` | Prototype flow clones (section 8) |
 | 9 | `99 Archive` | Archived frames and components |
 
-T4 (learned ranker) has no screen: the `ReasonChip` text may change but the layout does not.
+T4 (learned ranker) has no screen: the `ReasonChip` text may change but the layout does not. The page name `06 Screens – T3` stays even though most of its frames are MVP (D31).
 
 ## 4. Frame list
 
@@ -116,10 +117,12 @@ T4 (learned ranker) has no screen: the `ReasonChip` text may change but the layo
 
 | Frame | Purpose | Contents | States | PRD-F / US |
 |---|---|---|---|---|
-| `T0-01 Home – Map` | Root screen. Set A and B. | Full-bleed `MapPlaceholder`; top overlay (wordmark, `OfflineBadge`, `RefreshStatus`); `TripBuilderCard`; `PinMarker` A/B; my-location button; `TripSheet collapsed`; `AttributionLabel`. `AskBar` layer exists but is hidden. | `empty`, `a-set`, `ab-set`, `map-error`, `pack-error`, `ab-set / dark` | F1, F3 / US-01 |
+| `T0-01 Home – Map` | Root screen. Set A and B. | Full-bleed `MapPlaceholder`; top overlay (wordmark, `OfflineBadge`, `RefreshStatus`); `TripBuilderCard`; `AskBar collapsed` as a secondary pill directly under `TripBuilderCard` (visible, never replacing the pins or the fields; [D31](state.md#5-decisions)); `PinMarker` A/B; my-location button; `TripSheet collapsed`; `AttributionLabel`. | `empty`, `a-set`, `ab-set`, `map-error`, `pack-error`, `ab-set / dark` | F1, F3, F8 / US-01, US-11 |
 | `T0-02 Place Search` | Search pack places for A or B; resolve ambiguity. | `SearchField` focused over the map; list of `PlaceResultRow`; "use my location" row for A; pin-drop hint. | `typing`, `results`, `ambiguous`, `no-results`, `offline-limited` | F1 / US-01, US-03 |
-| `T0-03 Best Trip – Sheet` | Show the best trip on real roads. | Compact `TripBuilderCard` (`A → B`); `MapLine`s by mode; `PinMarker` stops and para stop; `TripSheet` with `TripSummary`, `ReasonChip`, `LegRow`s, `ParaPointRow`, action row ("Start trip" is hidden here and shown in the T2 frames; "Show alternatives", `VoteButtons` and "Suggest a trip" are hidden until T1). | `collapsed`, `half`, `expanded`, `half / sample`, `half / unknown-fare`, `half / walk-offline`, `half / leg-selected`, `half / dark` | F2, F3 / US-02, US-03 (QA-19) |
-| `T0-04 Not In My Data` | Say clearly when it can't help. | Pins on the map; `StateMessage` in `TripSheet half`. | `outside-makati`, `no-route` | F2 / US-03 |
+| `T0-03 Best Trip – Sheet` | Show the best trip on real roads. | Compact `TripBuilderCard` (`A → B`) with the `AskBar collapsed` pill under it; `MapLine`s by mode; `PinMarker` stops and para stop; `TripSheet` with `TripSummary`, `ReasonChip`, `LegRow`s (jeepney, bus, UV legs show the "Tama ba 'tong sasakyan?" entry, `showVehicleCheck`, [D31](state.md#5-decisions)), `ParaPointRow`, action row ("Start trip" is hidden here and shown in the T2 frames; "Show alternatives", `VoteButtons` and "Suggest a trip" are hidden until T1). | `collapsed`, `half`, `expanded`, `half / sample`, `half / unknown-fare`, `half / walk-offline`, `half / leg-selected`, `half / dark` | F2, F3, F8 / US-02, US-03, US-12 (QA-19) |
+| `T0-04 Not In My Data` | Say clearly when it can't help. | Pins on the map; `StateMessage` in `TripSheet half`; `AskBar collapsed` pill under `TripBuilderCard`. | `outside-makati`, `no-route` | F2 / US-03 |
+
+The `AskBar` is visible on `T0-01`, `T0-03` and `T0-04`. On `T0-02 Place Search` the focused `SearchField` and the results list cover its spot while typing; it returns as soon as the field loses focus. No tier flag hides it.
 
 `half / sample` shows `SourceLabel sample` next to every mock value. `half / unknown-fare` shows "Pamasahe: hindi alam" and an "unknown" total (no partial total). `half / walk-offline` shows the dashed `MapLine` with `WalkLabel` for the first and last mile.
 
@@ -147,11 +150,13 @@ T4 (learned ranker) has no screen: the `ReasonChip` text may change but the layo
 
 | Frame | Purpose | Contents | States | PRD-F / US |
 |---|---|---|---|---|
-| `T3-01 Ask Bar – States` | Ask in words, secondary to the map. | Home map with the `AskBar` pill above the sheet. | `collapsed`, `expanded-empty`, `thinking`, `disabled-loading`, `model-error` | F8 / US-11 |
+| `T3-01 Ask Bar – States` | Ask in words, secondary to the map (MVP, D31). | Home map with the `AskBar` pill under `TripBuilderCard`. | `collapsed`, `expanded-empty`, `thinking`, `disabled-loading`, `model-error` | F8 / US-11 |
 | `T3-02 Ask – Understood` | Show that the question set A and B. | Pins A and B placed; chips "A: …", "B: …"; confirm. Ambiguous places link to `T0-02 Place Search / ambiguous`. | `understood`, `ambiguous` | F8 / US-11 |
 | `T3-03 Voice – Mic` | Voice question with confirmation. | `MicButton`; transcript field; confirm or edit. | `listening`, `transcribing`, `confirm-transcript`, `mic-denied`, `nothing-heard` | F9 / US-13 |
 | `T3-04 Vehicle Check – Input` | Ask "Is this the right vehicle?" | Opened from a `LegRow` in `T0-03` or from `T2-02`; text field with mic. | `from-leg`, `from-tracking`, `typing` | F8 / US-12 |
 | `T3-05 Vehicle Check – Verdict` | Show the match result. | `VerdictCard` with large text label and icon, over the leg. | `ride`, `wrong`, `unsure` | F8 / US-12 |
+
+Tags per [D31](state.md#5-decisions): `T3-01`, `T3-02`, `T3-04`, `T3-05` (F8) carry the flag `MVP (D31)`. `T3-03` (voice, F9) is optional; tag it `T3 – optional`. Voice and the ranker are cut before F8.
 
 ## 5. Component inventory
 
@@ -164,7 +169,7 @@ Properties: **V** = variant property, **T** = text, **B** = boolean, **S** = ins
 | `ModeChip` | V `variant` = `jeepney` \| `bus` \| `mrt` \| `lrt` \| `uv` \| `p2p` \| `tricycle` \| `walk`; V `size` = `default` \| `compact`; T `label` | Icon plus text always (never color alone). Fill `mode/<variant>`, text `mode/<variant>-on`. |
 | `SourceLabel` | V `source` = `algorithm` \| `community` \| `sample`; T `votes` (community only) | `algorithm`: neutral outline. `community`: amber tonal, "Community · {n} 👍". `sample`: small neutral tag with info icon; it is the sample-data marker. |
 | `ReasonChip` | T `text` (≤ 4 words) | Neutral tonal. |
-| `LegRow` | S `mode` (a `ModeChip`); T `board`, `alight`, `fare`, `minutes`, `distance`, `walk`, `signboard`; B `showSample`; B `showVehicleCheck`; V `state` = `default` \| `current` \| `done` \| `upcoming` | Stop names bold, ≥ 16 sp. `signboard` hidden for walk, MRT, LRT. `showVehicleCheck` only for jeepney, bus, UV (T3). `done` at 40 % opacity. |
+| `LegRow` | S `mode` (a `ModeChip`); T `board`, `alight`, `fare`, `minutes`, `distance`, `walk`, `signboard`; B `showSample`; B `showVehicleCheck`; V `state` = `default` \| `current` \| `done` \| `upcoming` | Stop names bold, ≥ 16 sp. `signboard` hidden for walk, MRT, LRT. `showVehicleCheck` only for jeepney, bus, UV (MVP, D31). `done` at 40 % opacity. |
 | `ParaPointRow` | T `landmark` | Para icon plus "Mag-para sa {landmark}". |
 | `TripSummary` | T `fare`, `minutes`, `distance`, `walk`, `transfers`; S `reason` (`ReasonChip`); B `showSample` | Unknown values read "unknown"; total unknown if any part is unknown. |
 | `TripSheet` | V `state` = `collapsed` \| `half` \| `expanded`; slot `content` | Heights: `collapsed` 96 dp, `half` 50 % (≈ 458 dp), `expanded` 80 % (≈ 732 dp). Drag handle. Top radius `radius/xl`. |
@@ -187,9 +192,9 @@ Properties: **V** = variant property, **T** = text, **B** = boolean, **S** = ins
 | `TripProgress` | T `legIndex`, `legCount`, `metersToPara`, `stopsToPara`; B `gpsLost` | `gpsLost` replaces distances with "Walang GPS". |
 | `ActiveTripPanel` | S `progress`, `currentLeg`, `nextLeg`; B `simulated` | Contains "End trip". `simulated` shows `SimulatedTag`. |
 | `SimulatedTag` | none | "Simulated GPS". |
-| `AskBar` (T3) | V `state` = `collapsed` \| `expanded` \| `thinking` \| `disabled-loading` \| `error`; T `value`, `progress` | Collapsed is a pill with mic. |
-| `MicButton` (T3) | V `state` = `idle` \| `listening` \| `transcribing` \| `denied` | |
-| `VerdictCard` (T3) | V `verdict` = `ride` \| `wrong` \| `unsure`; T `signboard` | Large text label plus icon; colors `verdict/*`. |
+| `AskBar` (MVP, D31) | V `state` = `collapsed` \| `expanded` \| `thinking` \| `disabled-loading` \| `error`; T `value`, `progress` | Secondary input: collapsed is a pill with mic, placed under or near `TripBuilderCard`; never replaces the pins or fields. The mic is optional (F9), the pill stays visible without it. |
+| `MicButton` (T3, optional) | V `state` = `idle` \| `listening` \| `transcribing` \| `denied` | |
+| `VerdictCard` (MVP, D31) | V `verdict` = `ride` \| `wrong` \| `unsure`; T `signboard` | Large text label plus icon; colors `verdict/*`. |
 | `StateMessage` | V `kind` = `not-in-data` \| `no-route` \| `no-alternatives` \| `map-error` \| `pack-error` \| `model-error` \| `offline-search`; T `title`, `body`, `action` | Copy in section 7. |
 
 Material 3 buttons, icon buttons, text fields, dialogs, and the status and gesture bars come from the file's existing Material 3 kit. Do not rebuild them. Icons are the Material Symbols already in the file. No new logo, illustration, or photo: use the existing wordmark layer, or the text "CommuteNity" in the display face if none exists.
@@ -270,17 +275,18 @@ Text styles (create or update): `Title / Display` (display, bold, 22), `Leg / St
 
 Taglish is the default display language; EN is the reference for review. `{x}` marks a variable text. Use these strings verbatim.
 
-### 7.1 Placeholder tokens (Makati hero trip, TBD per [A13](state.md#4-open-assumptions))
+### 7.1 Placeholder tokens (Makati hero trip: pair fixed by [D30](state.md#5-decisions); legs TBD per [A13](state.md#4-open-assumptions))
 
 | Token | Text |
 |---|---|
-| Origin / destination | `Place A (TBD)` / `Place B (TBD)` |
+| Origin (A) | `Ayala Center`, sublabel `Station Rd, San Lorenzo` |
+| Destination (B) | `Dela Rosa St`, sublabel `Pio del Pilar` |
 | Stops | `Stop 1 (TBD)`, `Stop 2 (TBD)`, … |
 | Landmark | `Landmark (TBD)` |
 | Route and signboard | `Route X (TBD)`, `SIGNBOARD (TBD)` |
 | Fare, minutes, distance, walk | `₱XX`, `XX min`, `X.X km`, `X min` |
 
-Best trip legs, illustrative only: walk, one ride, walk. Alternatives: one `Algorithm` row, one `Community · 12 👍` row. Every placeholder value carries `SourceLabel sample`. Add a sticky `Placeholder: Makati hero trip TBD (A13)` on each frame that shows these.
+The pair names are real (D30) and carry no `SourceLabel sample`. Best trip legs, illustrative only: walk, one ride, walk. Alternatives: one `Algorithm` row, one `Community · 12 👍` row. Every placeholder leg value (route, stop, fare, minutes, distance, signboard, landmark) carries `SourceLabel sample`. Add a sticky `Placeholder legs: routes, fares, minutes TBD (A13)` on each frame that shows leg values. Never invent routes, jeepney names, fares, or minutes for the pair.
 
 ### 7.2 Strings
 
@@ -345,6 +351,7 @@ Best trip legs, illustrative only: walk, one ride, walk. Alternatives: one `Algo
 | Notifications denied | Allow notifications so the para alert can reach you. | I-allow ang notifications para maabisuhan ka sa para. |
 | `AskBar` collapsed | Ask… | Magtanong… |
 | `AskBar` hint | How do I get from {A} to {B}? | Paano pumunta sa {B} mula {A}? |
+| `AskBar` example (hero pair) | How to get from Ayala Center to Pio del Pilar? | Paano pumunta sa Dela Rosa St., Pio del Pilar galing Ayala Center? |
 | `AskBar` loading | Loading model… {pct}% | Nilo-load ang model… {pct}% |
 | `AskBar` error | Can't load the AI model. | Hindi ma-load ang AI model. |
 | Ask understood | Understood: from {A} to {B} | Naintindihan: mula {A} papunta {B} |
@@ -385,9 +392,9 @@ Prototype connections work only inside one page. So wire **only on `07 Flows`**,
 | `Flow C – Alternatives, vote, suggest, sync` | C-01 `T0-03 … / half` (T1 build: action row visible): "Show alternatives" → C-02 `T1-03 Alternatives – List / list`: row tap → C-03 `… / row-expanded`: "Use this trip" → C-01. C-01: 👍 → C-04 `T1-05 Vote – States / up-unsynced` → after delay → C-05 `… / up-synced`; tap again → C-06 `… / none`. C-02 or C-01: "Suggest a trip" → C-07 `T1-04 Suggest Trip – Leg Builder / empty` → C-08 `… / picking-route` → C-09 `… / picking-stop` → C-10 `… / ready` → "Save" → C-11 `… / saved` → C-12 `T1-06 Sync – Two Phones / phone-1-unsynced` → after delay → C-13 `… / phone-2-after-sync`. C-07 invalid → C-14 `… / invalid-leg`. | F5, F6 / US-05–US-08 |
 | `Flow D – Active trip and para` | D-01 `T0-03 … / half` (T2 build): "Start trip" → D-02 `T2-01 Trip – Permissions / rationale`: "Allow" → D-03 `T2-02 Trip Active – Tracking / on-route`: after delay → D-04 `… / off-route` → after delay → D-03; D-03: after delay → D-05 `… / gps-lost` → after delay → D-03; D-03: after delay → D-06 `T2-03 Trip Active – Para Alert / banner` → after delay → D-07 `T2-04 Para Alert – Notification / heads-up`. D-03: "End trip" → D-08 `… / end-confirm` (overlay): confirm → D-09 `T0-01 Home – Map / empty`. D-02: "Not now" → D-10 `… / location-denied`. | F7 / US-09, US-10 |
 | `Flow E – Ask in words and voice` | E-01 `T3-01 Ask Bar – States / collapsed`: pill tap → E-02 `… / expanded-empty`: submit → E-03 `… / thinking` → after delay → E-04 `T3-02 Ask – Understood / understood` → confirm → E-05 `T0-03 … / half`. E-04 variant `ambiguous` → E-06 `T0-02 Place Search / ambiguous` → choose → E-04. E-02: mic tap → E-07 `T3-03 Voice – Mic / listening` → after delay → E-08 `… / transcribing` → E-09 `… / confirm-transcript` → confirm → E-03. E-07 denied → E-10 `… / mic-denied`; nothing heard → E-11 `… / nothing-heard`. E-01 model error → E-12 `… / model-error`. | F8, F9 / US-11, US-13 |
-| `Flow F – Correct vehicle` | F-01 `T0-03 … / half` (T3 build): `showVehicleCheck` tap → F-02 `T3-04 Vehicle Check – Input / from-leg` → type → F-03 `… / typing` → submit → F-04 `T3-05 … / ride`; alternates: F-05 `… / wrong`, F-06 `… / unsure`. Start from tracking: F-07 `T2-02 … / on-route` → vehicle check → F-08 `T3-04 … / from-tracking`. | F8 / US-12 |
+| `Flow F – Correct vehicle` | F-01 `T0-03 … / half` (MVP build): `showVehicleCheck` tap → F-02 `T3-04 Vehicle Check – Input / from-leg` → type → F-03 `… / typing` → submit → F-04 `T3-05 … / ride`; alternates: F-05 `… / wrong`, F-06 `… / unsure`. Start from tracking: F-07 `T2-02 … / on-route` → vehicle check → F-08 `T3-04 … / from-tracking`. | F8 / US-12 |
 
-Where a flow shows a T1/T2/T3 control on a T0 clone, show it in that clone only (a clone state such as `half / t1-actions`); the tier page's frame stays at its own tier's contents.
+Where a flow shows a T1/T2 control on a T0 clone, show it in that clone only (a clone state such as `half / t1-actions`); the tier page's frame stays at its own tier's contents. The `AskBar` and the vehicle-check entry are MVP (D31), so they show on the T0 frames themselves. Flow E's voice branch (E-07 to E-11, F9) is optional; the rest of Flow E and Flow F are MVP.
 
 ## 9. Annotation conventions
 
@@ -398,9 +405,9 @@ Tier: T0 | PRD: F1, F3 | US: US-01 | QA: QA-01, QA-18 | DSD: §1.1
 States: empty, a-set, ab-set, map-error, pack-error
 ```
 
-- IDs come from section 4. QA IDs come from [QAD §6](qad-commutenity.md#6-release-criteria); use QA-18 on every frame, plus QA-17 where `sample` is shown, QA-19 where totals can be unknown, QA-02 where the road-following line is shown, QA-10/QA-11 on `T2-*`, QA-13 on `T3-04/05`, QA-14 on `T3-03`.
-- Decision tags on stickies (use the file's default sticky style): `D20`..`D29`, `A13` (placeholder hero trip), `A14` (attribution text from the map provider), `A16` (thresholds tunable).
-- State flags: `TBD (A13)` on placeholder content; `SIMULATED` on `simulated` frames; `T3 – hidden in T0–T2` on the `AskBar` layer.
+- IDs come from section 4. QA IDs come from [QAD §6](qad-commutenity.md#6-release-criteria); use QA-18 on every frame, plus QA-17 where `sample` is shown, QA-19 where totals can be unknown, QA-02 where the road-following line is shown, QA-10/QA-11 on `T2-*`, QA-12 on `T3-01/02` and on the `AskBar` frames `T0-01`, `T0-03`, `T0-04`, QA-13 on `T3-04/05`, QA-14 on `T3-03`.
+- Decision tags on stickies (use the file's default sticky style): `D20`..`D31`, `D30` (hero pair), `D31` (ask bar in the MVP), `A13` (candidate trips for the D30 pair; leg placeholders), `A14` (attribution text from the map provider), `A16` (thresholds tunable).
+- State flags: `TBD (A13)` on placeholder leg content (routes, fares, minutes); `SIMULATED` on `simulated` frames; `MVP (D31)` on the F8 frames (`T3-01`, `T3-02`, `T3-04`, `T3-05`) and on the `AskBar` layer; `T3 – optional` on `T3-03` (voice).
 - Behavior notes as stickies on `T2-03` and `T2-04`: "Fires once at ~300 m before the alight stop. Vibration + heads-up notification + banner. No sound. No TTS."
 - Page `00 Cover` carries a legend frame listing these tags.
 
@@ -417,7 +424,8 @@ The agent confirms each line in `Change Report › Checklist` as done, or lists 
 - [ ] Dark copies exist for `T0-01 / ab-set`, `T0-03 / half`, `T2-02 / on-route`, `T2-03 / banner`.
 - [ ] Every map frame shows `AttributionLabel`; no straight line on any map except `dashed-walk-offline` with `WalkLabel`.
 - [ ] `SourceLabel sample` appears beside every placeholder value; no real fares, stops, or routes were invented.
-- [ ] `AskBar` is hidden on every T0–T2 frame and visible on T3 frames.
+- [ ] `AskBar` is visible on `T0-01`, `T0-03`, `T0-04` and on every `T3` frame that shows the map home, as a secondary pill under or near `TripBuilderCard`, with the map trip builder still primary; no tier flag hides it in the MVP. F8 frames are tagged `MVP (D31)`, and only `T3-03` (voice) is tagged optional.
+- [ ] Pair names are `Ayala Center` (sublabel `Station Rd, San Lorenzo`) and `Dela Rosa St` (sublabel `Pio del Pilar`) on every frame that shows A and B; no `Place A (TBD)` / `Place B (TBD)` remains; only the legs are `TBD (A13)`.
 - [ ] Text sweep (section 2.3) returns zero hits for `Metro Manila`, `Valenzuela`, `Recto`, `OCR`, `Scan`, `camera` outside `99 Archive`.
 - [ ] Archived items are in `99 Archive` with the `ARCHIVED` prefix and a sticky with reason and D-ID; nothing was deleted.
 - [ ] Every frame has a `meta –` layer with Tier, PRD, US, QA, DSD, and States, and every PRD-F (F1–F9) and US (US-01–US-13) from section 4 is covered by at least one frame.
@@ -429,7 +437,7 @@ The agent confirms each line in `Change Report › Checklist` as done, or lists 
 - Product code, Compose theme export, or code generation.
 - Real map tiles, map screenshots, or any imagery from a map provider. Use `MapPlaceholder` only.
 - New brand assets: logo, illustration, photography, icon sets beyond the Material Symbols already in the file.
-- Real hero-trip content (stops, fares, minutes, routes). It is TBD ([A13](state.md#4-open-assumptions)).
+- Real hero-trip leg content (stops, fares, minutes, routes). It stays TBD until the candidate trips for the [D30](state.md#5-decisions) pair are listed ([A13](state.md#4-open-assumptions)); the pair names themselves are in scope.
 - Screens for OCR signboard scanning, TTS, social feed or profiles, a browser app, iOS, or coverage beyond Makati ([PRD-F11](prd-commutenity.md#3-features-and-priorities)).
 - A screen for the learned ranker (T4); it changes only the reason text.
 - Android system configuration: notification channels, vibration patterns, foreground-service details.

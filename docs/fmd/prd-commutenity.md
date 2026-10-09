@@ -2,9 +2,9 @@
 
 **Project:** CommuteNity
 **Date:** 2026-10-09
-**Version:** 0.3
+**Version:** 0.4
 **Owner:** Project owner
-**Status:** Draft. Re-scoped to Makati City only, with a map-first trip builder ([D20](state.md#5-decisions) to [D29](state.md#5-decisions)).
+**Status:** Draft. Re-scoped to Makati City only, with a map-first trip builder ([D20](state.md#5-decisions) to [D29](state.md#5-decisions)). The hero trip pair is set by [D30](state.md#5-decisions), and PRD-F8 (ask in words) is release-critical per [D31](state.md#5-decisions).
 **Last reconciled:** 2026-10-09
 **IDEA:** [Idea brief](idea-commutenity.md) · **Scope:** [MVP scope](mvp-scope.md) · **Stories:** [User stories](user-stories.md)
 
@@ -34,7 +34,7 @@ Definitions: [IDEA §2](idea-commutenity.md#2-who-its-for). These are target rol
 | PRD-F5 | Alternatives on request | Other ranked candidates, labelled Algorithm or Community, with reason lines and vote counts | Must | T1 |
 | PRD-F6 | Community contributions with local-first sync | Suggest a trip (structured legs plus a note) and vote "this worked / didn't". Stored locally and synced through the secondary backend when online ([D17](state.md#5-decisions)). | Must | T1 |
 | PRD-F7 | In-trip tracking | Offline GPS snapped to the active trip's shape: on-route or off-route status, current leg, distance and stops to the para point, and a para alert before the alight stop. | Must | T2 |
-| PRD-F8 | Ask in words | An on-device LLM turns "How to get from X to Y?" into point A and point B, and turns "Is this the correct vehicle?" into the correct-vehicle check ([D27](state.md#5-decisions)). Phrasing stays grounded in the computed trip. | Should | T3 |
+| PRD-F8 | Ask in words | An on-device LLM turns "How to get from X to Y?" into point A and point B, and turns "Is this the correct vehicle?" into the correct-vehicle check ([D27](state.md#5-decisions)). Phrasing stays grounded in the computed trip. **Release-critical for the 10:00 AM submission and part of the MVP ([D31](state.md#5-decisions)).** | Must | T3 (label kept; part of the MVP per D31) |
 | PRD-F9 | Voice questions | On-device speech-to-text (Whisper) feeding PRD-F8 | Should | T3 |
 | PRD-F10 | Learned on-device ranker | A model trained on preference labels and votes replaces the deterministic baseline if it wins on held-out data ([D11](state.md#5-decisions), [D18](state.md#5-decisions)) | Could | T4 |
 | PRD-F11 | OCR signboard scan, TTS, full social layer, browser app, iOS, coverage beyond Makati | Parked ([D26](state.md#5-decisions), [D20](state.md#5-decisions)) | Won't (this event) | — |
@@ -65,8 +65,8 @@ Design reference: [DSD](dsd-commutenity.md). The map is the home screen; the tri
 | Active trip (tracking) | "Start trip" on the best-trip card | "Naghahanap ng GPS…" | — | GPS unavailable or permission denied: trip stays viewable without tracking; GPS lost mid-trip shows the last known status as stale | Position on the route, "On route", current leg, distance and stops to the para point, ongoing notification |
 | Off route | Tracking sees a deviation past the threshold | — | — | — | "You may be off route" with distance from the route; clears when the rider returns |
 | Para alert | ~300 m before the alight stop ([D25](state.md#5-decisions)) | — | — | — | Vibration, heads-up notification, and an on-screen banner "Para na sa <stop>". Fires once per alight point. No sound. |
-| Ask in words (T3) | Text field or mic on the map | "Nag-iisip sa phone mo…" | Example questions for Makati | Model failed to load or not understood: use the map instead | Point A and point B set; the flow continues in the builder |
-| Correct-vehicle check (T3) | From a leg of the active trip, or asked in words | "Checking…" | — | Nothing typed or recognised: "Type the signboard text" | Shows the text read and "Yes, ride this", "No, look for '<signboard>'", or "Not sure, check the signboard" ([D27](state.md#5-decisions)) |
+| Ask in words (PRD-F8, MVP per [D31](state.md#5-decisions)) | Text field or mic on the map | "Nag-iisip sa phone mo…" | Example questions for Makati | Model failed to load or not understood: use the map instead | Point A and point B set; the flow continues in the builder |
+| Correct-vehicle check (PRD-F8, MVP per [D31](state.md#5-decisions)) | From a leg of the active trip, or asked in words | "Checking…" | — | Nothing typed or recognised: "Type the signboard text" | Shows the text read and "Yes, ride this", "No, look for '<signboard>'", or "Not sure, check the signboard" ([D27](state.md#5-decisions)) |
 | Voice (T3) | Mic button | Listening, then transcribing | — | Mic denied or nothing heard | Transcript shown for confirmation, then fills Ask |
 
 Primary path: open → set A and B on the map → best-trip card and map → (show alternatives) → (vote / suggest) → (start trip → on route → para alert) → sync and refresh whenever online.
@@ -74,7 +74,7 @@ Primary path: open → set A and B on the map → best-trip card and map → (sh
 ```mermaid
 flowchart TD
     A[Open app offline] --> B[Map trip builder: set A and B<br/>tap / drag / search / my location]
-    W[Ask in words or voice - T3] -.sets.-> B
+    W[Ask in words - F8, MVP; or voice - F9, optional] -.sets.-> B
     B --> C{A and B inside Makati<br/>and near stops?}
     C -->|No| N[Not in my data]
     C -->|Yes| E[Generate candidates: algorithm + community]
@@ -96,7 +96,7 @@ flowchart TD
     O --> M
     R --> P[Para alert near the alight stop]
     P --> Z[Arrived]
-    T -.T3.-> K[Correct-vehicle check]
+    T -.F8.-> K[Correct-vehicle check]
 ```
 
 The app has no user-facing accounts. Contributions use an internal anonymous Auth identity and sync through the server-side validation boundary ([D17](state.md#5-decisions)). GPS tracks never leave the phone ([SDD §5](sdd-commutenity.md#5-security-and-privacy)).
@@ -107,7 +107,7 @@ These events are logged on the phone only, for the demo and for evals. They neve
 
 | Event | Trigger | Properties | Metric |
 |---|---|---|---|
-| `question_parsed` | LLM parser returns (T3) | Latency ms, ok/fail, ambiguity flag | Parse success, latency |
+| `question_parsed` | LLM parser returns (PRD-F8) | Latency ms, ok/fail, ambiguity flag | Parse success, latency |
 | `route_picked` | Best-trip card renders | Candidate count, source of the pick, scorer (baseline/ranker), total latency ms | End-to-end latency, coverage |
 | `alternatives_opened` | Sheet opens | Count by source | Use of alternatives |
 | `contribution_saved` | Suggestion or vote stored | Type, synced flag | Contribution volume |
@@ -116,17 +116,17 @@ These events are logged on the phone only, for the demo and for evals. They neve
 | `trip_started` | "Start trip" tapped | Source of the trip, leg count, GPS provider | Tracking use |
 | `off_route` | Off-route state entered | Leg index, max distance from the route (m), duration (s) | Threshold tuning ([A16](state.md#4-open-assumptions)) |
 | `para_alert_fired` | Para alert fires | Leg index, distance to the para point at fire (m), GPS accuracy (m) | Alert reliability: fires once, at the right place |
-| `model_loaded` | Model ready (T3) | Model ID, load ms | Cold vs warm start |
+| `model_loaded` | Model ready (PRD-F8) | Model ID, load ms | Cold vs warm start |
 
 ## 6. Cut Line
 
-Tiers are built strictly in order ([MVP scope](mvp-scope.md#tiers)). The MVP is T0 + T1 + T2. Nothing from T3 or later merges into the demo build before T2 is demo-safe. LLM, STT, and ranker work starts early in parallel but stays off the demo path until its tier. The ranker also stays off until it beats the baseline. Cut rules: [BUILD §1](build-commutenity.md#1-build-sequence).
+Tiers are built strictly in order ([MVP scope](mvp-scope.md#tiers)), with one exception: **the MVP is T0 + T1 + T2 + PRD-F8** ([D31](state.md#5-decisions)). PRD-F8 keeps its T3 label but merges into the demo build, behind its feature flag, as soon as T0 is demo-safe, independent of T1 and T2. Voice (PRD-F9) and the ranker (PRD-F10) stay off the demo path until their tier, and are cut before F8. The ranker also stays off until it beats the baseline. Cut rules: [BUILD §1](build-commutenity.md#1-build-sequence).
 
 ## 7. AI Behavior
 
-All inference runs on the phone ([SDD §8](sdd-commutenity.md#8-ai-architecture-and-safety)). T0 to T2 need no model: the trip, reason line, tracking, and para alert come from deterministic code and templates.
+All inference runs on the phone ([SDD §8](sdd-commutenity.md#8-ai-architecture-and-safety)). T0 to T2 need no model: the trip, reason line, tracking, and para alert come from deterministic code and templates. The MVP's model is the PRD-F8 on-device LLM ([D31](state.md#5-decisions)). If the LLM speed test fails, the fallbacks are a smaller model, then llama.cpp, and last the rule-based parser plus on-device embedding place search; never a cloud model.
 
-- **LLM parse (PRD-F8, T3):** returns JSON matching the [parser contract](sdd-commutenity.md#4-module-contracts), at low temperature. It does one of two things: extract an origin and destination (and optional preference) from a question, or extract the signboard or route-name text from a vehicle question. On invalid output it retries once, then asks the rider to rephrase or use the map. Extracted places still go through place search before pins are set.
+- **LLM parse (PRD-F8, release-critical per [D31](state.md#5-decisions)):** returns JSON matching the [parser contract](sdd-commutenity.md#4-module-contracts), at low temperature. It does one of two things: extract an origin and destination (and optional preference) from a question, or extract the signboard or route-name text from a vehicle question. On invalid output it retries once, then asks the rider to rephrase or use the map. Extracted places still go through place search before pins are set.
 - **Trip pick (PRD-F2, PRD-F10):** candidates come only from the deterministic generator and from validated community suggestions. The scorer or ranker only orders them; it never creates routes or facts.
 - **Phrasing (PRD-F8):** input is the structured best trip. Output is a short Taglish or English answer. If the phrasing adds any number or place not in `factsUsed`, the app shows the template instead.
 - **Correct-vehicle check (PRD-F8, [D27](state.md#5-decisions)):** the verdict is a deterministic fuzzy match of the typed or spoken text against the active trip's `routes.signboards[]` and route names. The LLM only extracts the text; it never decides "ride this".
@@ -136,9 +136,9 @@ All inference runs on the phone ([SDD §8](sdd-commutenity.md#8-ai-architecture-
 
 ## 8. Dependencies
 
-- An Android demo phone that can run the chosen LLM and Whisper ([A4](state.md#4-open-assumptions), [A12](state.md#4-open-assumptions)); gates T3 only.
+- An Android demo phone that can run the chosen LLM ([A4](state.md#4-open-assumptions), [A12](state.md#4-open-assumptions)); the speed test picks the PRD-F8 model and runtime ([D31](state.md#5-decisions)), and Whisper (PRD-F9) is optional.
 - A Makati map pack that MapLibre Native Android renders offline ([A14](state.md#4-open-assumptions)).
-- A Makati hero trip with at least two genuinely different trips ([A13](state.md#4-open-assumptions)).
+- The Makati hero trip pair ([D30](state.md#5-decisions)): Ayala Center to Dela Rosa Street, Pio del Pilar. At least two genuinely different candidate trips for it must be verified from `collected` or `known` data ([A13](state.md#4-open-assumptions)).
 - A shape-routing engine for the data build ([A15](state.md#4-open-assumptions)).
 - A curated pack with fares, minutes, distances, and road shapes ([data plan](data-commutenity.md)).
 - GPS accuracy good enough in Makati for the off-route and para thresholds ([A16](state.md#4-open-assumptions)).
@@ -150,12 +150,13 @@ All inference runs on the phone ([SDD §8](sdd-commutenity.md#8-ai-architecture-
 
 | Stage | Entry | Exit | Owner |
 |---|---|---|---|
-| Specify / Shape | Docs and wayfinder map | D20 to D29 recorded; A13 to A15 closed before their checkpoints | Project owner |
+| Specify / Shape | Docs and wayfinder map | D20 to D31 recorded; A13 (candidate trips for the D30 pair) to A15 closed before their checkpoints | Project owner |
 | T0 skeleton | CP1 map spike passes; pack v0 with shapes | US-01 to US-03 pass offline on the demo phone | P1, P3, P4 |
+| F8 ask in words (T3 label, MVP per [D31](state.md#5-decisions)) | T0 demo-safe (it merges behind its feature flag, independent of T1 and T2); LLM speed test done and a model chosen | ~4:30 AM (CP-F8): US-11 and US-12 pass offline; tag `demo-safe-f8` | P2 |
 | T1 demo-ready | T0 passes | US-04 to US-08 pass; [QAD gate](qad-commutenity.md#6-release-criteria) for T0 + T1 | Whole team |
 | T2 tracking | T1 demo-safe | US-09 and US-10 pass, including the mock-location GPS track | P1, P3 |
-| T3 ask in words and voice | T2 demo-safe; LLM speed test passed | US-11 to US-13 pass | P2 |
+| T3 voice | T2 demo-safe; F8 passing | US-13 passes (optional; cut before F8) | P2 |
 | T4 ranker | Eval beats baseline | Ranker swapped in; eval recorded | P3 |
 | Freeze and submit | 8:00 AM feature freeze | Submitted before 10:00 AM | Project owner |
 
-**Rollback trigger:** any regression in the offline T0/T1/T2 path, a wrong fact during rehearsal, a para alert that fires at the wrong place or more than once, or a refresh or sync failure that blocks the UI. Action: install the last `demo-safe-*` APK ([BUILD §5](build-commutenity.md#5-conventions-and-definition-of-done)) and turn off the failing tier's feature flag.
+**Rollback trigger:** any regression in the offline T0/T1/T2 path, a wrong fact during rehearsal, a para alert that fires at the wrong place or more than once, or a refresh or sync failure that blocks the UI. Action: install the last `demo-safe-*` APK ([BUILD §5](build-commutenity.md#5-conventions-and-definition-of-done)) and turn off the failing tier's feature flag. A failing F8 reverts to the next on-device fallback ([D31](state.md#5-decisions)), never to a cloud model.

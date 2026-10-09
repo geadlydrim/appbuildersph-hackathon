@@ -2,7 +2,7 @@
 
 **Project:** CommuteNity
 **Date:** 2026-10-09
-**Version:** 0.3
+**Version:** 0.4
 **Owner:** Project owner
 **Status:** Draft
 **Last reconciled:** 2026-10-09
@@ -23,7 +23,7 @@ The best route also isn't always the "official" one. Riders know shortcuts and c
 
 **Insight (why local, why now):** a Makati vector-tile extract and a curated commute pack, with road shapes precomputed ahead of time, are small enough to live on a mid-range Android phone. Trip computation and GPS tracking need no network, and small LLM and speech models now run on-device too. Together they make an assistant that never needs the network when you're actually traveling. It still refreshes its data and learns from community contributions whenever the phone is online. That fits the challenge exactly: *"remains genuinely useful when the cloud disappears."*
 
-**Riskiest assumption:** the offline map renders on the demo phone, the precomputed road shapes make a trip that looks right on real roads, and the pack plus contributions produce a trip that riders would actually agree is the best one. This has to hold reliably enough for a live demo ([SCRUTINY §4](scrutiny-commutenity.md#4-assumption-stress-test), [A13–A16](state.md#4-open-assumptions)).
+**Riskiest assumption:** the offline map renders on the demo phone, the precomputed road shapes make a trip that looks right on real roads, the pack plus contributions produce a trip that riders would actually agree is the best one, and the on-device LLM (PRD-F8, release-critical per [D31](state.md#5-decisions)) runs fast enough on the demo phone to turn a typed question into point A and B. This has to hold reliably enough for a live demo ([SCRUTINY §4](scrutiny-commutenity.md#4-assumption-stress-test), [A13–A16](state.md#4-open-assumptions)).
 
 ## 2. Who It's For
 
@@ -49,13 +49,16 @@ The full tiering is in [MVP scope](mvp-scope.md).
 | Alternatives on request (algorithm and community) | T1 |
 | Suggest a trip or vote "this worked"; sync when online | T1 |
 | In-trip tracking: on-route status and the para alert (offline GPS) | T2 |
-| Ask in words, correct-vehicle text check, voice (speech-to-text) | T3 |
+| Ask in words and the correct-vehicle text check, through an on-device LLM (PRD-F8) | Release-critical, in the MVP ([D31](state.md#5-decisions)); T3 label |
+| Voice (speech-to-text) | T3 voice, optional; cut before F8 |
 | On-device ranker trained on preferences and votes | T4 upgrade; never blocks |
 | Full social (feed, comments, profiles, accounts) | Parked |
 | OCR signboard scan, text-to-speech, coverage beyond Makati | Parked / Won't this event |
 | Browser app | After the event |
 
 **If we only ship one thing:** the phone is in airplane mode and someone sets two pins on the Makati map. The app automatically picks the best trip and draws it on real roads, with the legs, the boarding and alighting points, the fares, the walk time, and where to say "para". Everything comes from the pack and map on the phone.
+
+**The MVP adds one more thing:** the rider can also ask in words, for example "How to get from Ayala Center to Pio del Pilar?" (the hero pair, [D30](state.md#5-decisions)), and an on-device LLM sets the two pins. This is what makes the submission run meaningful local AI inference ([D31](state.md#5-decisions)).
 
 **Explicitly out of scope:** accounts, social feed, comments, turn-by-turn navigation, real-time vehicle locations, ride-hailing, payments, coverage beyond Makati, OCR signboard scanning, text-to-speech, iOS.
 

@@ -2,21 +2,21 @@
 
 **Project:** CommuteNity
 **Date:** 2026-10-09
-**Version:** 0.3
+**Version:** 0.4
 **Owner:** Presenter (P4)
-**Status:** Draft. Rewritten for the Makati-only, map-first scope ([D20](state.md#5-decisions)–[D28](state.md#5-decisions)).
+**Status:** Draft. Rewritten for the Makati-only, map-first scope ([D20](state.md#5-decisions)–[D28](state.md#5-decisions)). The hero pair ([D30](state.md#5-decisions)) and the on-device LLM as the MVP's model ([D31](state.md#5-decisions)) are reflected below.
 **Last reconciled:** 2026-10-09
 **Source brief:** [Idea](idea-commutenity.md) · **Product plan:** [PRD](prd-commutenity.md)
 
 ## 1. Story
 
-Open on a New Arrival in Makati: no signal, a map, and two places to connect. Turn on airplane mode. Tap point A and point B, and the phone draws the best trip on real roads, with fares, minutes, and where to say "para". Show what other riders suggest. Start the trip and watch the phone follow along and tell the rider when to say "para". Then ask in words, check a vehicle, and close on why this only works locally.
+Open on a New Arrival in Makati: no signal, a map, and two places to connect. Turn on airplane mode. Tap point A and point B, and the phone draws the best trip on real roads, with fares, minutes, and where to say "para". Show what other riders suggest. Start the trip and watch the phone follow along and tell the rider when to say "para". Then ask in words (the on-device LLM), check a vehicle, and close on why this only works locally.
 
 This script describes the intended demo. Present only what works at the freeze, and label any unfinished tier or any simulated part. Say plainly what runs on the phone.
 
 ## 2. Timed Scenes
 
-The phone is mirrored on the venue display. The hero trip is the Makati pair chosen under [A13](state.md#4-open-assumptions).
+The phone is mirrored on the venue display. The hero trip is the D30 pair ([D30](state.md#5-decisions)): **A = Ayala Center → B = Dela Rosa Street, Pio del Pilar**, Makati. Example question: "Paano pumunta sa Dela Rosa St., Pio del Pilar galing Ayala Center?" / "How to get from Ayala Center to Pio del Pilar?" Its candidate trips are verified under [A13](state.md#4-open-assumptions); don't state a route, fare, or minutes in the script until they are.
 
 | Time | On screen | Script and action |
 |---|---|---|
@@ -25,12 +25,12 @@ The phone is mirrored on the venue display. The hero trip is the Makati pair cho
 | 0:45–1:45 | The map. Tap point A, tap point B (or drag, or search a place). | The best trip appears, drawn on real roads: legs, fares, minutes, distance, walk time, "para sa ⟨landmark⟩", and a reason chip. "We worked out the road lines beforehand and stored them in the pack. The phone does the ranking. Every stop and fare comes from our verified pack." Tap a point outside Makati: "Not in my data." |
 | 1:45–2:25 | Show alternatives (T1) | "Want other options?" Open the sheet: Algorithm and Community trips with vote counts, drawn on the map. "Riders know shortcuts. Here's one a rider shared." Vote 👍 offline; it saves on the phone and syncs later. "When there's signal, the phone refreshes its pack and map. When there isn't, it still works." |
 | 2:25–3:25 | Start trip: tracking and the para alert (T2) | Tap "Start trip". The phone follows the position along the trip: on route, the current leg, distance to the para point. Then the alert: vibration, a notification, and a banner "Para na! ⟨stop⟩". **If the route is replayed from a mock-location track, say "This is a simulated route".** "GPS works without data. The phone matches it to the stored road line. Your GPS track never leaves the phone and is gone when the trip ends." |
-| 3:25–4:05 | Ask in words, check the vehicle, voice (T3) | Type or say "Paano pumunta sa ⟨destination⟩ galing ⟨origin⟩?" and the pins are set. Then "Is this the correct vehicle?" with the signboard text: "No, look for '⟨signboard⟩'", then a matching one: "Yes, ride this." Voice: show the transcript for confirmation. "The on-device model reads the question. A strict text match decides the answer. The model can't say 'ride this' on its own." Skip any part that isn't shipped. |
+| 3:25–4:05 | Ask in words and check the vehicle (PRD-F8, in the MVP per [D31](state.md#5-decisions)); voice only if shipped | Type or say "Paano pumunta sa Dela Rosa St., Pio del Pilar galing Ayala Center?" and the pins are set (A = Ayala Center, B = Pio del Pilar), then the same trip appears. Then "Is this the correct vehicle?" with the signboard text: "No, look for '⟨signboard⟩'", then a matching one: "Yes, ride this." Voice (optional): show the transcript for confirmation. "The on-device model reads the question. A strict text match decides the answer. The model can't say 'ride this' on its own." Skip voice if it isn't shipped; ask in words is part of the MVP and stays in. |
 | 4:05–4:20 | The trained ranker (T4, only if shipped) | "We trained a ranker on which trips riders prefer. On held-out trips it agrees with riders X% of the time, versus Y% for our hand-tuned rules." Use real numbers, and name the data as team-generated. |
 | 4:20–4:45 | Why local | Four reasons: no signal, no load, seconds to decide, private trips. "A cloud version fails at exactly the moment you need it. GPS tracking needs no data, and your track stays on the phone. The network is used only to refresh, to share community suggestions, and, if you ask, to fetch a walking route or search a place." |
 | 4:45–5:00 | Close | What runs on the phone, and what's next: more areas beyond Makati and real riders' contributions. |
 
-**Total:** 300 seconds. Rehearse with real latency. Cut order if time runs short: the ranker scene (4:05), then voice, then the rest of the T3 scene. Don't cut the airplane-mode, trip, or tracking scenes.
+**Total:** 300 seconds. Rehearse with real latency. Cut order if time runs short: the ranker scene (4:05), then voice. Keep ask in words and the vehicle check, which carry the Local AI claim. Don't cut the airplane-mode, trip, or tracking scenes.
 
 ## 3. Demo Preparation and Fallback
 
@@ -40,7 +40,7 @@ The phone is mirrored on the venue display. The hero trip is the Makati pair cho
   - Mock-location app selected and the hero-trip GPX track loaded ([QAD §2](qad-commutenity.md#2-data-and-environment)); location and notification permissions granted; the screen-off case tried once.
   - Mirroring tested at the 12:15 PM AV check.
   - Second phone already synced with a community suggestion.
-  - If T3 ships: models pre-downloaded, 3 covered questions and 1 out-of-coverage rehearsed, and the signboard texts for the vehicle check written down.
+  - The F8 LLM model pre-downloaded (and Whisper, if voice ships); the hero question, 3 covered questions, and 1 out-of-coverage question rehearsed; and the signboard texts for the vehicle check written down.
 - **Fallback:**
   - If tracking isn't passing, **demo with the recorded mock-GPS route and say "simulated route"**. The same applies if the live track misbehaves on stage.
   - If refresh or sync fails, say "it refreshes and syncs when online", use the bundled pack, and show the local unsynced marker.
@@ -53,7 +53,7 @@ The phone is mirrored on the venue display. The hero trip is the Makati pair cho
 | Criterion | Weight | Proof in the demo |
 |---|---:|---|
 | Problem & Usefulness | 25% | The Makati story; New Arrival; a best trip on real roads, explained; a para alert; community alternatives |
-| Local AI Implementation | 25% | Airplane mode on stage; offline map and on-phone tracking; whichever of the on-device LLM, speech model, and ranker shipped; the four "why local" reasons. **Claim only what shipped.** The MVP alone has no learned model ([SCRUTINY FC-18](scrutiny-commutenity.md#2-claim--reference-audit)). |
+| Local AI Implementation | 25% | Airplane mode on stage; offline map and on-phone tracking; the on-device LLM as the MVP's model ([D31](state.md#5-decisions)): ask in words and the vehicle-text extraction run on the phone; plus whichever of the speech model and ranker shipped; the four "why local" reasons. **Claim only what shipped.** If a fallback replaced the LLM (smaller model, llama.cpp, or the rule-based parser plus on-device embeddings), name it, per [SCRUTINY FC-18](scrutiny-commutenity.md#2-claim--reference-audit). |
 | Technical Execution | 20% | Works live; deterministic routing and map-matching explain why it's reliable; the simulated route is labelled |
 | Innovation | 15% | A map-first trip builder that works offline, plus tracking with a para alert, plus local-first community knowledge, plus an on-device ranker if shipped |
 | Product & Demo Quality | 15% | One clean flow on a real phone; honest states |
@@ -89,4 +89,4 @@ Rules source: [JUDGING](JUDGING.md#judging-criteria).
 
 **Why does this product benefit from running AI locally?**
 
-Commuters need help exactly where connectivity fails: underground stations, packed terminals, a prepaid SIM with no load left. They need it within seconds, before the jeep leaves. CommuteNity puts the whole trip on the phone: an offline Makati map, a local commute pack, trip ranking, GPS tracking with a "para" alert, and ⟨if shipped: a language model for questions in Taglish and English, on-device speech-to-text, and a route ranker trained on rider preferences⟩. It answers instantly with no signal, costs nothing per question, and never sends your questions, voice, or GPS track to a server. The track is processed on the phone and discarded when the trip ends. The phone refreshes its pack and map, fetches optional walking routes, and syncs community route suggestions, only when you're back online.
+Commuters need help exactly where connectivity fails: underground stations, packed terminals, a prepaid SIM with no load left. They need it within seconds, before the jeep leaves. CommuteNity puts the whole trip on the phone: an offline Makati map, a local commute pack, trip ranking, GPS tracking with a "para" alert, an on-device language model for questions in Taglish and English ⟨model and runtime, to confirm⟩, and ⟨if shipped: on-device speech-to-text and a route ranker trained on rider preferences⟩. It answers instantly with no signal, costs nothing per question, and never sends your questions, voice, or GPS track to a server. The track is processed on the phone and discarded when the trip ends. The phone refreshes its pack and map, fetches optional walking routes, and syncs community route suggestions, only when you're back online.
