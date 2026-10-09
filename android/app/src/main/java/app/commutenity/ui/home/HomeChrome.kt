@@ -383,7 +383,8 @@ fun MyLocationButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .size(48.dp)
             .shadow(6.dp, CircleShape, ambientColor = colors.shadow, spotColor = colors.shadow)
             .background(colors.surface, CircleShape)
-            .clickable(onClick = onClick),
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = "Use my location (sample, not GPS)" },
         contentAlignment = Alignment.Center,
     ) {
         Box(

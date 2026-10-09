@@ -40,10 +40,10 @@ fun SheetHandle(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun PeekCopy(modifier: Modifier = Modifier) {
+fun PeekCopy(text: String = "Pick A and B on the map.", modifier: Modifier = Modifier) {
     val colors = LocalCommuteColors.current
     Text(
-        text = "Pick A and B on the map.",
+        text = text,
         color = colors.ink,
         fontWeight = FontWeight.Medium,
         fontSize = 15.sp,
@@ -52,7 +52,11 @@ fun PeekCopy(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun NotInDataMessage(onChangeDestination: () -> Unit, modifier: Modifier = Modifier) {
+fun NotInDataMessage(
+    onChangeDestination: () -> Unit,
+    modifier: Modifier = Modifier,
+    changeLabel: String = "Change destination",
+) {
     val colors = LocalCommuteColors.current
     Column(modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
         Text(
@@ -62,7 +66,7 @@ fun NotInDataMessage(onChangeDestination: () -> Unit, modifier: Modifier = Modif
             lineHeight = 22.sp,
         )
         Text(
-            text = "Change destination",
+            text = changeLabel,
             color = colors.paraOn,
             fontWeight = FontWeight.Bold,
             fontSize = 15.sp,
@@ -80,6 +84,7 @@ fun NotInDataMessage(onChangeDestination: () -> Unit, modifier: Modifier = Modif
 fun BestTripContent(
     trip: Trip,
     onOpenQuestions: () -> Unit = {},
+    workedCount: Int = 0,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalCommuteColors.current
@@ -105,6 +110,18 @@ fun BestTripContent(
             trip.legs.forEachIndexed { index, leg ->
                 StepRow(leg = leg, last = index == trip.legs.lastIndex)
             }
+        }
+        if (workedCount > 0) {
+            val riders = if (workedCount == 1) "1 rider says" else "$workedCount riders say"
+            Text(
+                text = "$riders this works · sample",
+                color = colors.ink,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .clickable(onClick = onOpenQuestions),
+            )
         }
         Text(
             text = "Questions",
