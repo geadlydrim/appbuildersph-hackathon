@@ -4,7 +4,7 @@ Read this once before you start. It takes about 10 minutes.
 
 ## 1. The big picture (plain English)
 
-**What we're building.** CommuteNity is an Android app for **Makati City**. You set where you are (point A) and where you're going (point B) on a map. It picks the best trip: which jeep or train, where to say "para", and how much it costs, and draws it on real roads. It works **with no signal**, because the map, the commute data, and the road shapes are all stored on the phone and everything is computed there. When the phone is online it refreshes that data. While you ride, GPS tells you whether you're still on route and buzzes before your stop. Riders can also share their own trips and vote on what worked, and ask and answer questions that give small, bounded evidence for a trip (rider Q&A, saved on the phone only). You can also ask in words, for example "How to get from Ayala Center to Pio del Pilar?": a language model that runs on the phone reads the question and sets A and B. That is part of the MVP. Asking by voice comes later, if there's time. We are **not** building turn-by-turn navigation, a signboard camera scanner, or spoken answers.
+**What we're building.** CommuteNity is an Android app for **Makati City**. You set where you are (point A) and where you're going (point B) on a map. It picks the best trip: which jeep or train, where to say "para", and how much it costs, and draws it on real roads. It works **with no signal**, because the map, the commute data, and the road shapes are all stored on the phone and everything is computed there. When the phone is online it refreshes that data. While you ride, GPS tells you whether you're still on route and buzzes before your stop. Riders can also share their own trips and vote on what worked, and ask and answer questions that give small, bounded evidence for a trip (rider Q&A, saved on the phone only). You can also ask in words, for example "How to get from V.A. Rufino St to Pio del Pilar?": a language model that runs on the phone reads the question and sets A and B. That is part of the MVP. Asking by voice comes later, if there's time. We are **not** building turn-by-turn navigation, a signboard camera scanner, or spoken answers.
 
 **Deadline.** The code freeze is **10:00 AM, Oct 10**. Whatever is on GitHub at 10:00 AM is what the judges see.
 
@@ -122,7 +122,7 @@ gh issue edit <number> --add-assignee @me
 |---|---|
 | ~~[Who owns each workstream?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/11)~~ | **Superseded (D35):** no fixed role owners. Anyone claims any issue. |
 | ~~[Which phone presents the demo?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/3)~~ | **Decided:** the owner's POCO X6 5G (Snapdragon 7s Gen 2). It was first recorded as the X6 Pro by mistake. |
-| ~~[Which corridors does the pack cover?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/6)~~ | **Superseded:** Makati City only (D20). The hero trip pair is decided (D30): **Ayala Center → Dela Rosa Street, Pio del Pilar**. Still open (A13): at least two genuinely different candidate trips for that pair, listed and verified by the team before pack v0. |
+| ~~[Which corridors does the pack cover?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/6)~~ | **Superseded:** Makati City only (D20). The hero trip pair is decided (D30, amended by D37): **V.A. Rufino St → Dela Rosa Street, Pio del Pilar**. Still open (A13): at least two genuinely different candidate trips for that pair, listed and verified by the team before pack v0. |
 | [Which sync backend?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/9) | Whoever claims it |
 | [Ranker data format](https://github.com/geadlydrim/appbuildersph-hackathon/issues/10) | Whoever claims it |
 | ~~[LLM speed test on the demo phone](https://github.com/geadlydrim/appbuildersph-hackathon/issues/8)~~ | **Decided (D32):** Gemma 4 E2B on LiteRT-LM, GPU, with the hybrid parser: about 2–3 s per question, 10/10 correct on the test set. The LLM only parses; answers use the template. The 2.6 GB model is pre-installed on the demo phone. [Results](https://github.com/geadlydrim/appbuildersph-hackathon/blob/prototype/llm-speed-test/spikes/llm-speed-test/RESULTS.md). |
@@ -173,6 +173,8 @@ git tag demo-safe-t0 && git push origin demo-safe-t0
 ```
 
 ### Checkpoints
+
+The table is the plan. For what is built right now, see [`docs/fmd/state.md`](fmd/state.md) §1.
 
 | Time | Goal |
 |---|---|

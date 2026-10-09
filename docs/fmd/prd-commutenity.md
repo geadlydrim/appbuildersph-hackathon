@@ -144,7 +144,7 @@ All inference runs on the phone ([SDD §8](sdd-commutenity.md#8-ai-architecture-
 
 - An Android demo phone that can run the chosen LLM ([A4](state.md#4-open-assumptions), [A12](state.md#4-open-assumptions)); the speed test picks the PRD-F8 model and runtime ([D31](state.md#5-decisions)), and Whisper (PRD-F9) is optional.
 - A Makati map pack that MapLibre Native Android renders offline ([A14](state.md#4-open-assumptions)).
-- The Makati hero trip pair ([D30](state.md#5-decisions)): Ayala Center to Dela Rosa Street, Pio del Pilar. At least two genuinely different candidate trips for it must be verified from `collected` or `known` data ([A13](state.md#4-open-assumptions)).
+- The Makati hero trip pair ([D30](state.md#5-decisions), amended by [D37](state.md#5-decisions)): V.A. Rufino St to Dela Rosa Street, Pio del Pilar. At least two genuinely different candidate trips for it must be verified from `collected` or `known` data ([A13](state.md#4-open-assumptions)).
 - A shape-routing engine for the data build ([A15](state.md#4-open-assumptions)).
 - A curated pack with fares, minutes, distances, and road shapes ([data plan](data-commutenity.md)).
 - GPS accuracy good enough in Makati for the off-route and para thresholds ([A16](state.md#4-open-assumptions)).

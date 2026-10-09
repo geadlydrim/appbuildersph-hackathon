@@ -58,7 +58,7 @@ The full tiering is in [MVP scope](mvp-scope.md).
 
 **If we only ship one thing:** the phone is in airplane mode and someone sets two pins on the Makati map. The app automatically picks the best trip and draws it on real roads, with the legs, the boarding and alighting points, the fares, the walk time, and where to say "para". Everything comes from the pack and map on the phone.
 
-**The MVP adds one more thing:** the rider can also ask in words, for example "How to get from Ayala Center to Pio del Pilar?" (the hero pair, [D30](state.md#5-decisions)), and an on-device LLM sets the two pins. This is what makes the submission run meaningful local AI inference ([D31](state.md#5-decisions)).
+**The MVP adds one more thing:** the rider can also ask in words, for example "How to get from V.A. Rufino St to Pio del Pilar?" (the hero pair, [D30](state.md#5-decisions), amended by [D37](state.md#5-decisions)), and an on-device LLM sets the two pins. This is what makes the submission run meaningful local AI inference ([D31](state.md#5-decisions)).
 
 **Explicitly out of scope:** accounts, social feed, comments, turn-by-turn navigation, real-time vehicle locations, ride-hailing, payments, coverage beyond Makati, OCR signboard scanning, text-to-speech, iOS.
 
