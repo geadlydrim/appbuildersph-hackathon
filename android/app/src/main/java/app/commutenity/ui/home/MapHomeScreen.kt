@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -101,6 +102,8 @@ fun MapHomeScreen(
             onTap = { lat, lng -> onEvent(HomeEvent.MapTap(lat, lng)) },
             path = trip?.trip?.path?.takeIf { state.sheet == Sheet.Half },
             onMovePin = { field, lat, lng -> onEvent(HomeEvent.MovePin(field, lat, lng)) },
+            // Just above the my-location button (48 dp, 16 dp above the sheet), with a small gap.
+            compassBottom = sheetHeight.value + 16.dp + 48.dp + 12.dp,
         )
         // The placeholder picture has no coordinates, so it gets these fixed-position pins. The real
         // map draws A and B itself at their coordinates.
@@ -221,7 +224,14 @@ fun MapHomeScreen(
                     )
                 },
             )
-            Column(Modifier.verticalScroll(rememberScrollState())) {
+            // The sheet reaches the screen bottom; pad its scrolling content by the navigation bar (plus a
+            // little air) so the last rows ("riders say this works", "Questions") clear the phone's buttons.
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .navigationBarsPadding()
+                    .padding(bottom = 16.dp),
+            ) {
                 when {
                     state.sheet == Sheet.Notice -> {
                         val field = outsideField(state) ?: Field.B
