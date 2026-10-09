@@ -291,6 +291,8 @@ fun AskComposer(
     onSubmit: () -> Unit,
     onClose: () -> Unit,
     listening: Boolean = false,
+    thinking: Boolean = false,
+    aiStatus: String? = null,
     onMic: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -311,11 +313,14 @@ fun AskComposer(
                 fontWeight = FontWeight.Bold,
             )
         }
-        Text(
-            text = if (listening) "Listening… speak in English" else "Sample match only. This build has no on-device model.",
-            color = colors.muted,
-            fontSize = 12.sp,
-        )
+        val hint = if (listening) "Listening… speak in English" else aiStatus
+        if (hint != null) {
+            Text(
+                text = hint,
+                color = colors.muted,
+                fontSize = 12.sp,
+            )
+        }
         BasicTextField(
             value = draft,
             onValueChange = onDraft,
@@ -342,13 +347,13 @@ fun AskComposer(
         }
         Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "Find",
+                text = if (thinking) "Thinking…" else "Find",
                 color = colors.paraOn,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .background(colors.ink)
-                    .clickable(onClick = onSubmit)
+                    .clickable(enabled = !thinking, onClick = onSubmit)
                     .padding(horizontal = 14.dp, vertical = 10.dp),
             )
             Text(

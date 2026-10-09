@@ -40,6 +40,21 @@ android {
     androidResources {
         noCompress += "pmtiles"
     }
+
+    sourceSets {
+        getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/packAssets"))
+    }
+}
+
+// Bundle the hero commute pack from the single source file in /data; never hand-copy it into assets.
+val copyPackAssets = tasks.register<Copy>("copyPackAssets") {
+    from("${rootDir}/../data/pack/hero-trip.source.json")
+    into(layout.buildDirectory.dir("generated/packAssets/pack"))
+    rename { "hero-trip.json" }
+}
+
+tasks.named("preBuild") {
+    dependsOn(copyPackAssets)
 }
 
 kotlin {
@@ -59,6 +74,7 @@ dependencies {
     implementation(libs.litertlm.android)
     debugImplementation(libs.compose.ui.tooling)
     testImplementation(libs.junit)
+    testImplementation(libs.json)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.ext.junit)

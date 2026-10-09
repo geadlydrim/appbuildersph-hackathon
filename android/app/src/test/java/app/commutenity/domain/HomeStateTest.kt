@@ -1,6 +1,9 @@
 package app.commutenity.domain
 
+import app.commutenity.ai.Intent
+import app.commutenity.ai.ParserOutput
 import app.commutenity.data.sample.SampleTripSource
+import app.commutenity.ai.Preference as AiPreference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -78,7 +81,7 @@ class HomeStateTest {
     }
 
     @Test
-    fun askSampleMatchSetsBothPinsAndSaysItIsNotTheModel() {
+    fun askRuleBasedFallbackSetsBothPins() {
         val asking = reduce(HomeState(), HomeEvent.OpenAsk, source)
         val drafted = reduce(asking, HomeEvent.AskDraft("Ayala Center to Dela Rosa St"), source)
         val next = reduce(drafted, HomeEvent.SubmitAsk, source)
@@ -86,7 +89,7 @@ class HomeStateTest {
         assertEquals("Dela Rosa St", next.destination?.name)
         assertEquals(Sheet.Half, next.sheet)
         assertFalse(next.asking)
-        assertTrue(next.askFeedback!!.contains("not the on-device model"))
+        assertEquals("Simple matching: Ayala Center → Dela Rosa St.", next.askFeedback)
     }
 
     @Test
@@ -96,7 +99,7 @@ class HomeStateTest {
         val next = reduce(drafted, HomeEvent.SubmitAsk, source)
         assertTrue(next.asking)
         assertNull(next.origin)
-        assertTrue(next.askFeedback!!.contains("Pick A and B on the map"))
+        assertNull(next.destination)
     }
 
     @Test
@@ -261,6 +264,121 @@ class HomeStateTest {
         val outside = reduce(a, HomeEvent.MapTap(14.59, 121.07), source)
         assertFalse(outside.destination!!.inMakati)
         assertEquals(Sheet.Notice, outside.sheet)
+    }
+
+    private fun parsed(
+        intent: Intent = Intent.TRIP,
+        origin: String? = null,
+        destination: String? = null,
+        preference: AiPreference? = null,
+        vehicleText: String? = null,
+    ) = HomeEvent.AskParsed(ParserOutput(intent, origin, destination, preference, vehicleText))
+
+    private fun asking(): HomeState {
+        val opened = reduce(HomeState(), HomeEvent.OpenAsk, source)
+        return reduce(opened, HomeEvent.AskDraft("some question"), source)
+    }
+
+    @Test
+    fun parsedTripWithBothPlacesSetsPinsClosesComposerAndOpensTheSheet() {
+        val next = reduce(asking(), parsed(origin = "Ayala Center", destination = "Dela Rosa St"), source)
+        assertEquals("Ayala Center", next.origin?.name)
+        assertEquals("Dela Rosa St", next.destination?.name)
+        assertFalse(next.asking)
+        assertEquals("", next.askDraft)
+        assertNull(next.askFeedback)
+        assertEquals(Sheet.Half, next.sheet)
+        assertFalse(next.thinking)
+    }
+
+    @Test
+    fun parsedPreferenceIsStoredAndNullMeansDefault() {
+        val cheapest = reduce(
+            asking(),
+            parsed(origin = "Ayala Center", destination = "Dela Rosa St", preference = AiPreference.CHEAPEST),
+            source,
+        )
+        assertEquals(TripPreference.Cheapest, cheapest.preference)
+        val fastest = reduce(asking(), parsed(destination = "Dela Rosa St", preference = AiPreference.FASTEST), source)
+        assertEquals(TripPreference.Fastest, fastest.preference)
+        val fewest = reduce(asking(), parsed(destination = "Dela Rosa St", preference = AiPreference.FEWEST_TRANSFERS), source)
+        assertEquals(TripPreference.FewestTransfers, fewest.preference)
+        val none = reduce(cheapest, parsed(origin = "Ayala Center", destination = "Dela Rosa St"), source)
+        assertEquals(TripPreference.Default, none.preference)
+    }
+
+    @Test
+    fun mapPicksKeepThePreference() {
+        val cheapest = reduce(
+            asking(),
+            parsed(origin = "Ayala Center", destination = "Dela Rosa St", preference = AiPreference.CHEAPEST),
+            source,
+        )
+        val tapped = reduce(cheapest, HomeEvent.MapTap(14.558, 121.018), source)
+        assertEquals(TripPreference.Cheapest, tapped.preference)
+        val closed = reduce(cheapest, HomeEvent.CloseAsk, source)
+        assertEquals(TripPreference.Cheapest, closed.preference)
+    }
+
+    @Test
+    fun parsedDestinationOnlyAsksForTheStart() {
+        val next = reduce(asking(), parsed(destination = "Dela Rosa St"), source)
+        assertEquals("Dela Rosa St", next.destination?.name)
+        assertNull(next.origin)
+        assertTrue(next.asking)
+        assertEquals("some question", next.askDraft)
+        assertEquals("Where are you starting? Tap the map, use my location, or type it.", next.askFeedback)
+    }
+
+    @Test
+    fun parsedDestinationKeepsAnExistingStart() {
+        val withStart = reduce(HomeState(), HomeEvent.UseMyLocation, source)
+        val next = reduce(withStart, parsed(destination = "Dela Rosa St"), source)
+        assertEquals(source.myLocation, next.origin)
+        assertEquals("Dela Rosa St", next.destination?.name)
+        assertFalse(next.asking)
+        assertEquals(Sheet.Half, next.sheet)
+    }
+
+    @Test
+    fun parsedUnknownPlaceKeepsPinsAndSaysItWasNotFound() {
+        val withStart = reduce(HomeState(), HomeEvent.UseMyLocation, source)
+        val drafted = reduce(withStart, HomeEvent.OpenAsk, source)
+        val next = reduce(drafted, parsed(origin = "Atlantis", destination = "Dela Rosa St"), source)
+        assertEquals(source.myLocation, next.origin)
+        assertEquals("Dela Rosa St", next.destination?.name)
+        assertTrue(next.asking)
+        assertEquals("I couldn't find \"Atlantis\" in Makati yet.", next.askFeedback)
+    }
+
+    @Test
+    fun parsedTripWithNoPlacesAsksWhichPlaces() {
+        val next = reduce(asking(), parsed(), source)
+        assertTrue(next.asking)
+        assertEquals("Which places? Try: V.A. Rufino to Dela Rosa St.", next.askFeedback)
+    }
+
+    @Test
+    fun parsedVehicleCheckAndOtherIntentsShowTheirTexts() {
+        val vehicle = reduce(asking(), parsed(intent = Intent.VEHICLE_CHECK, vehicleText = "Buendia"), source)
+        assertTrue(vehicle.asking)
+        assertEquals("You read \"Buendia\". The signboard check is coming next.", vehicle.askFeedback)
+        val other = reduce(asking(), parsed(intent = Intent.OTHER), source)
+        assertTrue(other.asking)
+        assertEquals("I can help with trips in Makati. Try: V.A. Rufino to Dela Rosa St.", other.askFeedback)
+    }
+
+    @Test
+    fun thinkingAndFailureToggleTheThinkingFlag() {
+        val thinking = reduce(asking(), HomeEvent.AskThinking, source)
+        assertTrue(thinking.thinking)
+        assertEquals("Thinking…", thinking.askFeedback)
+        val failed = reduce(thinking, HomeEvent.AskFailed("The AI couldn't read that."), source)
+        assertFalse(failed.thinking)
+        assertTrue(failed.asking)
+        assertEquals("The AI couldn't read that.", failed.askFeedback)
+        val parsedAfter = reduce(thinking, parsed(intent = Intent.OTHER), source)
+        assertFalse(parsedAfter.thinking)
     }
 
     private fun bothSet(): HomeState {
