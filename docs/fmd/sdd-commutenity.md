@@ -4,7 +4,7 @@
 **Date:** 2026-10-09
 **Version:** 0.2
 **Owner:** Implementer
-**Status:** Draft. Runtimes and models are pending [A4](state.md#4-open-assumptions), the backend is pending [A9](state.md#4-open-assumptions), and the ranker is pending [A11](state.md#4-open-assumptions).
+**Status:** Draft. Runtimes and models are pending [A4](state.md#4-open-assumptions), and the ranker is pending [A11](state.md#4-open-assumptions). Contribution sync is decided in [D17](state.md#5-decisions).
 **Last reconciled:** 2026-10-09
 **PRD:** [Product requirements](prd-commutenity.md)
 
@@ -96,9 +96,9 @@ Proposed shapes. Final names are settled at CP3.
 **Answer composer:** `compose(Ranked, lang) → { text, factsUsed[] }`. The template renders first. The LLM phrasing is accepted only if every number and place it mentions is in `factsUsed`.
 
 **Contribution store and sync:**
-- `saveSuggestion(od, legs, note)`
-- `vote(candidateKey, +1 | -1 | 0)`
-- `sync()`: push unsynced items, then pull since the last cursor
+- `saveSuggestion(od, legs, note)` and `vote(candidateKey, +1 | -1 | 0)` write to Room first.
+- `sync()` signs in anonymously if needed, then sends a batched push/pull request to the Supabase Edge Function; Room retains unsynced mutations until acknowledged.
+- The function validates legs and note length, writes suggestions or current votes, applies a server-side per-identity mutation limit, and returns suggestions plus aggregate vote totals only.
 - `candidateKey` is a stable hash of the leg sequence, so the same route gets the same votes everywhere.
 
 **Signboard matcher:** `matchSign(ocrText, legs) → { verdict: ride | wrong | unreadable, readText, score }`.
@@ -132,11 +132,11 @@ sequenceDiagram
 ## 5. Security and Privacy
 
 - **On the phone:** questions, audio, and camera frames never leave the phone. LLM output is rendered as plain text.
-- **What leaves the phone:** only contributions (suggestions, votes, notes), plus an anonymous random device ID. There are no accounts, names, or location traces.
+- **What leaves the phone:** only contributions (suggestions, votes, notes) and an anonymous Auth credential. There are no user-facing accounts, names, or location traces.
 - **Backend:**
-  - Write-only inserts for contributions; public reads of aggregates and suggestions.
-  - Validation for leg references and note length (≤ 280 characters).
-  - Basic rate limit per device ID.
+  - Supabase anonymous Auth plus a single authenticated Edge Function for sync; the Android app has no service-role key.
+  - The function validates pack references and note length (≤ 280 characters), applies a server-side per-identity mutation limit, and is the only privileged writer.
+  - Pull responses contain suggestions and vote aggregates only; raw vote rows and anonymous identity values are never public.
 - **Suggestions are untrusted.** They only ever *order* candidates and add pack-valid paths. They never change fares or stops.
 
 Details: [CLR](clr-commutenity.md).

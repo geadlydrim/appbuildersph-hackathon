@@ -84,7 +84,7 @@ flowchart TD
     Y -.-> E
 ```
 
-The app has no accounts. Contributions carry an anonymous device ID ([A9](state.md#4-open-assumptions)).
+The app has no user-facing accounts. Contributions use an internal anonymous Auth identity and sync through the server-side validation boundary ([D17](state.md#5-decisions)).
 
 ### 5.6 Instrumentation
 
@@ -119,7 +119,7 @@ All inference runs on the phone ([SDD §8](sdd-commutenity.md#8-ai-architecture-
 - An Android demo phone that can run the chosen LLM ([A4](state.md#4-open-assumptions), [A12](state.md#4-open-assumptions)).
 - Open-weight models packaged for Android runtimes.
 - A curated pack with fares and minutes ([data plan](data-commutenity.md)).
-- A sync backend ([A9](state.md#4-open-assumptions)).
+- The Supabase sync boundary ([D17](state.md#5-decisions)).
 - Screen mirroring for the stage demo.
 
 ## 9. Implementation and Rollback
