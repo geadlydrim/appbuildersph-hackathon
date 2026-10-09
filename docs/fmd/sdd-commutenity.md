@@ -34,7 +34,7 @@ flowchart LR
     PR --> CG[Candidate generator - k-shortest paths]
     CG --> PK[(Commute pack - assets)]
     CG --> CS[(Room DB: contributions + synced overlay)]
-    CG --> SC[Scorer: hand-weighted T0 / learned ranker T2]
+    CG --> SC[Scorer: lexicographic T0 / learned ranker T2]
     SC --> AC[Answer composer - template + LLM phrasing]
     AC --> UI
     UI --> CS
@@ -65,9 +65,9 @@ The pack schema lives in the [data plan §2](data-commutenity.md#2-commute-pack-
 | Candidates | Up to K=10 loopless paths (Yen's k-shortest on a time-plus-transfer-penalty cost), plus every **valid** community suggestion for the same resolved origin–destination pair |
 | Suggestion validity | Every leg references pack routes and stops, the legs are continuous, and the route ID exists. Fares and minutes are computed from the pack, never taken from the suggestion. |
 | Features per candidate | `total_minutes`, `fare_php`, `transfers`, `walk_minutes`, `modes_count`, `net_votes`, `vote_count`, `is_community`, `unknown_fare_legs` |
-| Baseline score (T0) | Weighted sum of the normalized features. Hand-set weights live in one config file and favor fewer transfers, then time, then fare. Votes give a bounded bonus. |
+| Baseline order (T0) | Deterministic lexicographic order, not a weighted sum. Default and `fewest_transfers`: transfers → `total_minutes` → `fare_php` → `walk_minutes`; `fastest` or `cheapest` promotes that requested criterion and retains the remaining order. `net_votes`, clamped to −3…+3, breaks only a tie after those criteria; stable `candidateKey` is last. Missing fare sorts after known fare. |
 | Ranker (T2) | Same feature vector → learned score ([A11](state.md#4-open-assumptions)). Swapped in by a feature flag. |
-| Pick | The highest score is the auto pick. The rest, in order, are the alternatives (show at most 5). |
+| Pick | The first candidate in the baseline order is the auto pick. The rest, in order, are alternatives (show at most 5). |
 | Fare | Sum of segment fares. If any segment fare is missing, the trip fare is "unknown"; no partial totals. |
 | Alight point | The last stop of each ride leg, plus a landmark alias where one exists |
 | Coverage | If an endpoint is unresolved, return `NOT_IN_PACK`. Never fall back to LLM-invented routing. |

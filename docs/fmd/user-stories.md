@@ -100,7 +100,7 @@ The old CommuteNity stories (US-100+ feed and auth; US-001–016 catalog) are re
 
 > As the **team**, we want the route pick learned from preferences and votes so that it matches what riders actually choose better than our hand-set weights do.
 
-- Given the held-out preference set ([data plan §6](data-commutenity.md#6-evaluation-sets)), when we compare the trained ranker with the hand-weighted baseline, then the ranker ships only if it's better on the agreed metric.
+- Given the held-out preference set ([data plan §6](data-commutenity.md#6-evaluation-sets)), when we compare the trained ranker with the deterministic baseline, then the ranker ships only if it's better on the agreed metric.
 - It runs on the phone, offline. Its training data (team-generated, disclosed as such), method, and real results go in the README. No fabricated benchmarks ([JUDGING](JUDGING.md#rules)).
 
 ## T3: Signboard check

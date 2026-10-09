@@ -26,12 +26,12 @@ Definitions: [IDEA §2](idea-commutenity.md#2-who-its-for). These are target rol
 | ID | Feature | Description | Priority | Tier |
 |---|---|---|---|---|
 | PRD-F1 | Trip question understanding | An on-device LLM turns a Taglish or English question into a structured origin, destination, and preference. Ambiguous places trigger a choice. | Must | T0 |
-| PRD-F2 | Auto route picker and grounded answer | Deterministic candidate generation over the pack, a hand-weighted efficiency score, and an auto-picked best route. The on-device LLM phrases it without adding facts. A reason line explains the pick. Out-of-coverage questions get "not in my data". | Must | T0 |
+| PRD-F2 | Auto route picker and grounded answer | Deterministic candidate generation over the pack, a lexicographic efficiency order, and an auto-picked best trip. The on-device LLM phrases it without adding facts. A reason line explains the pick. Out-of-coverage questions get "not in my data". | Must | T0 |
 | PRD-F3 | On-device commute pack | Curated stops, places and aliases, routes, segments, fares, minutes, and signboard texts, stored on the phone. Every record is classed `collected`, `known`, or `mock`, and mock values are marked in the UI. | Must | T0 |
 | PRD-F4 | First-run setup and offline shell | One-time model download with progress. Works fully offline afterwards. | Must | T1 |
 | PRD-F5 | Alternatives on request | Other ranked candidates, labelled Algorithm or Community, with reason lines and vote counts | Must | T1 |
 | PRD-F6 | Community contributions with local-first sync | Suggest a route (structured legs plus a note) and vote "this worked / didn't". Stored locally and synced through the secondary backend when online. | Must | T1 |
-| PRD-F7 | Learned on-device ranker | A model trained on preference labels and votes replaces the hand-weighted score if it wins on held-out data | Should | T2 |
+| PRD-F7 | Learned on-device ranker | A model trained on preference labels and votes replaces the deterministic baseline if it wins on held-out data | Should | T2 |
 | PRD-F8 | Signboard check | Camera → on-device OCR → deterministic match against the trip's legs | Could | T3 |
 | PRD-F9 | Voice question | On-device speech-to-text feeding PRD-F1 | Could | T4 |
 | PRD-F10 | Full social layer, browser app, iOS | Parked | Won't (this event) | — |

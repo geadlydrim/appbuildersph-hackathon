@@ -19,13 +19,13 @@ Build strictly in order. A tier starts only when the previous one is **demo-safe
 
 | Tier | Name | What it adds | Features | Done when |
 |---|---|---|---|---|
-| **T0** | Walking skeleton | Pack on the phone. A typed question goes through parse → candidate routes → hand-weighted score, which auto-picks the best one. Grounded answer. Pretrained models only. | PRD-F1, PRD-F2, PRD-F3 | [US-01](user-stories.md#us-01-ask-a-trip-question-offline) to [US-03](user-stories.md#us-03-know-when-its-not-in-my-data) pass in airplane mode |
+| **T0** | Walking skeleton | Pack on the phone. A typed question goes through parse → candidate routes → deterministic lexicographic order, which auto-picks the best trip. Grounded answer. Pretrained models only. | PRD-F1, PRD-F2, PRD-F3 | [US-01](user-stories.md#us-01-ask-a-trip-question-offline) to [US-03](user-stories.md#us-03-know-when-its-not-in-my-data) pass in airplane mode |
 | **T1** | Demo-ready plus community | First-run model download. "Show alternatives". Suggest a route, vote "this worked", local-first storage, sync when online. | PRD-F4, PRD-F5, PRD-F6 | US-04 to US-08 pass; [QAD gate](qad-commutenity.md#6-release-criteria) for T0+T1 |
-| **T2** | Trained ranker | An on-device learned ranker replaces the hand-weighted score, **only if it beats it** on held-out preferences | PRD-F7 | [US-09](user-stories.md#us-09-a-ranker-that-learned-from-riders) passes; eval recorded |
+| **T2** | Trained ranker | An on-device learned ranker replaces the deterministic baseline, **only if it beats it** on held-out preferences | PRD-F7 | [US-09](user-stories.md#us-09-a-ranker-that-learned-from-riders) passes; eval recorded |
 | **T3** | Signboard check | Camera → on-device OCR → match against the trip's legs | PRD-F8 | [US-10](user-stories.md#us-10-check-a-jeepney-signboard) passes on held-out photos |
 | **T4** | Voice | Spoken Taglish → on-device speech-to-text → same flow as T0 | PRD-F9 | [US-11](user-stories.md#us-11-ask-by-voice) passes |
 
-Ranker **data collection** (scenarios, preference labels, seeded contributions) starts in parallel at CP2 ([data plan §4](data-commutenity.md#4-training-data-collection)). Ranker **training** runs alongside T1. Neither may block T0 or T1. If the ranker doesn't beat the baseline by the feature freeze, the hand-weighted score ships and the pitch says so honestly.
+Ranker **data collection** (scenarios, preference labels, seeded contributions) starts in parallel at CP2 ([data plan §4](data-commutenity.md#4-training-data-collection)). Ranker **training** runs alongside T1. Neither may block T0 or T1. If the ranker doesn't beat the baseline by the feature freeze, the deterministic lexicographic order ships and the pitch says so honestly.
 
 ## Geography and modes
 

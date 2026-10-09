@@ -18,7 +18,7 @@ The theme fit is strong. Offline use is the core value, and the app trains and r
 |---|---|
 | Facts come from the pack via deterministic code; models parse, rank, and phrase | [SDD §1](sdd-commutenity.md#1-architecture), [§3](sdd-commutenity.md#3-routing-contract) |
 | Strict tiers, with T0+T1 as the MVP; hard cut rules if checkpoints slip | [MVP scope](mvp-scope.md#tiers), [BUILD §1](build-commutenity.md#1-build-sequence) |
-| The ranker ships only if it beats the hand-weighted baseline on held-out pairs | [Data plan §5](data-commutenity.md#5-training-plan) |
+| The ranker ships only if it beats the deterministic baseline on held-out pairs | [Data plan §5](data-commutenity.md#5-training-plan) |
 | Contribution and preference data is team-generated, and disclosed as such | [Data plan §4](data-commutenity.md#4-training-data-collection), [CLR §5](clr-commutenity.md#5-ip-provenance-and-disclosure) |
 | Prove the on-phone LLM runtime first (CP1); have a fallback ready | [BUILD §1](build-commutenity.md#1-build-sequence) |
 | Fresh repo; disclose what we reused from the original CommuteNity concept | [D3](state.md#5-decisions) |
@@ -51,7 +51,7 @@ The only external authority cited so far is the official briefing ([JUDGING](JUD
 | Gap | Needed by | Treatment |
 |---|---|---|
 | Runtime and model not proven on our phone | SDD, BUILD | A4 and A12; CP1 |
-| No corridor data or minutes | Pack, ranker, demo | A6, A10; data plan §3 |
+| No corridor data or minutes | Pack, ranker, demo | D15, D16; data plan §3 |
 | No sync backend chosen | T1 | A9 |
 | No problem evidence | Pitch | [VALIDATION](val-commutenity.md) |
 | Role owners unassigned | BUILD | A8 |
