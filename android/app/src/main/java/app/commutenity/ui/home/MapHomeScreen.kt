@@ -61,6 +61,7 @@ fun MapHomeScreen(
     onEvent: (HomeEvent) -> Unit,
     onOpenQuestions: () -> Unit = {},
     onMenu: () -> Unit = {},
+    onMic: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     map: MapSurface = PlaceholderMap,
     designStatusBar: Boolean = false,
@@ -144,11 +145,14 @@ fun MapHomeScreen(
                         onDraft = { onEvent(HomeEvent.AskDraft(it)) },
                         onSubmit = { onEvent(HomeEvent.SubmitAsk) },
                         onClose = { onEvent(HomeEvent.CloseAsk) },
+                        listening = state.listening,
+                        onMic = onMic,
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 } else {
                     AskBar(
                         onClick = { onEvent(HomeEvent.OpenAsk) },
+                        onMic = onMic,
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 }

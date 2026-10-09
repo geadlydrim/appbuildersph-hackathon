@@ -214,7 +214,7 @@ private fun EndpointRow(
 }
 
 @Composable
-fun AskBar(onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun AskBar(onClick: () -> Unit, onMic: (() -> Unit)? = null, modifier: Modifier = Modifier) {
     val colors = LocalCommuteColors.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
@@ -239,10 +239,46 @@ fun AskBar(onClick: () -> Unit, modifier: Modifier = Modifier) {
             color = colors.muted.copy(alpha = if (pressed) 0.6f else 1f),
             fontSize = 14.sp,
         )
+        if (onMic != null) {
+            Box(
+                Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(colors.pinA, CircleShape)
+                    .semantics { contentDescription = "Ask by voice" }
+                    .clickable(role = Role.Button, onClick = onMic),
+                contentAlignment = Alignment.Center,
+            ) {
+                MicGlyph()
+            }
+        } else {
+            Box(
+                Modifier
+                    .size(32.dp)
+                    .background(colors.pinA, CircleShape),
+            )
+        }
+    }
+}
+
+@Composable
+private fun MicGlyph() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier
-                .size(32.dp)
-                .background(colors.pinA, CircleShape),
+                .size(width = 8.dp, height = 12.dp)
+                .background(Color.White, RoundedCornerShape(4.dp)),
+        )
+        Box(
+            Modifier
+                .padding(top = 1.dp)
+                .size(width = 2.dp, height = 3.dp)
+                .background(Color.White),
+        )
+        Box(
+            Modifier
+                .size(width = 8.dp, height = 2.dp)
+                .background(Color.White, RoundedCornerShape(1.dp)),
         )
     }
 }
@@ -254,6 +290,8 @@ fun AskComposer(
     onDraft: (String) -> Unit,
     onSubmit: () -> Unit,
     onClose: () -> Unit,
+    listening: Boolean = false,
+    onMic: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalCommuteColors.current
@@ -265,8 +303,16 @@ fun AskComposer(
             .background(colors.surface, shape)
             .padding(14.dp),
     ) {
+        if (listening) {
+            Text(
+                text = "● Listening",
+                color = colors.pinA,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
         Text(
-            text = "Sample match only. This build has no on-device model.",
+            text = if (listening) "Listening… speak in English" else "Sample match only. This build has no on-device model.",
             color = colors.muted,
             fontSize = 12.sp,
         )
@@ -281,7 +327,7 @@ fun AskComposer(
                 .fillMaxWidth(),
             decorationBox = { inner ->
                 if (draft.isEmpty()) {
-                    Text("Example: Ayala Center to Dela Rosa St", color = colors.faint, fontSize = 15.sp)
+                    Text("Example: V.A. Rufino to Dela Rosa St", color = colors.faint, fontSize = 15.sp)
                 }
                 inner()
             },
@@ -314,6 +360,17 @@ fun AskComposer(
                     .clickable(onClick = onClose)
                     .padding(horizontal = 14.dp, vertical = 10.dp),
             )
+            if (onMic != null) {
+                Text(
+                    text = if (listening) "Stop" else "Speak",
+                    color = colors.ink,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(onClick = onMic)
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                )
+            }
         }
     }
 }

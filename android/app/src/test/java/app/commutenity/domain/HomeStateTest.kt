@@ -99,6 +99,81 @@ class HomeStateTest {
         assertTrue(next.askFeedback!!.contains("Pick A and B on the map"))
     }
 
+    @Test
+    fun voiceStartOpensTheComposerAndListens() {
+        val dirty = HomeState(askDraft = "old", askFeedback = "old feedback", activeField = Field.A)
+        val next = reduce(dirty, HomeEvent.VoiceStart, source)
+        assertTrue(next.asking)
+        assertTrue(next.listening)
+        assertEquals("", next.askDraft)
+        assertNull(next.askFeedback)
+        assertNull(next.activeField)
+    }
+
+    @Test
+    fun partialUpdatesTheDraftOnlyWhileListening() {
+        val listening = reduce(HomeState(), HomeEvent.VoiceStart, source)
+        val partial = reduce(listening, HomeEvent.VoicePartial("Ayala"), source)
+        assertEquals("Ayala", partial.askDraft)
+        val stopped = reduce(partial, HomeEvent.VoiceStop, source)
+        assertFalse(stopped.listening)
+        assertEquals("Ayala", stopped.askDraft)
+        val late = reduce(stopped, HomeEvent.VoicePartial("Ayala Center to"), source)
+        assertEquals(stopped, late)
+    }
+
+    @Test
+    fun voiceResultKeepsTheComposerOpenWithTheHeardText() {
+        val listening = reduce(HomeState(), HomeEvent.VoiceStart, source)
+        val next = reduce(listening, HomeEvent.VoiceResult("  Ayala Center to Dela Rosa St "), source)
+        assertFalse(next.listening)
+        assertTrue(next.asking)
+        assertEquals("Ayala Center to Dela Rosa St", next.askDraft)
+        assertEquals(VOICE_HEARD_FEEDBACK, next.askFeedback)
+        assertNull(next.origin)
+        assertNull(next.destination)
+    }
+
+    @Test
+    fun blankVoiceResultSaysItDidNotCatchThat() {
+        val listening = reduce(HomeState(), HomeEvent.VoiceStart, source)
+        val next = reduce(listening, HomeEvent.VoiceResult("   "), source)
+        assertFalse(next.listening)
+        assertTrue(next.asking)
+        assertEquals("", next.askDraft)
+        assertEquals("I didn't catch that. Try again or type your question.", next.askFeedback)
+    }
+
+    @Test
+    fun voiceErrorStopsListeningAndKeepsTheDraft() {
+        val listening = reduce(HomeState(), HomeEvent.VoiceStart, source)
+        val partial = reduce(listening, HomeEvent.VoicePartial("Ayala Center"), source)
+        val next = reduce(partial, HomeEvent.VoiceError("Speech recognition failed."), source)
+        assertFalse(next.listening)
+        assertTrue(next.asking)
+        assertEquals("Ayala Center", next.askDraft)
+        assertEquals("Speech recognition failed.", next.askFeedback)
+    }
+
+    @Test
+    fun submitAfterVoiceResultUsesTheTypedPath() {
+        val listening = reduce(HomeState(), HomeEvent.VoiceStart, source)
+        val heard = reduce(listening, HomeEvent.VoiceResult("Ayala Center to Dela Rosa St"), source)
+        val next = reduce(heard, HomeEvent.SubmitAsk, source)
+        assertEquals("Ayala Center", next.origin?.name)
+        assertEquals("Dela Rosa St", next.destination?.name)
+        assertFalse(next.listening)
+        assertFalse(next.asking)
+    }
+
+    @Test
+    fun closingAskWhileListeningStopsListening() {
+        val listening = reduce(HomeState(), HomeEvent.VoiceStart, source)
+        val next = reduce(listening, HomeEvent.CloseAsk, source)
+        assertFalse(next.listening)
+        assertFalse(next.asking)
+    }
+
     private fun bothSet(): HomeState {
         val origin = reduce(HomeState(), HomeEvent.UseMyLocation, source)
         val searching = reduce(origin, HomeEvent.Focus(Field.B), source)
