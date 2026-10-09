@@ -1,0 +1,236 @@
+{
+  "config": {
+    "model": "gemma3-1b-it-int4.litertlm",
+    "model_bytes": 584417280,
+    "backend": "gpu",
+    "constrained": true,
+    "iters": 1,
+    "warmup": 1,
+    "think_off": false,
+    "threads": 0,
+    "max_output_tokens": 64,
+    "runtime": "LiteRT-LM litertlm-android 0.18.0"
+  },
+  "device": {
+    "manufacturer": "Xiaomi",
+    "model": "23122PCD1G",
+    "device": "garnet",
+    "soc_manufacturer": "QTI",
+    "soc_model": "SM7435",
+    "sdk": 35,
+    "total_ram_mb": 7301,
+    "avail_ram_mb": 3119,
+    "cpus": 8,
+    "thermal_before": {
+      "status": 0,
+      "headroom_10s": null
+    }
+  },
+  "load_ms": 13018.047131,
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "pure Tagalog (hero pair)",
+      "question": "Paano pumunta sa Dela Rosa, Pio del Pilar mula sa Ayala Center?",
+      "output": "{\"intent\":\"trip\",\"origin\":\" Ayala Center\",\"destination\":\"Dela Rosa, Pio del Pilar\",\"preference\":\"cheapest\",\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": false
+      },
+      "median_ms": 4787.901456,
+      "p95_ms": 4787.901456,
+      "latencies_ms": [
+        4787.901456
+      ],
+      "create_conversation_median_ms": 3397.644791,
+      "bench_first": {
+        "ttft_s": 1.749488264,
+        "prefill_tokens": 296,
+        "decode_tokens": 32,
+        "prefill_tps": 179.21887861054762,
+        "decode_tps": 10.216952262335877
+      },
+      "decode_tps_median": 10.216952262335877,
+      "prefill_tps_median": 179.21887861054762
+    },
+    {
+      "id": "q2",
+      "kind": "Taglish + pa- prefix + fastest",
+      "question": "Pa-Greenbelt ako galing Guadalupe, ano pinakamabilis?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Guadalupe\",\"destination\":\"Pa-Greenbelt\",\"preference\":\"fastest\",\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": false,
+        "vehicle_text_ok": true,
+        "od_exact": false,
+        "preference_ok": true
+      },
+      "median_ms": 4584.084113,
+      "p95_ms": 4584.084113,
+      "latencies_ms": [
+        4584.084113
+      ],
+      "create_conversation_median_ms": 3426.346717,
+      "bench_first": {
+        "ttft_s": 1.73616215925,
+        "prefill_tokens": 294,
+        "decode_tokens": 30,
+        "prefill_tps": 179.47420814766082,
+        "decode_tps": 10.199525747347574
+      },
+      "decode_tps_median": 10.199525747347574,
+      "prefill_tps_median": 179.47420814766082
+    },
+    {
+      "id": "q3",
+      "kind": "English, cheapest",
+      "question": "What's the cheapest way from Pio del Pilar to Ayala Triangle?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Pio del Pilar\",\"destination\":\"Ayala Triangle\",\"preference\":\"cheapest\",\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 4572.955363,
+      "p95_ms": 4572.955363,
+      "latencies_ms": [
+        4572.955363
+      ],
+      "create_conversation_median_ms": 3425.214686,
+      "bench_first": {
+        "ttft_s": 1.7374501785,
+        "prefill_tokens": 294,
+        "decode_tokens": 30,
+        "prefill_tps": 179.28816994690504,
+        "decode_tps": 10.242543250037658
+      },
+      "decode_tps_median": 10.242543250037658,
+      "prefill_tps_median": 179.28816994690504
+    },
+    {
+      "id": "q4",
+      "kind": "typo + abbreviation + fewest transfers",
+      "question": "frm RCBC pa-Pio del Pilar, ung walang lipat sana",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Pio del Pilar\",\"destination\":\"FCB\",\"preference\":\"fastest\",\"vehicle_text\":\"FCB\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": false,
+        "destination_ok": false,
+        "vehicle_text_ok": false,
+        "od_exact": false,
+        "preference_ok": false
+      },
+      "median_ms": 5651.093227,
+      "p95_ms": 5651.093227,
+      "latencies_ms": [
+        5651.093227
+      ],
+      "create_conversation_median_ms": 3607.650259,
+      "bench_first": {
+        "ttft_s": 2.09176332075,
+        "prefill_tokens": 295,
+        "decode_tokens": 30,
+        "prefill_tps": 149.80183788868712,
+        "decode_tps": 8.163592385171805
+      },
+      "decode_tps_median": 8.163592385171805,
+      "prefill_tps_median": 149.80183788868712
+    },
+    {
+      "id": "q5",
+      "kind": "correct-vehicle check (D27)",
+      "question": "Ito ba yung tamang jeep? Nakasulat sa karatula: PASAY - GUADALUPE",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Pasay\",\"destination\":\"Guadalupe\",\"preference\":\"fastest\",\"vehicle_text\":\"PASAY - GUADALUPE\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": false,
+        "origin_ok": false,
+        "destination_ok": false,
+        "vehicle_text_ok": true,
+        "od_exact": false,
+        "preference_ok": false
+      },
+      "median_ms": 5134.310519,
+      "p95_ms": 5134.310519,
+      "latencies_ms": [
+        5134.310519
+      ],
+      "create_conversation_median_ms": 3437.559843,
+      "bench_first": {
+        "ttft_s": 1.74712544425,
+        "prefill_tokens": 303,
+        "decode_tokens": 35,
+        "prefill_tps": 183.9006919026829,
+        "decode_tps": 10.050548279203962
+      },
+      "decode_tps_median": 10.050548279203962,
+      "prefill_tps_median": 183.9006919026829
+    },
+    {
+      "id": "q6",
+      "kind": "non-trip",
+      "question": "Uulan ba mamaya?",
+      "output": "{\"intent\":\"other\",\"origin\":null,\"destination\":null,\"preference\":null,\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 4029.736978,
+      "p95_ms": 4029.736978,
+      "latencies_ms": [
+        4029.736978
+      ],
+      "create_conversation_median_ms": 3419.771509,
+      "bench_first": {
+        "ttft_s": 1.7405419177500001,
+        "prefill_tokens": 286,
+        "decode_tokens": 24,
+        "prefill_tps": 174.26164518371948,
+        "decode_tps": 10.067283890695453
+      },
+      "decode_tps_median": 10.067283890695453,
+      "prefill_tps_median": 174.26164518371948
+    }
+  ],
+  "summary": {
+    "worst_question_p95_ms": 5651.093227,
+    "overall_median_ms": 4584.084113,
+    "valid_json_questions": 6,
+    "od_exact_questions": 3,
+    "pass": false
+  },
+  "thermal_after": {
+    "status": 0,
+    "headroom_10s": null
+  },
+  "pss_kb_after": 814557
+}

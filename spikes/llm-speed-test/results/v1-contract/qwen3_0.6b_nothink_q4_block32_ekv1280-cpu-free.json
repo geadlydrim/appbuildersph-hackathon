@@ -1,0 +1,194 @@
+{
+  "config": {
+    "model": "qwen3_0.6b_nothink_q4_block32_ekv1280.litertlm",
+    "model_bytes": 347251840,
+    "backend": "cpu",
+    "constrained": false,
+    "iters": 1,
+    "warmup": 1,
+    "think_off": false,
+    "threads": 0,
+    "max_output_tokens": 64,
+    "runtime": "LiteRT-LM litertlm-android 0.18.0"
+  },
+  "device": {
+    "manufacturer": "Xiaomi",
+    "model": "23122PCD1G",
+    "device": "garnet",
+    "soc_manufacturer": "QTI",
+    "soc_model": "SM7435",
+    "sdk": 35,
+    "total_ram_mb": 7301,
+    "avail_ram_mb": 2914,
+    "cpus": 8,
+    "thermal_before": {
+      "status": 0,
+      "headroom_10s": null
+    }
+  },
+  "load_ms": 4104.83479,
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "pure Tagalog",
+      "question": "Paano pumunta sa Recto mula sa Malanday?",
+      "output": "```json\n{\"intent\": \"other\", \"origin\": null, \"destination\": null, \"preference\": null}\n```",
+      "distinct_outputs": 1,
+      "valid_runs": 0,
+      "score": {
+        "valid": false,
+        "intent_ok": false,
+        "origin_ok": false,
+        "destination_ok": false,
+        "od_exact": false,
+        "preference_ok": false
+      },
+      "median_ms": 8192.551143,
+      "p95_ms": 8192.551143,
+      "latencies_ms": [
+        8192.551143
+      ],
+      "bench_first": {
+        "ttft_s": 3.87524078625,
+        "prefill_tokens": 204,
+        "decode_tokens": 27,
+        "prefill_tps": 54.995522075882455,
+        "decode_tps": 6.029622196615762
+      },
+      "decode_tps_median": 6.029622196615762,
+      "prefill_tps_median": 54.995522075882455
+    },
+    {
+      "id": "q2",
+      "kind": "Taglish + landmark alias",
+      "question": "Pa-SM Valenzuela ako galing Monumento, ano pinakamabilis?",
+      "output": "```json\n{\n  \"intent\": \"other\",\n  \"origin\": null,\n  \"destination\": null,\n  \"preference\": null\n}\n```",
+      "distinct_outputs": 1,
+      "valid_runs": 0,
+      "score": {
+        "valid": false,
+        "intent_ok": false,
+        "origin_ok": false,
+        "destination_ok": false,
+        "od_exact": false,
+        "preference_ok": false
+      },
+      "median_ms": 7899.974372,
+      "p95_ms": 7899.974372,
+      "latencies_ms": [
+        7899.974372
+      ],
+      "bench_first": {
+        "ttft_s": 3.3182278505,
+        "prefill_tokens": 208,
+        "decode_tokens": 33,
+        "prefill_tps": 65.50793817368479,
+        "decode_tps": 6.991044436909247
+      },
+      "decode_tps_median": 6.991044436909247,
+      "prefill_tps_median": 65.50793817368479
+    },
+    {
+      "id": "q3",
+      "kind": "English, cheapest",
+      "question": "What's the cheapest way from Malanday to Doroteo Jose?",
+      "output": "```json\n{\n  \"intent\": \"other\",\n  \"origin\": null,\n  \"destination\": null,\n  \"preference\": null\n}\n```",
+      "distinct_outputs": 1,
+      "valid_runs": 0,
+      "score": {
+        "valid": false,
+        "intent_ok": false,
+        "origin_ok": false,
+        "destination_ok": false,
+        "od_exact": false,
+        "preference_ok": false
+      },
+      "median_ms": 8120.509633,
+      "p95_ms": 8120.509633,
+      "latencies_ms": [
+        8120.509633
+      ],
+      "bench_first": {
+        "ttft_s": 3.3731972085,
+        "prefill_tokens": 204,
+        "decode_tokens": 33,
+        "prefill_tps": 63.255801714226266,
+        "decode_tps": 6.747793837942885
+      },
+      "decode_tps_median": 6.747793837942885,
+      "prefill_tps_median": 63.255801714226266
+    },
+    {
+      "id": "q4",
+      "kind": "typo + abbreviation + fewest transfers",
+      "question": "frm UST pa-Malanday, ung walang lipat sana",
+      "output": "```json\n{\n  \"intent\": \"other\",\n  \"origin\": null,\n  \"destination\": null,\n  \"preference\": null\n}\n```",
+      "distinct_outputs": 1,
+      "valid_runs": 0,
+      "score": {
+        "valid": false,
+        "intent_ok": false,
+        "origin_ok": false,
+        "destination_ok": false,
+        "od_exact": false,
+        "preference_ok": false
+      },
+      "median_ms": 7793.757914,
+      "p95_ms": 7793.757914,
+      "latencies_ms": [
+        7793.757914
+      ],
+      "bench_first": {
+        "ttft_s": 3.3476115037499996,
+        "prefill_tokens": 204,
+        "decode_tokens": 33,
+        "prefill_tps": 63.57406935212393,
+        "decode_tps": 7.206893642210053
+      },
+      "decode_tps_median": 7.206893642210053,
+      "prefill_tps_median": 63.57406935212393
+    },
+    {
+      "id": "q5",
+      "kind": "non-trip",
+      "question": "Uulan ba mamaya?",
+      "output": "```json\n{\"intent\": \"other\", \"origin\": null, \"destination\": null, \"preference\": null}\n```",
+      "distinct_outputs": 1,
+      "valid_runs": 0,
+      "score": {
+        "valid": false,
+        "intent_ok": false,
+        "origin_ok": false,
+        "destination_ok": false,
+        "od_exact": false,
+        "preference_ok": false
+      },
+      "median_ms": 13908.661557,
+      "p95_ms": 13908.661557,
+      "latencies_ms": [
+        13908.661557
+      ],
+      "bench_first": {
+        "ttft_s": 8.2690631375,
+        "prefill_tokens": 195,
+        "decode_tokens": 27,
+        "prefill_tps": 24.215828547725543,
+        "decode_tps": 4.619388498397789
+      },
+      "decode_tps_median": 4.619388498397789,
+      "prefill_tps_median": 24.215828547725543
+    }
+  ],
+  "summary": {
+    "worst_question_p95_ms": 13908.661557,
+    "overall_median_ms": 8120.509633,
+    "valid_json_questions": 0,
+    "od_exact_questions": 0,
+    "pass": false
+  },
+  "thermal_after": {
+    "status": 0,
+    "headroom_10s": null
+  },
+  "pss_kb_after": 884329
+}
