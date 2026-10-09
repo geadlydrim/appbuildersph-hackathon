@@ -1,3 +1,4 @@
 /data/map/*.pmtiles
 /android/app/src/main/assets/*.pmtiles
 /data/pack/cache/overpass/
+__pycache__/
