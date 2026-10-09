@@ -27,6 +27,7 @@ Append-only. One row per meaningful action or decision. Never edit past rows.
 | 13 | 2026-10-09 | Owner decision: cover the Valenzuela–Recto corridor. The hero trip is Malanday to the Recto area, comparing a direct Malanday–Recto e-jeep with Malanday → LRT-1 Monumento → LRT-1 Doroteo Jose → walk. Keanu (geadlydrim) and Jeff (storms23) verify it; mock data may cover adjacent stops only. | state D15 (A6 closed), MVP scope, data plan | D15 |
 | 14 | 2026-10-09 | Owner decision: hero-trip minutes are typical, non-peak team estimates (`known`) until event verification makes them `collected`; mock minutes never drive the hero trip. T0 uses an explainable lexicographic candidate order, with a requested preference promoted and bounded votes only as a final tie-break. | state D16 (A10 closed), SDD §3, data plan §3 | D16 |
 | 15 | 2026-10-09 | Owner decision: use Supabase anonymous Auth and one authenticated Edge Function for local-first contribution sync. It validates and rate-limits mutations server-side; only suggestions and vote aggregates are readable. | state D17 (A9 closed), SDD §4–§5, data plan §2.1, CLR, BUILD | D17 |
+| 16 | 2026-10-09 | Owner decision: ranker labelling uses three-candidate JSON scenarios and strict top-3 rankings from four teammates. A deterministic pair split protects held-out `known` evaluation; pairwise logistic regression with preference interactions exports JSON for Kotlin. | state D18 (A11 closed), data plan §§4–6, SDD §3, QAD AI-06, GLOSSARY | D18 |
 
 ---
 

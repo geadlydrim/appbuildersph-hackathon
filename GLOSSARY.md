@@ -77,3 +77,13 @@ _Avoid_: like, rating, upvote
 **Contribution**:
 A suggestion or a vote.
 _Avoid_: post, user content
+
+### Ranking and evaluation
+
+**Scenario**:
+One labelled comparison set for a resolved origin–destination pair and stated preference, containing exactly three candidates.
+_Avoid_: test case, prompt
+
+**Preference label**:
+One rater's strict order of a scenario's three candidates. It yields pairwise examples for ranker training.
+_Avoid_: vote, score

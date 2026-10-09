@@ -4,7 +4,7 @@
 **Date:** 2026-10-09
 **Version:** 0.2
 **Owner:** Data owner and ranker owner ([A8](state.md#4-open-assumptions))
-**Status:** Draft. The Valenzuela–Recto corridor and its travel-time baseline are decided ([D15](state.md#5-decisions), [D16](state.md#5-decisions)); the ranker model remains pending [A11](state.md#4-open-assumptions).
+**Status:** Draft. The Valenzuela–Recto corridor, travel-time baseline, and ranker data/model plan are decided ([D15](state.md#5-decisions), [D16](state.md#5-decisions), [D18](state.md#5-decisions)).
 **Last reconciled:** 2026-10-09
 **SDD:** [System design](sdd-commutenity.md)
 
@@ -88,8 +88,8 @@ Mock data fills the gaps that real and known data can't cover overnight ([D13](s
 
 | Set | How | Labels | Split |
 |---|---|---|---|
-| Route scenarios | For each covered origin–destination pair, plus variants (time of day, preference), generate the candidate set from the pack and add the team's community suggestions | — | — |
-| Preference labels | Each of the 4 teammates independently picks the route they would take, or ranks the top 3, per scenario, with their preference stated | Pairwise preferences derived from rankings; inter-rater agreement recorded | **Split by origin–destination pair** (held-out pairs are never seen in training) |
+| Route scenarios | One JSON scenario per covered origin–destination pair and stated preference, with exactly three pack-valid candidates and their feature vectors | — | Deterministically assign 25% of origin–destination pairs to held-out before labelling |
+| Preference labels | Each of the 4 teammates independently submits a strict top-3 order for every scenario | Three pairwise examples per rater: 1st > 2nd, 1st > 3rd, 2nd > 3rd; never infer a preference from an unranked candidate | The same origin–destination pair is never in both train and held-out |
 | Seeded contributions | Teammates submit real alternative routes they know and vote on candidates through the app (this also exercises T1) | Votes become `net_votes` and `vote_count` features | Same pair-level split |
 | Trip questions | Varied Taglish and English questions per covered pair, including typos, landmarks, out-of-coverage, and off-topic | Gold `{intent, origin, destination}` plus the expected route | Held-out eval only |
 
@@ -97,16 +97,42 @@ Mock data fills the gaps that real and known data can't cover overnight ([D13](s
 
 All preference labels, contributions, and questions carry `source_class` too. Labels written by teammates are `known`. Generated ones are `mock`.
 
+### 4.1 Scenario and label files
+
+`data/labels/scenarios.jsonl` contains one JSON object per scenario:
+
+```json
+{
+  "schema_version": 1,
+  "scenario_id": "vr-001-fastest",
+  "origin_place_id": "malanday",
+  "destination_place_id": "recto",
+  "preference": "fastest",
+  "source_class": "known",
+  "candidates": [
+    { "candidate_key": "…", "source": "algorithm", "features": { "total_minutes": 0, "fare_php": 0, "transfers": 0, "walk_minutes": 0, "modes_count": 0, "net_votes": 0, "vote_count": 0, "is_community": false, "unknown_fare_legs": 0 } },
+    { "candidate_key": "…", "source": "algorithm", "features": { "…": "…" } },
+    { "candidate_key": "…", "source": "community", "features": { "…": "…" } }
+  ]
+}
+```
+
+`data/labels/rankings.jsonl` contains `{ "scenario_id", "rater_id": "R1" | "R2" | "R3" | "R4", "ranking": [candidate_key, candidate_key, candidate_key], "source_class": "known" }`. Rankings are strict and contain all three candidates. The deterministic pair split is written to versioned input before raters label it.
+
+### 4.2 Pairwise examples
+
+For each ranking `[a, b, c]`, training emits only `(a, b)`, `(a, c)`, and `(b, c)` with label `left_preferred`. Feature values are normalized from training pairs only. The pair vector is the preferred candidate's ranker vector minus the other candidate's vector; preference-specific interactions multiply every base feature by the one-hot stated preference (`default`, `fastest`, `cheapest`, or `fewest_transfers`).
+
 ## 5. Training Plan
 
 | Item | Plan |
 |---|---|
-| Model ([A11](state.md#4-open-assumptions)) | Start with pairwise logistic regression on the [feature vector](sdd-commutenity.md#3-routing-contract). Try a small GBDT only if logistic regression plateaus and there is time. |
+| Model ([D18](state.md#5-decisions)) | Pairwise logistic regression on the [feature vector](sdd-commutenity.md#3-routing-contract), including preference interactions. Try a small GBDT only if logistic regression plateaus and there is time. |
 | Baseline | The deterministic lexicographic order from SDD §3 |
-| Training | A Python script in `ml/`. Its inputs are the scenarios, labels, and seeded votes. Its output is the weights or model file plus the feature spec. |
-| On-device export | Logistic regression: a JSON weights file evaluated in Kotlin. GBDT: ONNX, run with ONNX Runtime Android. |
-| Parity | The same fixture produces the same scores in Python and Kotlin (QA-11) |
-| Ship rule | Better than the baseline on held-out pairs on the metric in §6. Otherwise the baseline ships. |
+| Training | A Python script in `ml/` consumes scenarios, known rankings, and seeded votes. It emits the feature spec plus the JSON model. Mock scenarios or labels may augment training only. |
+| On-device export | JSON `{ feature_names, normalization, intercept, weights }`, evaluated in Kotlin. A GBDT fallback would export to ONNX only if pursued. |
+| Parity | The same fixture produces identical normalized vectors and scores in Python and Kotlin (QA-11) |
+| Ship rule | Higher top-1 agreement than the baseline on held-out `known` scenarios with a strict majority human top choice. Report excluded split scenarios and pairwise accuracy; otherwise the baseline ships. |
 
 ## 6. Evaluation Sets
 
@@ -114,7 +140,7 @@ All preference labels, contributions, and questions carry `source_class` too. La
 |---|---|---|---|
 | Parser | Exact match on origin and destination over held-out questions | Pretrained LLM plus prompt | — |
 | End-to-end | % of answers whose picked route is valid and whose facts exactly match the pack | T0 build | [QAD §6](qad-commutenity.md#6-release-criteria) threshold |
-| Ranker | Top-1 agreement with the majority human pick on held-out pairs; pairwise accuracy | Deterministic lexicographic order | Ranker must beat the baseline |
+| Ranker | Primary: top-1 agreement with the strict-majority human pick on held-out `known` scenarios. Diagnostic: pairwise accuracy across all held-out labels. | Deterministic lexicographic order | Ranker must beat the baseline on the primary metric; report the count excluded for no strict majority. |
 | Signboard | Correct verdict % on held-out photos; unreadable rate; **0 false "ride"** | Pretrained OCR plus matcher | — |
 
 Report the real numbers, sample sizes, and limits (for example, "4 raters, N held-out pairs, team-generated"). **Split every metric by data class.** Results on `mock` data show that the pipeline works. They are not evidence of real-world accuracy.

@@ -4,7 +4,7 @@
 **Date:** 2026-10-09
 **Version:** 0.2
 **Owner:** Implementer
-**Status:** Draft. Runtimes and models are pending [A4](state.md#4-open-assumptions), and the ranker is pending [A11](state.md#4-open-assumptions). Contribution sync is decided in [D17](state.md#5-decisions).
+**Status:** Draft. Runtimes and models are pending [A4](state.md#4-open-assumptions). Contribution sync and the ranker plan are decided in [D17](state.md#5-decisions) and [D18](state.md#5-decisions).
 **Last reconciled:** 2026-10-09
 **PRD:** [Product requirements](prd-commutenity.md)
 
@@ -64,9 +64,9 @@ The pack schema lives in the [data plan §2](data-commutenity.md#2-commute-pack-
 | Graph | Nodes are stops. Edges are route segments (rides) and transfers (walks). |
 | Candidates | Up to K=10 loopless paths (Yen's k-shortest on a time-plus-transfer-penalty cost), plus every **valid** community suggestion for the same resolved origin–destination pair |
 | Suggestion validity | Every leg references pack routes and stops, the legs are continuous, and the route ID exists. Fares and minutes are computed from the pack, never taken from the suggestion. |
-| Features per candidate | `total_minutes`, `fare_php`, `transfers`, `walk_minutes`, `modes_count`, `net_votes`, `vote_count`, `is_community`, `unknown_fare_legs` |
+| Features per candidate | Base features: `total_minutes`, `fare_php`, `transfers`, `walk_minutes`, `modes_count`, `net_votes`, `vote_count`, `is_community`, `unknown_fare_legs`. Ranker input also includes preference-specific interactions: each applicable base feature × `fastest`, `cheapest`, `fewest_transfers`, or `default`. |
 | Baseline order (T0) | Deterministic lexicographic order, not a weighted sum. Default and `fewest_transfers`: transfers → `total_minutes` → `fare_php` → `walk_minutes`; `fastest` or `cheapest` promotes that requested criterion and retains the remaining order. `net_votes`, clamped to −3…+3, breaks only a tie after those criteria; stable `candidateKey` is last. Missing fare sorts after known fare. |
-| Ranker (T2) | Same feature vector → learned score ([A11](state.md#4-open-assumptions)). Swapped in by a feature flag. |
+| Ranker (T2) | Pairwise logistic regression trained on the D18 feature spec and exported as JSON `{ feature_names, normalization, intercept, weights }`, evaluated in Kotlin. It is swapped in by a feature flag only if it beats T0 top-1 agreement on held-out `known` pairs. |
 | Pick | The first candidate in the baseline order is the auto pick. The rest, in order, are alternatives (show at most 5). |
 | Fare | Sum of segment fares. If any segment fare is missing, the trip fare is "unknown"; no partial totals. |
 | Alight point | The last stop of each ride leg, plus a landmark alias where one exists |

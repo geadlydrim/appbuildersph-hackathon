@@ -30,7 +30,7 @@ This is an assurance plan, not an audit that has been run.
 |---|---|
 | Intended use | Help a rider pick and understand a commute on covered Metro Manila corridors, offline |
 | Intended user | New Arrival, Occasional Commuter, Daily Rider |
-| Models | Open-weight LLM, embedding, ranker, OCR, and speech models. Exact IDs pending [A4](state.md#4-open-assumptions) and [A11](state.md#4-open-assumptions). |
+| Models | Open-weight LLM, embedding, ranker, OCR, and speech models. Exact LLM IDs remain pending [A4](state.md#4-open-assumptions); the ranker plan is [D18](state.md#5-decisions). |
 | Data provenance | Curated pack, plus team-generated preferences, contributions, and eval sets ([data plan](data-commutenity.md)) |
 | Model-visible data | The user's question or transcript; structured candidates and features; signboard image |
 | Human oversight | The rider sees the reason for the pick, alternatives with their sources, and the text read off a signboard. The app says "not in my data" instead of guessing. |
