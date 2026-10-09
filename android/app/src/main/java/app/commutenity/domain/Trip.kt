@@ -48,6 +48,8 @@ sealed interface Leg {
         val stops: String,
         val fareAndMinutes: String,
         val signboard: String,
+        /** Each signboard text this ride may show, from the pack. Feeds the correct-vehicle check. */
+        val signboards: List<String> = emptyList(),
     ) : Leg
     data class Para(val landmark: String) : Leg
 }

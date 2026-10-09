@@ -117,6 +117,7 @@ class PackTripSource(private val pack: CommutePack) : TripSource {
                         stops = "${from.name}  →  ${to.name}",
                         fareAndMinutes = "$fareText  ·  $timeText",
                         signboard = ride.signboards.joinToString(" / "),
+                        signboards = ride.signboards,
                     ),
                 )
             }
