@@ -4,7 +4,7 @@
 **Date:** 2026-10-09
 **Version:** 0.2
 **Owner:** Data owner and ranker owner ([A8](state.md#4-open-assumptions))
-**Status:** Draft. Corridors pending [A6](state.md#4-open-assumptions), travel times pending [A10](state.md#4-open-assumptions), ranker model pending [A11](state.md#4-open-assumptions).
+**Status:** Draft. The Valenzuela–Recto corridor is decided ([D15](state.md#5-decisions)); travel times remain pending [A10](state.md#4-open-assumptions), and the ranker model remains pending [A11](state.md#4-open-assumptions).
 **Last reconciled:** 2026-10-09
 **SDD:** [System design](sdd-commutenity.md)
 
@@ -58,7 +58,7 @@ These records are stored locally in Room and synced to the backend ([A9](state.m
 
 ## 3. Collection Protocol
 
-1. **Corridors ([A6](state.md#4-open-assumptions)):** pick 1–3 demo corridors the team rides. At least one should have two or more genuinely different ways to make the trip. Build them from `collected` and `known` data.
+1. **Corridor ([D15](state.md#5-decisions)):** build the Valenzuela–Recto corridor around the Malanday → Recto-area hero trip. Its direct Malanday–Recto e-jeep and Malanday → LRT-1 Monumento → LRT-1 Doroteo Jose → walk candidates must be built from `collected` and `known` data. Mock records may cover adjacent stops only; they cannot supply hero-trip facts.
 2. **Stops and segments:** use team knowledge, with OpenStreetMap for coordinates. Class each one `collected` (verified this event) or `known` (from memory).
 3. **Fares:** use the current official fare matrix where possible, citing the source and date (`collected`). Otherwise use team knowledge (`known`) or a `mock` value. If none of those exists, the fare is unknown. Per [fare research](https://github.com/geadlydrim/appbuildersph-hackathon/issues/5):
    - LRT-1, LRT-2, and MRT-3 matrices are `collected`, transcribed by hand from official images.

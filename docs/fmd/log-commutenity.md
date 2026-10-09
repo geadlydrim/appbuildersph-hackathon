@@ -24,6 +24,7 @@ Append-only. One row per meaningful action or decision. Never edit past rows.
 | 10 | 2026-10-09 | Owner decision: planning cutoff moved from 7:00 PM to 9:00 PM. Build checkpoints shifted about 1 h later (T0 ~1 AM, T1 ~4 AM, T2 ~6 AM, T3/T4 6–8 AM) and cut rules tightened to match. Feature freeze (8:00 AM) and code freeze (10:00 AM) unchanged. | team guide, BUILD §1, map #1, ticket defaults | — |
 | 11 | 2026-10-09 | Closed the fourth-teammate ticket: the team is geadlydrim, pablo-pica, storms23, and Jrabara101 (invites pending for the last two). Role assignment split into a new ticket at the top of the map. | state D12, A8; team guide | D12 amended |
 | 12 | 2026-10-09 | Closed the demo-phone ticket: the owner's POCO X6 Pro (Dimensity 8300-Ultra). The LLM speed-test ticket is now unblocked. | state D14 (A12 closed), team guide | D14 |
+| 13 | 2026-10-09 | Owner decision: cover the Valenzuela–Recto corridor. The hero trip is Malanday to the Recto area, comparing a direct Malanday–Recto e-jeep with Malanday → LRT-1 Monumento → LRT-1 Doroteo Jose → walk. Keanu (geadlydrim) and Jeff (storms23) verify it; mock data may cover adjacent stops only. | state D15 (A6 closed), MVP scope, data plan | D15 |
 
 ---
 
