@@ -119,11 +119,11 @@ gh issue edit <number> --add-assignee @me
 | Ticket | Who |
 |---|---|
 | [Who owns each workstream?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/11) | Project owner, first. It takes about 5 minutes. |
-| ~~[Which phone presents the demo?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/3)~~ | **Decided:** the owner's POCO X6 Pro. |
+| ~~[Which phone presents the demo?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/3)~~ | **Decided:** the owner's POCO X6 5G (Snapdragon 7s Gen 2). It was first recorded as the X6 Pro by mistake. |
 | ~~[Which corridors does the pack cover?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/6)~~ | **Superseded:** Makati City only (D20). The hero trip pair is decided (D30): **Ayala Center → Dela Rosa Street, Pio del Pilar**. Still open (A13): at least two genuinely different candidate trips for that pair, listed and verified by the data owner and the team before pack v0. |
 | [Which sync backend?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/9) | Android owner |
 | [Ranker data format](https://github.com/geadlydrim/appbuildersph-hackathon/issues/10) | Ranker owner |
-| [LLM speed test on the demo phone](https://github.com/geadlydrim/appbuildersph-hackathon/issues/8) | `geadlydrim`, on the POCO X6 Pro. **Running now.** The result picks the model and runtime for ask in words, and it gates the MVP's ask in words (D31). A failed test still keeps on-device inference: smaller model, then llama.cpp, then a rule-based parser plus on-device embeddings. Never a cloud model. |
+| ~~[LLM speed test on the demo phone](https://github.com/geadlydrim/appbuildersph-hackathon/issues/8)~~ | **Decided (D32):** Gemma 4 E2B on LiteRT-LM, GPU, with the hybrid parser: about 2–3 s per question, 10/10 correct on the test set. The LLM only parses; answers use the template. The 2.6 GB model is pre-installed on the demo phone. [Results](https://github.com/geadlydrim/appbuildersph-hackathon/blob/prototype/llm-speed-test/spikes/llm-speed-test/RESULTS.md). |
 | [Travel minutes and "most efficient"](https://github.com/geadlydrim/appbuildersph-hackathon/issues/7) | Data owner. Decided in D16; minutes now need to be recorded for the Makati hero trip. |
 
 ### Useful prep while you wait

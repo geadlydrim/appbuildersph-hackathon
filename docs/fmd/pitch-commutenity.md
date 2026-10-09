@@ -5,7 +5,7 @@
 **Version:** 0.5 (Shortened: 3:50 Spoken Pitch + 1:00 Demo Video)  
 **Presenter:** P4 (Jrabara101)  
 **Total Presentation:** 4:50 (Within 5:00 limit; 10s buffer) + 3:00 Judge Q&A  
-**Phone Setup:** POCO X6 Pro mirrored via `scrcpy` over USB to projector  
+**Phone Setup:** POCO X6 5G mirrored via `scrcpy` over USB to projector  
 **Hero Trip ([D30](state.md#5-decisions)):** Ayala Center (Station Rd, San Lorenzo) → Dela Rosa St, Pio del Pilar, Makati  
 **Release Floor ([D31](state.md#5-decisions)):** On-device LLM (PRD-F8 ask in words) is release-critical MVP  
 
@@ -26,11 +26,11 @@
 | Time | Phase | On Screen | Physical Action (What You Do) | Spoken Script (What You Say) |
 |---|---|---|---|---|
 | **0:00–0:45**<br>*(45s)* | **Problem & Scarcity** | Slide: Crowded Makati terminal / Ayala rush hour | Stand center stage. Make direct eye contact with judges. | *"Every single day, 14 million Filipinos face the most exhausting commute in Southeast Asia. Here in Makati, Google Maps is useless—it tells you to walk 4 kilometers in the heat, and Waze only knows private cars.<br><br>At the terminal, commuters face four brutal scarcities: **zero signal** in underpasses, **zero prepaid load** to spend on data, **zero seconds** before the jeep leaves you behind, and **zero public signs**. Commute knowledge lives in locals' heads—and the cloud fails right when you need it at the curb."* |
-| **0:45–1:25**<br>*(40s)* | **Solution & Architecture** | Slide: CommuteNity on-device architecture & Offline badge | Hold up the demo phone (POCO X6 Pro) in hand. | *"That is why we built CommuteNity. We compressed Makati's tribal transit intelligence directly into the silicon of this phone.<br><br>The entire vector map, precomputed road shapes, and language model live on the device. And our golden rule: **Code decides facts; AI parses intent.** Fares and routes come strictly from our verified local pack. Zero hallucinated routes, zero imaginary fares."* |
+| **0:45–1:25**<br>*(40s)* | **Solution & Architecture** | Slide: CommuteNity on-device architecture & Offline badge | Hold up the demo phone (POCO X6 5G) in hand. | *"That is why we built CommuteNity. We compressed Makati's tribal transit intelligence directly into the silicon of this phone.<br><br>The entire vector map, precomputed road shapes, and language model live on the device. And our golden rule: **Code decides facts; AI parses intent.** Fares and routes come strictly from our verified local pack. Zero hallucinated routes, zero imaginary fares."* |
 | **1:25–2:10**<br>*(45s)* | **Feature Walkthrough** | Slide: Feature breakdown (Offline Map, Community, GPS Tracking) | Point to the three core features on the slide. | *"CommuteNity delivers three core breakthroughs:<br>1. **The Map Trip Builder:** Tap Point A to Point B—it plots real road paths, not straight lines, with exact LTFRB fares.<br>2. **Local-First Community:** Riders share shortcut routes. You vote 'Worked for me' completely offline, saved in local Room storage to sync later.<br>3. **In-Trip GPS Tracking:** An offline foreground service snaps your location to the route and buzzes your pocket with a 'Para na!' alert before your stop."* |
 | **2:10–2:55**<br>*(45s)* | **Why Local Matters** | Slide: 'The Cloud Fails at the Curb' (4 Pillars) | Count 4 points on fingers. | *"Why can't this just be a cloud app? Four hard realities:<br>1. **No Signal:** Basements and CBD canyons are dead zones.<br>2. **No Data:** Commuters shouldn't spend ₱50 of prepaid load to check a ₱15 fare.<br>3. **Curb Latency:** Jeeps don't wait 10 seconds for a server round-trip.<br>4. **Absolute Privacy:** Your daily transit tracks never leave your pocket."* |
 | **2:55–3:30**<br>*(35s)* | **The Ask & Transition** | Slide: Team photo & GitHub repo QR code | Gesture toward screen, then transition to video player. | *"Big tech builds AI for Silicon Valley high-speed fiber. We built CommuteNity for the commuter standing in the rain at a Makati terminal with zero load.<br><br>Don't take our word for it. Watch CommuteNity running live on this phone in 100% Airplane Mode."* |
-| **3:30–3:50**<br>*(20s)* | **Video Intro & Setup** | Transition screen / Video player ready | Click play on the 60-second Demo Video. Step to the side. | *"Here is our one-minute live screen capture—recorded entirely on this POCO X6 Pro with zero internet."* |
+| **3:30–3:50**<br>*(20s)* | **Video Intro & Setup** | Transition screen / Video player ready | Click play on the 60-second Demo Video. Step to the side. | *"Here is our one-minute live screen capture—recorded entirely on this POCO X6 5G with zero internet."* |
 | **3:50–4:50**<br>*(60s)* | **1-Minute Demo Video** | **1-MINUTE DEMO VIDEO PLAYS** *(See Section 3 for video breakdown)* | Stand beside display; let video audio play (or deliver tight live narration). | *(Video audio plays: Airplane mode on $\rightarrow$ Ayala Center to Dela Rosa St $\rightarrow$ Real road route $\rightarrow$ Tracking $\rightarrow$ 'Para na!' alert $\rightarrow$ Vehicle text check).* |
 | **4:50–4:50+**<br>*(10s)* | **Closing Punchline** | Final Slide: CommuteNity Logo & People's Choice Vote | Step forward, bow/nod, open for Q&A. | *"Zero cloud APIs. Zero tracking. 100% on-device. We are CommuteNity—vote for us in People's Choice. Thank you!"* |
 
@@ -56,7 +56,7 @@
 ## 4. Demo Preparation & Fallback Matrix
 
 ### Equipment Setup
-* **Primary Phone:** POCO X6 Pro (MediaTek Dimensity 8300-Ultra) with offline PMTiles map and commute pack preloaded.
+* **Primary Phone:** POCO X6 5G (Snapdragon 7s Gen 2) with offline PMTiles map, commute pack, and the Gemma 4 E2B model preloaded.
 * **Mirroring / Video:** Laptop HDMI to projector. Video file queued in VLC/QuickTime in full-screen.
 * **Settings:** Phone timeout set to 10 min, Do Not Disturb ON, brightness 85%.
 
@@ -78,7 +78,7 @@
 | **Where does location data go?** | *"Nowhere. Location fixes are processed in the on-device foreground service and discarded immediately when the trip ends. Zero tracking."* |
 | **How do you prevent route hallucinations?** | *"Code decides facts; AI parses intent. The LLM only extracts structured origin/destination JSON. Deterministic Kotlin code computes valid routes and LTFRB fares from our local pack."* |
 | **Why focus only on Makati?** | *"Accuracy over coverage. We'd rather get one city's transit network 100% verified, road-accurate, and reliable than offer broad coverage filled with broken routes."* |
-| **How big is the download?** | *"The pack and offline PMTiles map are only a few megabytes. With the quantized int4 model, the one-time Wi-Fi download is ~700 MB – 1 GB, and it never uses cellular data again."* |
+| **How big is the download?** | *"The language model, Gemma 4 E2B, is 2.6 GB. It downloads once over Wi-Fi and never uses cellular data again. The pack and offline map come on top of that."* |
 
 ---
 
