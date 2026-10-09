@@ -98,3 +98,53 @@ class ShapeTest(unittest.TestCase):
             points = decode_polyline(rides[0]["shape"]["polyline"], 6)
             assert (14.55750, 121.00684) not in [(round(p[0], 5), round(p[1], 5)) for p in points]
             check_segment(rides[0]["route_id"], points, START, END, rides[0]["distance_m"])
+
+    def test_fill_keeps_generated_at_and_one_osrm_credit(self):
+        near = (14.55790, 121.00780)
+        far = (14.55750, 121.00684)
+        fixture = [
+            START,
+            (14.560000, 121.012000),
+            (14.558500, 121.009000),
+            near,
+            far,
+            END,
+        ]
+        pack_dir = os.path.dirname(os.path.abspath(__file__))
+        with open(os.path.join(pack_dir, "hero-trip.source.json"), encoding="utf-8") as hero:
+            source_data = json.load(hero)
+        for segment in source_data["segments"]:
+            segment["shape"] = None
+            segment["distance_m"] = None
+        with tempfile.TemporaryDirectory() as tmp:
+            source = os.path.join(tmp, "hero-trip.source.json")
+            cache = os.path.join(tmp, "osrm-gil-puyat-driving.json")
+            with open(source, "w", encoding="utf-8") as out:
+                json.dump(source_data, out)
+            with open(cache, "w", encoding="utf-8") as out:
+                json.dump({"code": "Ok", "routes": [{"geometry": encode_polyline(fixture, 6)}]}, out)
+
+            def fetch():
+                raise AssertionError("network")
+
+            fill_hero(source, cache, fetch)
+            with open(source, encoding="utf-8") as filled:
+                first = json.load(filled)
+            generated_at = first["segments"][0]["shape"]["generated_at"]
+            later = os.path.getmtime(cache) + 10_000
+            os.utime(cache, (later, later))
+            fill_hero(source, cache, fetch)
+            with open(source, encoding="utf-8") as filled:
+                second = json.load(filled)
+            osrm = [
+                line
+                for line in second["meta"]["sources"]
+                if line.startswith("OSRM demo server, driving profile, polyline6")
+            ]
+            assert len(osrm) == 1
+            assert second["segments"][0]["shape"]["generated_at"] == generated_at
+            assert second["segments"][1]["shape"]["generated_at"] == generated_at
+            assert second["meta"]["notes"] == (
+                "Source file for the hero trip only (state.md D37). "
+                "Road shapes and distance_m come from the cached OSRM driving line."
+            )

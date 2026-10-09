@@ -11,7 +11,7 @@
       "OSRM demo server, driving profile, polyline6, fetched 2026-10-09T20:06:15Z. OpenStreetMap ODbL."
     ],
     "shape_precision": 6,
-    "notes": "Source file for the hero trip only (state.md D37). Road shapes and distance_m are filled by the road-lines pipeline; until then they are null."
+    "notes": "Source file for the hero trip only (state.md D37). Road shapes and distance_m come from the cached OSRM driving line."
   },
   "places": [
     {

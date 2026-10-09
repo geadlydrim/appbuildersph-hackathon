@@ -193,7 +193,14 @@ def fill_hero(source_path: str, cache_path: str, fetch) -> None:
 
     polyline = encode_polyline(trimmed, 6)
     distance = length_m(trimmed)
-    generated_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(os.path.getmtime(cache_path)))
+    generated_at = None
+    for segment in source["segments"]:
+        existing = segment.get("shape") or {}
+        if isinstance(existing, dict) and existing.get("generated_at"):
+            generated_at = existing["generated_at"]
+            break
+    if not generated_at:
+        generated_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(os.path.getmtime(cache_path)))
     shape = {
         "polyline": polyline,
         "engine": "osrm",
@@ -204,12 +211,15 @@ def fill_hero(source_path: str, cache_path: str, fetch) -> None:
         segment["shape"] = shape
         segment["distance_m"] = distance
 
-    credit = (
-        f"OSRM demo server, driving profile, polyline6, fetched {generated_at}. "
-        "OpenStreetMap ODbL."
+    credit_prefix = "OSRM demo server, driving profile, polyline6"
+    if not any(line.startswith(credit_prefix) for line in source["meta"]["sources"]):
+        source["meta"]["sources"].append(
+            f"{credit_prefix}, fetched {generated_at}. OpenStreetMap ODbL."
+        )
+    source["meta"]["notes"] = (
+        "Source file for the hero trip only (state.md D37). "
+        "Road shapes and distance_m come from the cached OSRM driving line."
     )
-    if credit not in source["meta"]["sources"]:
-        source["meta"]["sources"].append(credit)
 
     with open(source_path, "w", encoding="utf-8") as source_file:
         json.dump(source, source_file, indent=2, ensure_ascii=False)
