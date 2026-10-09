@@ -5,6 +5,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import app.commutenity.MainActivity
+import app.commutenity.ui.map.loadOfflineStyleJson
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -12,6 +13,7 @@ import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.Style
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -23,6 +25,8 @@ class OfflineMapIntegrationTest {
         lateinit var mapView: MapView
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         context.assets.openFd("makati-20261009-z14.pmtiles").close()
+        val styleJson = loadOfflineStyleJson(context)
+        assertTrue("style must point at the local archive", styleJson.contains("pmtiles://file://"))
 
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
@@ -37,7 +41,7 @@ class OfflineMapIntegrationTest {
                 )
                 mapView.onStart()
                 mapView.getMapAsync { map ->
-                    map.setStyle("asset://map/style.json") {
+                    map.setStyle(Style.Builder().fromJson(styleJson)) {
                         map.cameraPosition = CameraPosition.Builder()
                             .target(LatLng(14.5547, 121.0244))
                             .zoom(13.2)

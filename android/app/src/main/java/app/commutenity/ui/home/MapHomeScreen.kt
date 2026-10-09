@@ -48,6 +48,7 @@ import app.commutenity.domain.outsideField
 import app.commutenity.domain.peekMessage
 import app.commutenity.ui.map.MapLibreSurface
 import app.commutenity.ui.map.MapSurface
+import app.commutenity.ui.map.PlaceholderMap
 import app.commutenity.ui.theme.LocalCommuteColors
 import app.commutenity.ui.theme.PlusJakarta
 import kotlinx.coroutines.launch
@@ -94,7 +95,12 @@ fun MapHomeScreen(
             showTrip = trip != null && state.sheet == Sheet.Half,
             modifier = Modifier.fillMaxSize(),
         )
-        PinLayer(state = state, showTrip = trip != null && state.sheet == Sheet.Half)
+        // These pins sit at fixed screen spots drawn for the placeholder picture. On the real map they
+        // would slide off their places when panning, so they only show on the placeholder until pins
+        // are drawn from map coordinates (the "draw the trip on the map" issue).
+        if (map === PlaceholderMap) {
+            PinLayer(state = state, showTrip = trip != null && state.sheet == Sheet.Half)
+        }
         if (designStatusBar) {
             Text(
                 text = "9:41",
