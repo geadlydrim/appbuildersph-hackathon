@@ -266,6 +266,41 @@ class HomeStateTest {
         assertEquals(Sheet.Notice, outside.sheet)
     }
 
+    @Test
+    fun movingPinBReplacesOnlyTheDestination() {
+        val ready = bothSet()
+        val moved = reduce(ready, HomeEvent.MovePin(Field.B, 14.5571, 121.0082), source)
+        assertEquals("Pinned spot", moved.destination?.name)
+        assertEquals(14.5571, moved.destination!!.lat!!, 1e-9)
+        assertEquals(121.0082, moved.destination!!.lng!!, 1e-9)
+        assertEquals(ready.origin, moved.origin)
+    }
+
+    @Test
+    fun movingPinAKeepsTheDestination() {
+        val ready = bothSet()
+        val moved = reduce(ready, HomeEvent.MovePin(Field.A, 14.5602, 121.0191), source)
+        assertEquals("Pinned spot", moved.origin?.name)
+        assertEquals(14.5602, moved.origin!!.lat!!, 1e-9)
+        assertEquals(121.0191, moved.origin!!.lng!!, 1e-9)
+        assertEquals(ready.destination, moved.destination)
+    }
+
+    @Test
+    fun movingPinOutsideMakatiShowsTheNotice() {
+        val moved = reduce(bothSet(), HomeEvent.MovePin(Field.B, 14.59, 121.07), source)
+        assertFalse(moved.destination!!.inMakati)
+        assertEquals(Sheet.Notice, moved.sheet)
+    }
+
+    @Test
+    fun movingPinClosesAnOpenSearchBox() {
+        val searching = reduce(bothSet(), HomeEvent.Focus(Field.A), source)
+        val moved = reduce(searching, HomeEvent.MovePin(Field.B, 14.56, 121.01), source)
+        assertNull(moved.activeField)
+        assertEquals("", moved.query)
+    }
+
     private fun parsed(
         intent: Intent = Intent.TRIP,
         origin: String? = null,

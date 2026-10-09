@@ -35,6 +35,7 @@ class PackTripSource(private val pack: CommutePack) : TripSource {
     private val packPlaceStops = pack.places.associate { it.id to it.stopIds }
     private val segmentsByEdgeId = pack.segments.associateBy { edgeId(it) }
     private val signboardsByRoute = pack.routes.associate { it.id to it.signboards }
+    private val modeByRoute = pack.routes.associate { it.id to it.mode }
     private val finder = TripFinder(
         TripGraph(
             pack.segments
@@ -106,7 +107,7 @@ class PackTripSource(private val pack: CommutePack) : TripSource {
         val kilometres = (segments.sumOf { it.distanceM ?: 0 } + firstWalkM + lastWalkM) / 1000.0
 
         val legs = buildList<Leg> {
-            if (firstWalkM >= MIN_WALK_M) add(Leg.Walk("~$firstWalkM m"))
+            if (firstWalkM >= MIN_WALK_M) add(Leg.Walk("~$firstWalkM m", "${walkMinutes(firstWalkM)} min"))
             rides.forEachIndexed { index, ride ->
                 val from = stopsById.getValue(ride.fromStopId)
                 val to = stopsById.getValue(ride.toStopId)
@@ -118,10 +119,15 @@ class PackTripSource(private val pack: CommutePack) : TripSource {
                         fareAndMinutes = "$fareText  ·  $timeText",
                         signboard = ride.signboards.joinToString(" / "),
                         signboards = ride.signboards,
+                        mode = modeByRoute[ride.routeId].orEmpty(),
+                        board = from.name,
+                        alight = to.name,
+                        fare = fareText,
+                        minutes = segments[index].minutes?.let { "$it min" }.orEmpty(),
                     ),
                 )
             }
-            if (lastWalkM >= MIN_WALK_M) add(Leg.Walk("~$lastWalkM m"))
+            if (lastWalkM >= MIN_WALK_M) add(Leg.Walk("~$lastWalkM m", "${walkMinutes(lastWalkM)} min"))
             add(Leg.Para(alight.name))
         }
 

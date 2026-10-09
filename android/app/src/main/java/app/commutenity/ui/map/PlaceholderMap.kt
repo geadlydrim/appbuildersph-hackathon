@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.commutenity.domain.Field
 import app.commutenity.domain.Place
 import app.commutenity.domain.TripPath
 import app.commutenity.ui.theme.LocalCommuteColors
@@ -68,6 +69,7 @@ object PlaceholderMap : MapSurface {
         destination: Place?,
         onTap: ((lat: Double, lng: Double) -> Unit)?,
         path: TripPath?,
+        onLongPress: ((field: Field, lat: Double, lng: Double) -> Unit)?,
     ) {
         val colors = LocalCommuteColors.current
         val paths = remember {

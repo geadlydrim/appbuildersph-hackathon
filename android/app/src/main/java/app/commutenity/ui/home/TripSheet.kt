@@ -14,6 +14,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.commutenity.domain.Leg
 import app.commutenity.domain.Trip
+import app.commutenity.domain.TripAnswer
 import app.commutenity.ui.theme.LocalCommuteColors
 import app.commutenity.ui.theme.PlusJakarta
 
@@ -105,6 +111,26 @@ fun BestTripContent(
             if (trip.sample) {
                 Chip("Sample", colors.sample, colors.sampleOn, Modifier.padding(start = 8.dp))
             }
+        }
+        val answerEnglish = remember(trip) { TripAnswer.compose(trip, taglish = false) }
+        if (answerEnglish.isNotEmpty()) {
+            var taglish by rememberSaveable { mutableStateOf(false) }
+            val answer = if (taglish) TripAnswer.compose(trip, taglish = true) else answerEnglish
+            Text(
+                text = answer,
+                color = colors.ink,
+                fontSize = 15.sp,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+            Text(
+                text = if (taglish) "English" else "Taglish",
+                color = colors.muted,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .clickable { taglish = !taglish },
+            )
         }
         Column(Modifier.padding(top = 16.dp)) {
             trip.legs.forEachIndexed { index, leg ->

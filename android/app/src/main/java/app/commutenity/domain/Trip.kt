@@ -43,13 +43,27 @@ data class TripPath(
 )
 
 sealed interface Leg {
-    data class Walk(val meters: String) : Leg
+    data class Walk(
+        val meters: String,
+        /** Walking time from the same rule as the trip total, e.g. "7 min". Empty when not known. */
+        val minutes: String = "",
+    ) : Leg
     data class Ride(
         val stops: String,
         val fareAndMinutes: String,
         val signboard: String,
         /** Each signboard text this ride may show, from the pack. Feeds the correct-vehicle check. */
         val signboards: List<String> = emptyList(),
+        /** Pack route mode, e.g. "jeepney" or "bus". */
+        val mode: String = "",
+        /** Name of the stop where the rider boards. */
+        val board: String = "",
+        /** Name of the stop where the rider says "para". */
+        val alight: String = "",
+        /** This ride's fare, e.g. "₱12" or "Fare unknown". */
+        val fare: String = "",
+        /** This ride's time, e.g. "7 min". */
+        val minutes: String = "",
     ) : Leg
     data class Para(val landmark: String) : Leg
 }
