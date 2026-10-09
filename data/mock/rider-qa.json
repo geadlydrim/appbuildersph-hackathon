@@ -1,0 +1,109 @@
+{
+  "source_class": "mock",
+  "source": "hand-written sample",
+  "note": "Not real riders. Answers tied to a trip use worked_candidate = the trip's candidate key from the commute pack.",
+  "threads": [
+    {
+      "id": "mock-hero-choice",
+      "source_class": "mock",
+      "source": "hand-written sample",
+      "from_place_id": "va-rufino",
+      "to_place_id": "dela-rosa-pio-del-pilar",
+      "from": "V.A. Rufino St",
+      "to": "Dela Rosa St",
+      "question": {
+        "id": "mock-hero-choice-q",
+        "body": "Jeep o bus papuntang Dela Rosa galing V.A. Rufino?",
+        "score": 18,
+        "source_class": "mock",
+        "source": "hand-written sample"
+      },
+      "answers": [
+        {
+          "id": "mock-hero-choice-a1",
+          "body": "Jeep na LRT sa Gil Puyat, okay naman.",
+          "score": 9,
+          "worked_candidate": "jeep-buendia-lrt#1",
+          "source_class": "mock",
+          "source": "hand-written sample"
+        },
+        {
+          "id": "mock-hero-choice-a2",
+          "body": "Jeep rin ako, 'yung may signboard na LRT. Walang problema.",
+          "score": 5,
+          "worked_candidate": "jeep-buendia-lrt#1",
+          "source_class": "mock",
+          "source": "hand-written sample"
+        },
+        {
+          "id": "mock-hero-choice-a3",
+          "body": "Bus na Buendia - LRT, nakarating naman ako.",
+          "score": 4,
+          "worked_candidate": "bus-buendia-lrt#1",
+          "source_class": "mock",
+          "source": "hand-written sample"
+        },
+        {
+          "id": "mock-hero-choice-a4",
+          "body": "Pwede ring lakarin pag maaga.",
+          "score": 2,
+          "worked_candidate": null,
+          "source_class": "mock",
+          "source": "hand-written sample"
+        }
+      ]
+    },
+    {
+      "id": "mock-reverse-board",
+      "source_class": "mock",
+      "source": "hand-written sample",
+      "from_place_id": "dela-rosa-pio-del-pilar",
+      "to_place_id": "va-rufino",
+      "from": "Dela Rosa St",
+      "to": "V.A. Rufino St",
+      "question": {
+        "id": "mock-reverse-board-q",
+        "body": "Saan ang sakayan pabalik ng V.A. Rufino galing Dela Rosa?",
+        "score": 7,
+        "source_class": "mock",
+        "source": "hand-written sample"
+      },
+      "answers": [
+        {
+          "id": "mock-reverse-board-a1",
+          "body": "Tingnan mo muna ang signboard bago sumakay.",
+          "score": 3,
+          "worked_candidate": null,
+          "source_class": "mock",
+          "source": "hand-written sample"
+        }
+      ]
+    },
+    {
+      "id": "mock-hero-para",
+      "source_class": "mock",
+      "source": "hand-written sample",
+      "from_place_id": "va-rufino",
+      "to_place_id": "dela-rosa-pio-del-pilar",
+      "from": "V.A. Rufino St",
+      "to": "Dela Rosa St",
+      "question": {
+        "id": "mock-hero-para-q",
+        "body": "Saan bababa para sa Dela Rosa?",
+        "score": 11,
+        "source_class": "mock",
+        "source": "hand-written sample"
+      },
+      "answers": [
+        {
+          "id": "mock-hero-para-a1",
+          "body": "Mag-para ka na pagdating malapit sa Osmeña.",
+          "score": 6,
+          "worked_candidate": null,
+          "source_class": "mock",
+          "source": "hand-written sample"
+        }
+      ]
+    }
+  ]
+}

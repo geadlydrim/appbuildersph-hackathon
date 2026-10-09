@@ -100,6 +100,7 @@ fun MapHomeScreen(
             destination = state.destination,
             onTap = { lat, lng -> onEvent(HomeEvent.MapTap(lat, lng)) },
             path = trip?.trip?.path?.takeIf { state.sheet == Sheet.Half },
+            onLongPress = { field, lat, lng -> onEvent(HomeEvent.MovePin(field, lat, lng)) },
         )
         // The placeholder picture has no coordinates, so it gets these fixed-position pins. The real
         // map draws A and B itself at their coordinates.

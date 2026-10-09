@@ -46,11 +46,16 @@ android {
     }
 }
 
-// Bundle the hero commute pack from the single source file in /data; never hand-copy it into assets.
+// Bundle the hero commute pack and the mock rider Q&A from the single source files in /data; never hand-copy them into assets.
 val copyPackAssets = tasks.register<Copy>("copyPackAssets") {
-    from("${rootDir}/../data/pack/hero-trip.source.json")
-    into(layout.buildDirectory.dir("generated/packAssets/pack"))
-    rename { "hero-trip.json" }
+    from("${rootDir}/../data/pack/hero-trip.source.json") {
+        into("pack")
+        rename { "hero-trip.json" }
+    }
+    from("${rootDir}/../data/mock/rider-qa.json") {
+        into("mock")
+    }
+    into(layout.buildDirectory.dir("generated/packAssets"))
 }
 
 tasks.named("preBuild") {

@@ -46,6 +46,8 @@ sealed interface HomeEvent {
     data class SettleSheet(val sheet: Sheet) : HomeEvent
     /** A tap on the map at a coordinate. */
     data class MapTap(val lat: Double, val lng: Double) : HomeEvent
+    /** A long-press on a map pin moved that end to a new coordinate. */
+    data class MovePin(val field: Field, val lat: Double, val lng: Double) : HomeEvent
 }
 
 /**
@@ -212,6 +214,14 @@ fun reduce(state: HomeState, event: HomeEvent, source: TripSource): HomeState {
             applyMapTap(state, pinnedPlace(event.lat, event.lng)).copy(activeField = null, query = ""),
             source,
         )
+        is HomeEvent.MovePin -> {
+            val moved = pinnedPlace(event.lat, event.lng)
+            val next = when (event.field) {
+                Field.A -> state.copy(origin = moved)
+                Field.B -> state.copy(destination = moved)
+            }
+            settle(next.copy(activeField = null, query = ""), source)
+        }
     }
 }
 

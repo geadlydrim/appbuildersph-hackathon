@@ -32,6 +32,19 @@ import app.commutenity.domain.QaTrip
 import app.commutenity.domain.TripResult
 import app.commutenity.domain.canOpenTrip
 import app.commutenity.domain.evidenceFor
+import app.commutenity.domain.orderingVotes
+import app.commutenity.domain.Leg
+import app.commutenity.domain.Place
+import app.commutenity.domain.QaCandidate
+import app.commutenity.domain.QaState
+import app.commutenity.domain.Trip
+import app.commutenity.domain.TripPreference
+import app.commutenity.domain.TripSource
+import app.commutenity.domain.Field
+import app.commutenity.domain.SearchRow
+import app.commutenity.data.qa.RiderQaLoader
+import android.content.Context
+import android.util.Log
 import app.commutenity.domain.reduceQa
 import app.commutenity.ui.home.HomeMenuDrawer
 import app.commutenity.ui.home.MapHomeScreen
@@ -58,7 +71,14 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
-        val source = PackTripSource.fromAssets(applicationContext)
+        val voteContext = VoteContext()
+        val source: TripSource = VoteAwareSource(
+            PackTripSource.fromAssets(applicationContext) { key ->
+                voteContext.questions().orderingVotes(key, heroPair = voteContext.heroPair)
+            },
+            voteContext,
+        )
+        val initialQuestions = loadQuestions(applicationContext)
         llm.start(lifecycleScope)
         val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         if (debuggable && intent.getBooleanExtra("llm_selftest", false)) {
@@ -67,7 +87,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             CommuteNityTheme {
                 var state by remember { mutableStateOf(HomeState()) }
-                var questions by remember { mutableStateOf(SampleQuestions.initial()) }
+                var questions by remember { mutableStateOf(initialQuestions) }
+                voteContext.questions = { questions }
                 val context = LocalContext.current
                 val speech = remember { OnDeviceSpeech(context) }
                 DisposableEffect(Unit) { onDispose { speech.destroy() } }
@@ -120,10 +141,16 @@ class MainActivity : ComponentActivity() {
                 } else {
                     null
                 }
+                fun openCandidates(): List<QaCandidate> =
+                    if (origin != null && destination != null) {
+                        source.candidates(origin, destination, state.preference).map { QaCandidate(it.key, tripLabel(it)) }
+                    } else {
+                        emptyList()
+                    }
                 Box(Modifier.fillMaxSize()) {
                     HomeMenuDrawer(
                         drawerState = drawerState,
-                        onOpenQuestions = { questions = reduceQa(questions, QaEvent.Open(shownTrip)) },
+                        onOpenQuestions = { questions = reduceQa(questions, QaEvent.Open(shownTrip, candidates = openCandidates())) },
                     ) {
                         MapHomeScreen(
                             state = state,
@@ -156,7 +183,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             onOpenQuestions = {
-                                questions = reduceQa(questions, QaEvent.Open(shownTrip, onlyTrip = true))
+                                questions = reduceQa(questions, QaEvent.Open(shownTrip, onlyTrip = true, candidates = openCandidates()))
                             },
                             workedCount = shownTrip?.let { questions.evidenceFor(it.key) } ?: 0,
                             onMenu = { scope.launch { drawerState.open() } },
@@ -191,4 +218,54 @@ class MainActivity : ComponentActivity() {
         if (isFinishing) llm.close()
         super.onDestroy()
     }
+}
+
+/** What the trip finder may read when it asks for votes: the latest Q&A state and whether the pair being resolved is the hero pair. */
+private class VoteContext {
+    var questions: () -> QaState = { QaState() }
+    var heroPair: Boolean = false
+}
+
+/**
+ * Marks each resolve/candidates call with its own pair before the finder asks for votes, so the hero rule (D13)
+ * follows the pair being resolved, even while a reduction is still computing the next state.
+ */
+private class VoteAwareSource(private val inner: TripSource, private val context: VoteContext) : TripSource by inner {
+    override fun resolve(origin: Place, destination: Place, preference: TripPreference): TripResult {
+        context.heroPair = isHeroPair(origin, destination)
+        return inner.resolve(origin, destination, preference)
+    }
+
+    override fun candidates(origin: Place, destination: Place, preference: TripPreference): List<Trip> {
+        context.heroPair = isHeroPair(origin, destination)
+        return inner.candidates(origin, destination, preference)
+    }
+
+    private fun isHeroPair(origin: Place, destination: Place) =
+        origin.id == PackTripSource.HERO_ORIGIN_ID && destination.id == PackTripSource.HERO_DESTINATION_ID
+}
+
+/** Short label for an answer chip: ride kind, fare and time straight from the trip. */
+private fun tripLabel(trip: Trip): String {
+    val mode = trip.legs.filterIsInstance<Leg.Ride>().firstOrNull()?.mode?.lowercase().orEmpty()
+    val kind = when {
+        mode.startsWith("jeep") -> "Jeep"
+        mode.startsWith("bus") -> "Bus"
+        else -> "Ride"
+    }
+    return "$kind ${trip.fare} · ${trip.minutes}"
+}
+
+/** Rider answers need the same candidate keys the finder produces, so load them against a vote-free source. */
+private fun loadQuestions(context: Context): QaState = try {
+    val plain = PackTripSource.fromAssets(context)
+    val places = plain.search(Field.B, "").filterIsInstance<SearchRow.PlaceRow>().associate { it.place.id to it.place }
+    RiderQaLoader.fromAssets(context) { fromId, toId ->
+        val from = places[fromId]
+        val to = places[toId]
+        if (from == null || to == null) emptySet() else plain.candidates(from, to).map { it.key }.toSet()
+    }
+} catch (e: Exception) {
+    Log.w("MainActivity", "Rider answers did not load; using sample questions", e)
+    SampleQuestions.initial()
 }

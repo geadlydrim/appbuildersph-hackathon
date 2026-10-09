@@ -19,6 +19,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import app.commutenity.domain.Field
 import app.commutenity.domain.GeoPoint
 import app.commutenity.domain.Place
 import app.commutenity.domain.TripPath
@@ -46,6 +47,7 @@ import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
 import java.io.File
+import kotlin.math.hypot
 
 private const val TAG = "MapLibreSurface"
 private const val PMTILES = "makati-20261009-z14.pmtiles"
@@ -94,6 +96,7 @@ object MapLibreSurface : MapSurface {
         destination: Place?,
         onTap: ((lat: Double, lng: Double) -> Unit)?,
         path: TripPath?,
+        onLongPress: ((field: Field, lat: Double, lng: Double) -> Unit)?,
     ) {
         val context = LocalContext.current
         val lifecycleOwner = LocalLifecycleOwner.current
@@ -105,6 +108,11 @@ object MapLibreSurface : MapSurface {
         val fitTop = with(density) { 300.dp.roundToPx() }
         val fitBottom = with(density) { 560.dp.roundToPx() }
         val latestOnTap by rememberUpdatedState(onTap)
+        val latestOnLongPress by rememberUpdatedState(onLongPress)
+        val latestOrigin by rememberUpdatedState(origin)
+        val latestDestination by rememberUpdatedState(destination)
+        // How close to a pin a long-press must land to grab it.
+        val pinGrabRadiusPx = with(density) { 60.dp.toPx() }
         // The loaded style; null until the map is ready. Pin updates wait for it.
         var style by remember { mutableStateOf<Style?>(null) }
         var maplibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
@@ -173,6 +181,23 @@ object MapLibreSurface : MapSurface {
                     map.addOnMapClickListener { point ->
                         latestOnTap?.invoke(point.latitude, point.longitude)
                         latestOnTap != null
+                    }
+                    map.addOnMapLongClickListener { point ->
+                        val callback = latestOnLongPress ?: return@addOnMapLongClickListener false
+                        val pressed = map.projection.toScreenLocation(point)
+                        val nearest = listOf(Field.A to latestOrigin, Field.B to latestDestination)
+                            .mapNotNull { (field, place) ->
+                                val at = place?.latLng() ?: return@mapNotNull null
+                                val screen = map.projection.toScreenLocation(at)
+                                field to hypot(screen.x - pressed.x, screen.y - pressed.y)
+                            }
+                            .minByOrNull { it.second }
+                        if (nearest == null || nearest.second > pinGrabRadiusPx) {
+                            false
+                        } else {
+                            callback(nearest.first, point.latitude, point.longitude)
+                            true
+                        }
                     }
                     maplibreMap = map
                     style = loaded

@@ -29,6 +29,9 @@ data class QaThread(
     val comments: List<QaPost>,
 )
 
+/** One trip choice an answer can be tied to; [key] is the candidate key, [label] is display text only. */
+data class QaCandidate(val key: String, val label: String)
+
 data class QaState(
     val open: Boolean = false,
     val trip: QaTrip? = null,
@@ -37,16 +40,31 @@ data class QaState(
     val asking: Boolean = false,
     val draft: String = "",
     val focusComment: Boolean = false,
-    val markWorked: Boolean = false,
+    val markWorkedKey: String? = null,
+    val candidates: List<QaCandidate> = emptyList(),
     val threads: List<QaThread> = emptyList(),
     val votes: Map<String, QaVote> = emptyMap(),
     val saveError: String? = null,
     val savedNotice: Boolean = false,
 )
 
-/** "N riders say this works" for one trip. Arrow votes (D36) never count here. */
-fun QaState.evidenceFor(tripKey: String): Int =
-    threads.sumOf { thread -> thread.comments.count { it.workedTrip == tripKey } }
+/**
+ * "N riders say this works" for one trip: every mock answer tied to it, plus at most one for this phone (D39).
+ * Arrow votes (D36) never count here.
+ */
+fun QaState.evidenceFor(tripKey: String): Int = tiedAnswers(tripKey, includeMock = true)
+
+/**
+ * The "worked" votes the trip finder may use to break an exact tie (D16). Same as [evidenceFor], except that
+ * on the hero pair mock answers are shown but never change the order (D13).
+ */
+fun QaState.orderingVotes(tripKey: String, heroPair: Boolean): Int = tiedAnswers(tripKey, includeMock = !heroPair)
+
+private fun QaState.tiedAnswers(tripKey: String, includeMock: Boolean): Int {
+    val tied = threads.flatMap { it.comments }.filter { it.workedTrip == tripKey }
+    val mock = if (includeMock) tied.count { !it.mine } else 0
+    return mock + minOf(1, tied.count { it.mine })
+}
 
 fun QaState.visibleThreads(): List<QaThread> {
     val route = trip?.route
@@ -54,10 +72,12 @@ fun QaState.visibleThreads(): List<QaThread> {
     return threads.filter { it.question.route?.samePair(route) == true }
 }
 
-/** This phone already said the trip on screen worked; one phone is one rider. */
+/** This phone already tied an answer to a trip for the pair on screen; one phone is one rider (D39). */
 fun QaState.alreadyMarkedWorked(): Boolean {
-    val key = trip?.key ?: return false
-    return threads.any { thread -> thread.comments.any { it.mine && it.workedTrip == key } }
+    val route = trip?.route ?: return false
+    return threads.any { thread ->
+        thread.question.route?.samePair(route) == true && thread.comments.any { it.mine && it.workedTrip != null }
+    }
 }
 
 fun QaState.isAboutTrip(thread: QaThread): Boolean {
@@ -65,7 +85,7 @@ fun QaState.isAboutTrip(thread: QaThread): Boolean {
     return thread.question.route?.samePair(route) == true
 }
 
-/** The "This trip worked" chip only makes sense in a thread about the trip on screen, once per phone. */
+/** Tying an answer to a trip only makes sense in a thread about the pair on screen, once per phone. */
 fun QaState.canMarkWorked(thread: QaThread): Boolean = isAboutTrip(thread) && !alreadyMarkedWorked()
 
 fun QaState.scoreOf(post: QaPost): Int = post.score + when (votes[post.id]) {
@@ -75,7 +95,11 @@ fun QaState.scoreOf(post: QaPost): Int = post.score + when (votes[post.id]) {
 }
 
 sealed interface QaEvent {
-    data class Open(val trip: QaTrip? = null, val onlyTrip: Boolean = false) : QaEvent
+    data class Open(
+        val trip: QaTrip? = null,
+        val onlyTrip: Boolean = false,
+        val candidates: List<QaCandidate> = emptyList(),
+    ) : QaEvent
     data object Close : QaEvent
     data object ShowAll : QaEvent
     data class OpenThread(val id: String, val focusComment: Boolean = false) : QaEvent
@@ -85,16 +109,18 @@ sealed interface QaEvent {
     data object CancelDraft : QaEvent
     data object SaveDraft : QaEvent
     data class Vote(val postId: String, val vote: QaVote) : QaEvent
-    data object ToggleWorked : QaEvent
+    /** Tie the next answer to [key] (one of the open candidates); the same key again, or null, unties it. */
+    data class MarkWorked(val key: String?) : QaEvent
 }
 
 fun reduceQa(state: QaState, event: QaEvent): QaState {
-    val fresh = state.copy(asking = false, draft = "", focusComment = false, markWorked = false, saveError = null, savedNotice = false)
+    val fresh = state.copy(asking = false, draft = "", focusComment = false, markWorkedKey = null, saveError = null, savedNotice = false)
     return when (event) {
         is QaEvent.Open -> fresh.copy(
             open = true,
             trip = event.trip,
             onlyTrip = event.onlyTrip && event.trip != null,
+            candidates = event.candidates,
             threadId = null,
         )
         QaEvent.Close -> fresh.copy(open = false, threadId = null)
@@ -103,12 +129,14 @@ fun reduceQa(state: QaState, event: QaEvent): QaState {
         QaEvent.BackToList -> fresh.copy(threadId = null)
         QaEvent.StartQuestion -> fresh.copy(asking = true)
         is QaEvent.Draft -> state.copy(draft = event.value, saveError = null)
-        QaEvent.CancelDraft -> state.copy(asking = false, draft = "", focusComment = false, markWorked = false, saveError = null)
+        QaEvent.CancelDraft -> state.copy(asking = false, draft = "", focusComment = false, markWorkedKey = null, saveError = null)
         QaEvent.SaveDraft -> saveDraft(state)
         is QaEvent.Vote -> state.copy(votes = toggleVote(state.votes, event.postId, event.vote))
-        QaEvent.ToggleWorked -> {
+        is QaEvent.MarkWorked -> {
             val thread = state.threads.firstOrNull { it.id == state.threadId }
-            if (thread != null && state.canMarkWorked(thread)) state.copy(markWorked = !state.markWorked) else state
+            val allowed = thread != null && state.canMarkWorked(thread) &&
+                (event.key == null || state.candidates.any { it.key == event.key })
+            if (allowed) state.copy(markWorkedKey = event.key.takeIf { it != state.markWorkedKey }) else state
         }
     }
 }
@@ -129,7 +157,7 @@ private fun saveDraft(state: QaState): QaState {
         val question = QaPost(id = id, body = body, placeName = null, route = route, sample = true, mine = true)
         listOf(QaThread(id = id, question = question, comments = emptyList())) + state.threads
     } else {
-        val worked = if (state.markWorked && state.canMarkWorked(thread)) state.trip?.key else null
+        val worked = state.markWorkedKey?.takeIf { key -> state.canMarkWorked(thread) && state.candidates.any { it.key == key } }
         val comment = QaPost(id = id, body = body, placeName = null, workedTrip = worked, sample = true, mine = true)
         state.threads.map { if (it.id == thread.id) it.copy(comments = it.comments + comment) else it }
     }
@@ -138,7 +166,7 @@ private fun saveDraft(state: QaState): QaState {
         asking = false,
         draft = "",
         focusComment = false,
-        markWorked = false,
+        markWorkedKey = null,
         saveError = null,
         savedNotice = true,
     )
