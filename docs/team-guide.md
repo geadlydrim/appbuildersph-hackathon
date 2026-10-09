@@ -10,10 +10,10 @@ Read this once before you start. It takes about 10 minutes.
 
 **How we work: decide first, then build.** We don't jump straight into code. A few decisions, made badly, would waste the whole night: which phone, which AI model, which routes we cover. So we work in two phases:
 
-1. **Planning (until 7:00 PM tonight).** We answer a short list of open questions. Each question is a GitHub issue called a **ticket**. All the tickets hang off one parent issue called the **map**. Anyone can pick up a ticket, answer it, and close it.
-2. **Building (7:00 PM until the freeze).** Once the questions are answered, they're turned into build tasks, also GitHub issues, and we build in fixed stages (**tiers**). Each tier must fully work before the next one starts, so we always have a working demo.
+1. **Planning (until 9:00 PM tonight).** We answer a short list of open questions. Each question is a GitHub issue called a **ticket**. All the tickets hang off one parent issue called the **map**. Anyone can pick up a ticket, answer it, and close it.
+2. **Building (9:00 PM until the freeze).** Once the questions are answered, they're turned into build tasks, also GitHub issues, and we build in fixed stages (**tiers**). Each tier must fully work before the next one starts, so we always have a working demo.
 
-**7:00 PM is a hard stop for planning.** Any ticket still open then takes the default answer written at the bottom of the ticket, and we start building anyway.
+**9:00 PM is a hard stop for planning.** Any ticket still open then takes the default answer written at the bottom of the ticket, and we start building anyway. If every ticket closes earlier, building starts earlier.
 
 **The docs are the source of truth.** Everything we've decided is written in `docs/fmd/`. Start with `docs/fmd/state.md`: it says where we are, what's decided, and what's still open.
 
@@ -59,7 +59,7 @@ cd appbuildersph-hackathon
 - omp reads `.agents/skills/` automatically. If you use Claude Code or Cursor, tell the project owner so we can make the skills visible to your tool.
 - The agent reads [`AGENTS.md`](../AGENTS.md) for the project rules.
 
-## 4. Planning phase: what to do (until 7:00 PM)
+## 4. Planning phase: what to do (until 9:00 PM)
 
 ### The loop
 
@@ -135,9 +135,9 @@ None of this needs a decision first:
 - Save the LTFRB jeepney and bus fare guides from a normal browser into the repo. The website blocks scripts, so this has to be done by hand.
 - Type the LRT-1, LRT-2, and MRT-3 fare tables into a sheet. Each fact goes in with its source.
 
-## 5. Building phase: what to do (7:00 PM → 10:00 AM)
+## 5. Building phase: what to do (9:00 PM → 10:00 AM)
 
-**Getting started.** At 7:00 PM the map is done. The map keeper turns the decisions into build issues, one per task, each labelled with its role. Then:
+**Getting started.** At 9:00 PM the map is done. The map keeper turns the decisions into build issues, one per task, each labelled with its role. Then:
 
 **1. Pick your next build issue and claim it:**
 
@@ -174,16 +174,16 @@ git tag demo-safe-t0 && git push origin demo-safe-t0
 
 | Time | Goal |
 |---|---|
-| ~7:00 PM | LLM speed test on the demo phone; app skeleton; routing code; first version of the commute pack |
-| ~12:00 AM | **T0:** ask a question offline, get the best trip |
-| ~3:00 AM | **T1:** alternatives, suggest a trip, vote, sync. This is the demo-ready MVP. |
-| ~5:00 AM | **T2:** trained ranker, only if it beats the simple scoring |
-| 5:00–8:00 AM | T3 signboard scanner, then T4 voice, if there's time |
+| ~9:00 PM | LLM speed test on the demo phone; app skeleton; routing code; first version of the commute pack |
+| ~1:00 AM | **T0:** ask a question offline, get the best trip |
+| ~4:00 AM | **T1:** alternatives, suggest a trip, vote, sync. This is the demo-ready MVP. |
+| ~6:00 AM | **T2:** trained ranker, only if it beats the simple scoring |
+| 6:00–8:00 AM | T3 signboard scanner, then T4 voice, if there's time |
 | **8:00 AM** | **Feature freeze.** Fixes only. |
 | 8:00–9:30 AM | README, disclosures, 1-minute video, X/LinkedIn post |
 | **10:00 AM** | **Code freeze and submission** |
 
-**If we fall behind,** we cut features. We don't stay up arguing. The cut rules are in [`docs/fmd/build-commutenity.md`](fmd/build-commutenity.md#1-build-sequence). For example, if T0 isn't working by 1:00 AM, the signboard scanner and voice are dropped.
+**If we fall behind,** we cut features. We don't stay up arguing. The cut rules are in [`docs/fmd/build-commutenity.md`](fmd/build-commutenity.md#1-build-sequence). For example, if T0 isn't working by 2:00 AM, the signboard scanner and voice are dropped.
 
 ## 6. Rules everyone follows
 

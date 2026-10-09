@@ -17,10 +17,10 @@ Start with [state](state.md), then read only the doc your workstream needs.
 | CP0 Decisions | ASAP | Resolve A4, A6, A8, A12 through wayfinder | Recorded in [state](state.md) | Project owner |
 | CP1 Runtime spike | CP0 + 1.5 h | A bare Android app loads the candidate LLM **on the demo phone** and parses 5 Taglish questions offline | Valid JSON at ≤ 5 s warm. If not, switch model or runtime now. | P2 (AI) |
 | CP2 Foundations | in parallel with CP1 | P1: Compose scaffold, Room, feature flags. P3: candidate generator and scorer as a pure Kotlin module with fixture tests. P4: pack v0 for one corridor plus validator, 30 eval questions, 10 ranking scenarios | Fixture tests pass; pack validates | P1, P3, P4 |
-| CP3 T0 skeleton | ~12:00 AM | Wire parser → resolver → generator → scorer → card → phrasing | US-01..US-03 pass offline on the phone; tag `demo-safe-t0` plus APK | P1 + P2 + P3 |
-| CP4 T1 demo-ready | ~3:00 AM | Setup screen, alternatives sheet, suggest/vote, Room plus sync backend (2 tables, push/pull) | [QAD gate](qad-commutenity.md#6-release-criteria) passes; tag `demo-safe-t1` | Whole team |
-| CP5 T2 ranker | ~5:00 AM | Train on the labelled scenarios and seeded votes; evaluate on held-out pairs; parity test; swap in behind a flag if it wins | AI-06 and QA-11 pass; tag `demo-safe-t2` | P3 |
-| CP6 T3 → T4 | 5:00–8:00 AM | Signboard check, then voice | Tier gates pass | P2 |
+| CP3 T0 skeleton | ~1:00 AM | Wire parser → resolver → generator → scorer → card → phrasing | US-01..US-03 pass offline on the phone; tag `demo-safe-t0` plus APK | P1 + P2 + P3 |
+| CP4 T1 demo-ready | ~4:00 AM | Setup screen, alternatives sheet, suggest/vote, Room plus sync backend (2 tables, push/pull) | [QAD gate](qad-commutenity.md#6-release-criteria) passes; tag `demo-safe-t1` | Whole team |
+| CP5 T2 ranker | ~6:00 AM | Train on the labelled scenarios and seeded votes; evaluate on held-out pairs; parity test; swap in behind a flag if it wins | AI-06 and QA-11 pass; tag `demo-safe-t2` | P3 |
+| CP6 T3 → T4 | 6:00–8:00 AM | Signboard check, then voice | Tier gates pass | P2 |
 | **Freeze** | **8:00 AM** | No new features; fixes only | — | Project owner |
 | Submit | 8:00–9:30 AM | README with disclosures, ~1 min demo video, X/LinkedIn post (#AppBuildersPH, tag Devin/Cognition), the "why local" answer | Submitted once, before **10:00 AM** | P4 |
 
@@ -28,10 +28,10 @@ Start with [state](state.md), then read only the doc your workstream needs.
 
 **Cut rules (no debate at 2 AM):**
 - If CP1 isn't passing at its target time, switch to the fallback runtime, then to a smaller model. As a last resort, use a rule-based parser plus the embedding resolver.
-- If CP3 slips past 1:00 AM, cut T3 and T4.
-- If sync isn't working by 3:30 AM, demo contributions from the local store only and say so.
-- If CP4 slips past 4:30 AM, T2 ships only if it is already passing; otherwise polish T1.
-- If the ranker doesn't beat the baseline by 6:30 AM, ship the baseline and report both numbers.
+- If CP3 slips past 2:00 AM, cut T3 and T4.
+- If sync isn't working by 4:30 AM, demo contributions from the local store only and say so.
+- If CP4 slips past 5:00 AM, T2 ships only if it is already passing; otherwise polish T1.
+- If the ranker doesn't beat the baseline by 7:00 AM, ship the baseline and report both numbers.
 
 ## 2. Team Workstreams
 
