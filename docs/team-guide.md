@@ -119,11 +119,11 @@ gh issue edit <number> --add-assignee @me
 | Ticket | Who |
 |---|---|
 | [Who owns each workstream?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/11) | Project owner, first. It takes about 5 minutes. |
-| [Which phone presents the demo?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/3) | **Everyone, now.** Comment with your phone's model, chip, RAM, Android version, and free storage. |
+| ~~[Which phone presents the demo?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/3)~~ | **Decided:** the owner's POCO X6 Pro. |
 | [Which corridors does the pack cover?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/6) | Whoever knows the commutes best (the data owner) |
 | [Which sync backend?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/9) | Android owner |
 | [Ranker data format](https://github.com/geadlydrim/appbuildersph-hackathon/issues/10) | Ranker owner |
-| [LLM speed test on the demo phone](https://github.com/geadlydrim/appbuildersph-hackathon/issues/8) | AI owner. It's blocked until the phone is picked. |
+| [LLM speed test on the demo phone](https://github.com/geadlydrim/appbuildersph-hackathon/issues/8) | AI owner, on the POCO X6 Pro. **Ready now.** |
 | [Travel minutes and "most efficient"](https://github.com/geadlydrim/appbuildersph-hackathon/issues/7) | Data owner. It's blocked until corridors are picked. |
 
 ### Useful prep while you wait

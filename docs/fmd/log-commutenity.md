@@ -23,6 +23,7 @@ Append-only. One row per meaningful action or decision. Never edit past rows.
 | 9 | 2026-10-09 | Charted the wayfinder map: issue #1 with 9 tickets, cutoff 7:00 PM. Added GLOSSARY.md (route = one line, trip = door-to-door). Research resolved the runtime question (LiteRT-LM replaces MediaPipe as the primary LLM runtime) and the fare-source question (rail fares `collected`, jeepney and bus `known` until the LTFRB guides are saved). Results are on the `research/*` branches. | state A4, SDD §8, BUILD §3, data plan §3 | A4 narrowed |
 | 10 | 2026-10-09 | Owner decision: planning cutoff moved from 7:00 PM to 9:00 PM. Build checkpoints shifted about 1 h later (T0 ~1 AM, T1 ~4 AM, T2 ~6 AM, T3/T4 6–8 AM) and cut rules tightened to match. Feature freeze (8:00 AM) and code freeze (10:00 AM) unchanged. | team guide, BUILD §1, map #1, ticket defaults | — |
 | 11 | 2026-10-09 | Closed the fourth-teammate ticket: the team is geadlydrim, pablo-pica, storms23, and Jrabara101 (invites pending for the last two). Role assignment split into a new ticket at the top of the map. | state D12, A8; team guide | D12 amended |
+| 12 | 2026-10-09 | Closed the demo-phone ticket: the owner's POCO X6 Pro (Dimensity 8300-Ultra). The LLM speed-test ticket is now unblocked. | state D14 (A12 closed), team guide | D14 |
 
 ---
 

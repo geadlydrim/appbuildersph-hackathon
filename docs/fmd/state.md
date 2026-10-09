@@ -53,7 +53,6 @@ Deliberately absent: ops runbook, go-to-market, pricing, store release. Nothing 
 | A9 | **Sync backend** for contributions: Supabase (known from the original CommuteNity, free tier) vs. alternatives; anonymous device IDs, no accounts | Setup time; abuse | Yes | Wayfinder |
 | A10 | **Travel-time data:** per-segment minutes come from team ride estimates (`collected` or `known`), with `mock` values where neither exists. "Most efficient" weighs time, fare, transfers, and walking. | Mock minutes drive the pick on the demo pair | Yes | Wayfinder plus the data owner |
 | A11 | **Ranker model:** pairwise logistic regression or a small GBDT exported for on-device inference. It is trained on team preference labels, contribution votes, and optional `mock` preferences. Evaluation uses held-out **human** labels only. | Too little data to beat the hand-weighted baseline | Yes; the baseline stays | Wayfinder plus the ranker owner |
-| A12 | **Demo phone:** which team Android phone presents (RAM, chip) and how it's mirrored (e.g., scrcpy over USB to the laptop, then HDMI) | Model too big for the phone, or mirroring fails at the venue | Yes | Before CP1 |
 
 ## 5. Decisions
 
@@ -72,6 +71,7 @@ Deliberately absent: ops runbook, go-to-market, pricing, store release. Nothing 
 | D11 | **Training target:** a learned on-device route ranker. It replaces the hand-weighted score only if it beats it on held-out preferences. Signboard and voice use pretrained models. | Human decision, 2026-10-09 | Ranker data too thin by CP5 |
 | D12 | **Team:** 4 people: geadlydrim (owner), pablo-pica, storms23, Jrabara101 | Human decision, 2026-10-09; [ticket](https://github.com/geadlydrim/appbuildersph-hackathon/issues/2) | — |
 | D13 | **Mixed data is allowed.** Data is a mix of `collected` (verified during the event), `known` (team knowledge), and `mock` (synthetic). Every record carries its class. Precedence for the same fact: collected > known > mock. Mock is labelled in the app, the evals, and the README, and is never presented as real ([data plan §3.1](data-commutenity.md#31-mock-data-rules)). | Human decision, 2026-10-09; owner reports that the organizers allow mock data (not stated in the briefing) | Organizers say otherwise |
+| D14 | **Demo phone:** the owner's POCO X6 Pro (MediaTek Dimensity 8300-Ultra, HyperOS), mirrored with scrcpy over USB to the laptop, then HDMI. The spare is any teammate's Android phone with the APK and models pre-installed. RAM variant and the mirroring test are still to confirm. | Human decision, 2026-10-09; [ticket](https://github.com/geadlydrim/appbuildersph-hackathon/issues/3) | Model doesn't fit in RAM |
 
 ## 6. Context Exclusions
 
