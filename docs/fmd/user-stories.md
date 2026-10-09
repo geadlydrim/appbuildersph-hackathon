@@ -101,6 +101,17 @@ The v0.2 stories (question-first, including the OCR signboard story) are retired
 - Given phone A suggests a trip and syncs, when phone B syncs, then B shows that trip as a Community alternative for the same pair.
 - Given sync fails, then nothing is lost. The app retries later and never blocks the map, the trip, or tracking.
 
+### US-15: Read a sample question, and add one without logging in
+**PRD-F12** · Mock only. Not in the current MVP cut. No login.
+
+> As a **New Arrival**, I want to see how a question and an answer would look, with a place name on them, so that "doon sa kanto" can point at a place later.
+
+- Every question and answer on this screen is mock data. The screen says "Sample data. Walang account at walang login." There is no account, no login, and no sync of other riders.
+- Given the sample threads, when I open "Mga tanong", then I can read a question, its place name, and its answers. Each one is marked Sample.
+- Given I type a question or an answer, when the text is empty, then it is not saved. When it has text, then it stays on this phone for the session and is still marked Sample.
+- Given I vote up or down, voting the same way again clears it. A vote never changes a fare, a stop, or a pack route.
+- A map reference is a place name. It is labeled sample, not verified. Missing map tiles do not hide the name.
+
 ## T2: In-trip tracking
 
 ### US-09: Am I still on the right route?
