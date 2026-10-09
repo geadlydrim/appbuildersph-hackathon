@@ -4,7 +4,7 @@ Native Android (Kotlin/Compose) on-device AI commute assistant for Metro Manila 
 
 ## Project docs
 
-Read `docs/fmd/state.md` first: position, open assumptions (A*), decisions (D*). `docs/fmd/index.md` lists every doc and reading path. `docs/fmd/JUDGING.md` holds the hackathon rules; it wins over any project doc.
+Read `docs/fmd/state.md` first: position, open assumptions (A*), decisions (D*). `docs/fmd/index.md` lists every doc and reading path. `docs/fmd/JUDGING.md` holds the hackathon rules; it wins over any project doc. Humans start with `docs/team-guide.md`.
 
 Standing rules:
 
