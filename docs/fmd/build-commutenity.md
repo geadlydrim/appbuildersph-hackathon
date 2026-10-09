@@ -15,7 +15,7 @@ Start with [state](state.md), then read only the doc your workstream needs. Tier
 | Checkpoint | Target (Oct 9–10) | Work | Done when | Owner |
 |---|---|---|---|---|
 | CP0 Decisions | Now | D20 to D31 recorded in [state](state.md) | Recorded | Project owner |
-| CP1 Spikes | ~11:30 PM | **Map spike:** MapLibre Native Android renders a Makati PMTiles file offline on the POCO X6 Pro; record file size ([A14](state.md#4-open-assumptions)). **LLM speed test** (issue #8): the candidate LLM loads on the demo phone and parses 5 Taglish questions offline. | Map renders in airplane mode, or the A14 fallback is chosen. LLM: valid JSON at ≤ 5 s warm, else switch model or runtime; it picks the F8 model and runtime, and a failure never removes on-device inference ([D31](state.md#5-decisions)). | P1 (map and LLM test); P2 owns the LLM work after the result |
+| CP1 Spikes | ~11:30 PM | **Map spike:** MapLibre Native Android renders a Makati PMTiles file offline on the POCO X6 5G; record file size ([A14](state.md#4-open-assumptions)). **LLM speed test** (issue #8): **done** ([D32](state.md#5-decisions)). Gemma 4 E2B on LiteRT-LM 0.18.0, GPU, hybrid parser: worst p95 2.84 s, 10/10 exact on 10 Makati questions. | Map renders in airplane mode, or the A14 fallback is chosen. LLM: passed; P2 builds PRD-F8 on it. | P1 (map); P2 owns the LLM work from here |
 | CP2 Foundations | in parallel with CP1; shape engine chosen before pack v0 ([A15](state.md#4-open-assumptions)); the ≥2 candidate trips for the D30 pair (Ayala Center to Dela Rosa St., Pio del Pilar) listed and verified before pack v0 ([A13](state.md#4-open-assumptions)) | P4: **pack v0 for Makati with road shapes** plus validator (incl. shape rules), mock generator, eval sets. P3: **trip finder module** (candidate generator and scorer) as a pure Kotlin module with fixture tests. P1: app shell, Room, feature flags, map screen. | Fixture tests pass; pack validates (QA-16) | P1, P3, P4 |
 | CP3 T0 walking skeleton | ~1:30 AM | Pins A and B on the offline map → trip finder → best-trip card and shapes drawn on real roads; airplane mode | US-01 to US-03 pass offline on the phone (QA-01 to QA-03, QA-16, QA-17, QA-19); tag `demo-safe-t0` plus APK | P1 + P3 + P4 |
 | CP4 T1 refresh and community | ~3:30 AM | Refresh client (pack, map pack, community), foot routes for first/last-mile, alternatives sheet, suggest/vote, Room plus sync backend (2 tables, push/pull), two-phone sync | US-04 to US-08 pass; [QAD gate](qad-commutenity.md#6-release-criteria) for T0 + T1 (QA-04 to QA-09); tag `demo-safe-t1` | Whole team |
@@ -43,8 +43,8 @@ Four people ([D12](state.md#5-decisions)). Owners per [D19](state.md#5-decisions
 
 | Role | Owner | Owns |
 |---|---|---|
-| **P1: Android app** | geadlydrim (Keanu) | App shell, MapLibre map and PMTiles map pack, A/B trip builder UI, trip card and alternatives UI, refresh and sync client, tracking UI and foreground service, APK builds, `demo-safe-*` tags. Runs the LLM speed test (issue #8) on his POCO X6 Pro. |
-| **P2: On-device AI** | pablo-pica | LLM (PRD-F8, MVP: parser and phrasing prompts, runtime after the speed test), STT (T3 voice, optional), place search and alias matching, correct-vehicle text matcher, latency |
+| **P1: Android app** | geadlydrim (Keanu) | App shell, MapLibre map and PMTiles map pack, A/B trip builder UI, trip card and alternatives UI, refresh and sync client, tracking UI and foreground service, APK builds, `demo-safe-*` tags. Ran the LLM speed test (issue #8) on his POCO X6 5G. |
+| **P2: On-device AI** | pablo-pica | LLM (PRD-F8, MVP: the hybrid parser on Gemma 4 E2B per [D32](state.md#5-decisions); LLM phrasing is off), STT (T3 voice, optional), place search and alias matching, correct-vehicle text matcher, latency |
 | **P3: Routing, tracking, ranker** | storms23 (Jeff) | Candidate generator and D16 ordering (trip finder), map-matching and tracking computation (T2), GPS test tracks, ranker training and eval in `ml/`, Kotlin parity, AI-06 (T4) |
 | **P4: Data, evals and story** | Jrabara101 | Makati pack with the road-shape precompute pipeline ([A15](state.md#4-open-assumptions)), fares, minutes, distances, aliases, signboards, mock-data generator, validator, eval sets, labelling sessions, QA runs, README disclosures, pitch, video, post |
 
@@ -52,7 +52,7 @@ Work comes from GitHub issues. Decisions go through the wayfinder map, not chat.
 
 ## 3. Stack Currency
 
-Nothing is pinned yet. Record exact versions when installing, and never fabricate them.
+Only the LLM runtime is pinned so far ([D32](state.md#5-decisions)). Record exact versions when installing, and never fabricate them.
 
 | Layer | Candidate | Verified | Pin |
 |---|---|---|---|
@@ -61,7 +61,7 @@ Nothing is pinned yet. Record exact versions when installing, and never fabricat
 | Map pack | Protomaps PMTiles (vector tiles from OSM data), extract with the `pmtiles` command-line tool | No | — |
 | Road shapes (data build only) | OSRM or GraphHopper for driving and foot; OSM track geometry for rail ([A15](state.md#4-open-assumptions)). Runs on a laptop or server, never in the app. | No | — |
 | GPS | Android `LocationManager` GPS provider or `FusedLocationProviderClient`, as a foreground service of type `location`; mock-location for tests | No | — |
-| LLM runtime (PRD-F8) | LiteRT-LM (`litertlm-android`, research: 0.18.0); fallback llama.cpp via JNI | No | — |
+| LLM runtime (PRD-F8) | LiteRT-LM `com.google.ai.edge.litertlm:litertlm-android:0.18.0`, GPU backend; model `gemma-4-E2B-it.litertlm` (2,588,147,712 bytes) from `litert-community/gemma-4-E2B-it-litert-lm` ([D32](state.md#5-decisions)). Fallback llama.cpp via JNI | Yes (LLM speed test on the POCO X6 5G, 2026-10-10) | `litertlm-android:0.18.0` |
 | Embeddings / ranker | LiteRT-LM EmbeddingEngine + EmbeddingGemma (T3, optional); ranker in plain Kotlin (T4) | No | — |
 | Speech (T3) | whisper.cpp via JNI | No | — |
 | Sync and refresh backend | Supabase: anonymous Auth, authenticated Edge Function, Postgres, Storage (manifest, pack, map pack) | No | — |

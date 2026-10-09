@@ -37,7 +37,7 @@ No tests exist yet. Docs only.
 
   The 100 m, 30 s, and ~300 m values are the proposed thresholds from [D25](state.md#5-decisions). They are config and get tuned in testing ([A16](state.md#4-open-assumptions)).
 - **Simulating GPS on the demo phone.** Real fixes are not needed to test tracking:
-  - **Real phone (POCO X6 Pro):** select a mock-location app in Developer options, then replay a GPX track with it. A debug-build replayer that registers a test location provider is the alternative. P1 and P3 pick one at CP5 and record it in [BUILD §3](build-commutenity.md#3-stack-currency). Not yet tried on HyperOS, so confirm on the first run that the app receives the mock fixes.
+  - **Real phone (POCO X6 5G):** select a mock-location app in Developer options, then replay a GPX track with it. A debug-build replayer that registers a test location provider is the alternative. P1 and P3 pick one at CP5 and record it in [BUILD §3](build-commutenity.md#3-stack-currency). Not yet tried on HyperOS, so confirm on the first run that the app receives the mock fixes.
   - **Emulator:** `adb emu geo fix <longitude> <latitude>` sets one fix, and the emulator's Extended controls load a GPX track. This is for early development only; the demo phone is the gate.
   - **Airplane mode still applies.** GPS needs no data, so replay and tracking run with the network off.
   - **Labelling:** any demo or screenshot that uses a replayed track says "simulated route".

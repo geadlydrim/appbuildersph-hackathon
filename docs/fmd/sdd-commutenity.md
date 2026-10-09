@@ -69,7 +69,7 @@ flowchart LR
 | PRD-F5 | Candidate generator, scorer, alternatives UI | Same as F2 |
 | PRD-F6 | Contribution store, sync client, backend | [Data plan §2.1](data-commutenity.md#21-contribution-schema) |
 | PRD-F7 | Tracking service, map-matcher, para alert, notification | Active trip's shapes and para points; `TrackingConfig` |
-| PRD-F8 | Query parser (LLM), place search, correct-vehicle matcher, trip composer (grounded phrasing) | Pack places; `routes.signboards[]` and route names |
+| PRD-F8 | Query parser (hybrid: keyword cues plus LLM extraction), place search, correct-vehicle matcher, trip composer (template; LLM phrasing off per [D32](state.md#5-decisions)) | Pack places; `routes.signboards[]` and route names |
 | PRD-F9 | Speech-to-text (whisper.cpp) | Whisper model file |
 | PRD-F10 | Ranker | Feature spec plus model file ([data plan §5](data-commutenity.md#5-training-plan)) |
 
@@ -117,7 +117,7 @@ Proposed shapes. Final names are settled at CP3.
 
 **Scorer:** `rank(candidates, preference) → Ranked[]`. Each `Ranked` has `{ candidate, score, reason }`. The reason comes from the top contributing features.
 
-**Trip composer:** `compose(Ranked, lang) → { text, factsUsed[] }`. The template renders first. With PRD-F8 the LLM phrasing is accepted only if every number and place it mentions is in `factsUsed`. T0 to T2 use the template only, and the template is the F8 fallback.
+**Trip composer:** `compose(Ranked, lang) → { text, factsUsed[] }`. The template renders the answer. LLM phrasing is **off** ([D32](state.md#5-decisions)): on the demo phone it took about 5.3 s and the owner judged it not natural. If it is ever turned back on, the phrasing is accepted only if every number and place it mentions is in `factsUsed`.
 
 **Shape store:** `shapeFor(legRef) → LatLng[]` decodes the encoded polyline stored in the pack for a segment or transfer; `tripShapes(trip) → LegShape[]` returns one line per leg for the map, and the active trip's full polyline for tracking. `footShape(pinStop) → LatLng[]?` returns a cached foot route or `null` (the caller then draws the dashed straight line). Decoded shapes are cached in memory for the visible trip only.
 
@@ -147,7 +147,7 @@ Proposed shapes. Final names are settled at CP3.
 | `PARA_ALERT_M` | 300 | [D25](state.md#5-decisions) |
 | `GPS_INTERVAL_MS`, `GPS_STALE_S`, `MAX_ACCURACY_M`, `BACKTRACK_M`, `LOOKAHEAD_M`, `ARRIVE_M` | Set during the A16 tuning; not yet chosen | — |
 
-**Query parser** (LLM, constrained JSON, PRD-F8):
+**Query parser** (hybrid, PRD-F8, [D32](state.md#5-decisions)). Output contract:
 ```json
 { "intent": "trip" | "vehicle_check" | "other",
   "origin": "string | null",
@@ -156,6 +156,16 @@ Proposed shapes. Final names are settled at CP3.
   "vehicle_text": "string | null" }
 ```
 For `trip`, the origin and destination go through place search and set point A and point B. For `vehicle_check`, `vehicle_text` goes to the matcher.
+
+How the JSON is produced (measured in the [LLM speed test](https://github.com/geadlydrim/appbuildersph-hackathon/blob/prototype/llm-speed-test/spikes/llm-speed-test/RESULTS.md)):
+1. **Cues (code):** Taglish and English keyword lists set `intent = vehicle_check` (e.g. "tama ba", "tamang", "karatula", "nakasulat", "it says") and `preference` ("walang lipat" → `fewest_transfers`, "mura"/"tipid" → `cheapest`, "mabilis" → `fastest`). The lists live in one config file.
+2. **Extraction (LLM):** Gemma 4 E2B on LiteRT-LM fills only `{origin, destination}`, or `{vehicle_text}` for a vehicle check, under a JSON schema (`ResponseFormat.json`). The prompt holds the question only, after a short few-shot system prompt.
+3. **Copy check (code):** a value survives only if the rider wrote it, compared word-aligned after trimming edge punctuation and a `pa-` prefix ("Pa-Greenbelt" → "Greenbelt"). Anything else becomes null. If origin equals destination, origin becomes null.
+4. **Assembly (code):** `intent` is `trip` if a place survived, else `other`; `preference` is set only for trips.
+
+**Lifecycle:** load the engine at app start in the background (cold load 17–29 s on the GPU backend), and keep one conversation created ahead of the question (`prefillPrefaceOnInit`; 4–8.5 s to create). Replace it right after each question.
+
+Enum-constrained spans were tried and failed (the decoder closed each string after its first word), so the copy check runs after decoding instead.
 
 **Correct-vehicle matcher** (P2, deterministic, [D27](state.md#5-decisions)): `matchVehicle(text, trip, progress) → { verdict: yes_ride | no_look_for | not_sure, expected: signboard?, matchedLegIndex?, score }`. It normalizes the text and fuzzy-matches it against `routes.signboards[]` and the route name of the active trip's next boarding leg (or the first ride leg before the trip starts). It returns `yes_ride` only above a conservative threshold; a clear match to a different route or no match returns `no_look_for` with the expected signboard; anything in between returns `not_sure`. The model never sets the verdict.
 
@@ -262,7 +272,7 @@ Details: [CLR](clr-commutenity.md).
 
 ## 7. Non-functional Targets
 
-These are planning targets on the demo phone; none has been measured yet.
+These are planning targets on the demo phone. Only the PRD-F8 rows were measured, in the [LLM speed test](https://github.com/geadlydrim/appbuildersph-hackathon/blob/prototype/llm-speed-test/spikes/llm-speed-test/RESULTS.md) ([D32](state.md#5-decisions)).
 
 | Requirement | Target | Verification |
 |---|---|---|
@@ -274,19 +284,20 @@ These are planning targets on the demo phone; none has been measured yet.
 | Battery | Not measured. A 30-minute tracking run on the demo phone records the drop; GPS interval is a config knob if it's too heavy. | Battery stats before and after |
 | Ask in words, warm (PRD-F8) | ≤ 5 s from question to best-trip card | 20 timed runs |
 | Correct-vehicle match (PRD-F8) | ≤ 1 s after the text is available | Timed runs |
-| Cold model load (PRD-F8) | ≤ 20 s | Timed relaunch |
-| Model download (PRD-F8) | ≤ 1.5 GB total, to confirm with the model choice | Storage settings |
+| Cold model load (PRD-F8) | ≤ 20 s, in the background at app start. Measured 16.9–29.0 s for Gemma 4 E2B on the GPU backend ([D32](state.md#5-decisions)), so it can't block the first screen | Timed relaunch |
+| Ask in words, measured (PRD-F8) | Parser only: worst p95 2.84 s, median 2.10 s over 10 questions × 20 runs on the demo phone ([D32](state.md#5-decisions)) | 20 timed runs |
+| Model download (PRD-F8) | 2.59 GB (Gemma 4 E2B), over the old 1.5 GB target; accepted by the owner and pre-installed on the demo phone ([D32](state.md#5-decisions)) | Storage settings |
 | Pack size (with shapes) | ≤ 10 MB, unmeasured; shapes may push it up | File size |
 | Map pack (PMTiles) size | TBD, depends on the Makati extract and zoom range ([A14](state.md#4-open-assumptions)) | File size |
 | Refresh and sync | Never block the UI; retry with backoff; an interrupted download resumes or restarts cleanly | QA-04, QA-09 |
 
 ## 8. AI Architecture and Safety
 
-Candidate models and runtimes ([A4](state.md#4-open-assumptions)). The T0 to T2 path runs no model; the MVP's model is the PRD-F8 LLM ([D31](state.md#5-decisions)), and if the LLM speed test fails the fallbacks are a smaller model, then llama.cpp, then the rule-based parser plus on-device embedding place search, never a cloud model. All of these are open-weight or on-device, and all are to be verified on the demo phone:
+Models and runtimes ([D32](state.md#5-decisions) for the LLM; [A4](state.md#4-open-assumptions) for the rest). The T0 to T2 path runs no model; the MVP's model is the PRD-F8 LLM ([D31](state.md#5-decisions)). If it later fails on the demo phone, the fallbacks are a smaller model, then llama.cpp, then the rule-based parser plus on-device embedding place search, never a cloud model. All of these are open-weight or on-device:
 
 | Role | Candidates | Android runtime candidates |
 |---|---|---|
-| Parser / phrasing LLM (PRD-F8, MVP) | Gemma3-1B-IT int4 (gated on Hugging Face), Qwen2.5-0.5B / Qwen3-0.6B int4 (ungated, Apache-2.0), Qwen2.5-1.5B Q4_K_M | **LiteRT-LM** (Kotlin API, JSON-schema `ResponseFormat`); fallback llama.cpp via JNI (needs a GBNF patch). MediaPipe LLM Inference is maintenance-only. |
+| Parser LLM (PRD-F8, MVP; decided, [D32](state.md#5-decisions)) | **Gemma 4 E2B** (`gemma-4-E2B-it.litertlm`, 2.59 GB, Apache-2.0, ungated) with the hybrid parser. Rejected on the demo phone: Gemma3-1B int4, Qwen3-0.6B int4, and the E2B GPU-specific build | **LiteRT-LM** `litertlm-android:0.18.0`, GPU backend, JSON-schema `ResponseFormat`. Fallback llama.cpp via JNI (needs a GBNF patch). MediaPipe LLM Inference is maintenance-only. |
 | Place embeddings (PRD-F8, optional; the last-resort on-device fallback per [D31](state.md#5-decisions)) | EmbeddingGemma (270M); multilingual-e5-small int8 | LiteRT-LM EmbeddingEngine; fallback MediaPipe Text Embedder or ONNX Runtime Android. Alias and fuzzy matching run first and carry T0 to T2; alias vectors are precomputed. |
 | Route ranker (T4) | Pairwise logistic regression or small GBDT | Plain Kotlin (JSON weights or tree dump); ONNX Runtime Android only if it's already in the app |
 | Speech-to-text (T3 voice, optional) | Whisper tiny/base multilingual | whisper.cpp via JNI |
@@ -308,7 +319,7 @@ Candidate models and runtimes ([A4](state.md#4-open-assumptions)). The T0 to T2 
 
 ### 8.2 AI Craft
 
-- The parser prompt contains Taglish few-shot examples and the JSON schema. It never contains pack data, which keeps it short and fast.
-- The phrasing input is only the structured best trip plus its reason.
+- The parser system prompt holds a few Taglish few-shot examples and no pack data, which keeps it short and fast. Few-shot place names can leak into answers (Gemma3-1B returned the example's "Cubao"); the copy check catches that.
+- LLM phrasing is off ([D32](state.md#5-decisions)). If it returns, its input is only the structured best trip plus its reason.
 - Each model call gets one retry, then falls back to deterministic output.
 - The full eval suite reruns after any change to a model, prompt, place search, ranker, matcher, or the pack ([QAD §7](qad-commutenity.md#7-ai-evaluation)).
