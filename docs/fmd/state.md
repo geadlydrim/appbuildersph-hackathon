@@ -10,15 +10,15 @@ Read this first. It says where the project stands, what's decided, and what's st
 
 | Field | Value |
 |---|---|
-| Current milestone | Specify / Shape. Docs only; no product code exists. |
+| Current milestone | Build. Scope re-set on 2026-10-09 (~22:40 +08) to Makati-only and map-first ([D20](#5-decisions)–[D29](#5-decisions)); planning is over. This branch holds docs only; no product code exists in it yet. |
 | Entered on | 2026-10-09 |
-| Exit condition | The wayfinder frontier is resolved enough that the [build guide](build-commutenity.md) checkpoints start without reopening scope |
-| Next milestone | Implement the walking skeleton ([BUILD §1](build-commutenity.md#1-build-sequence)) |
+| Exit condition | MVP = T0 + T1 + T2 demo-safe on the demo phone in airplane mode ([MVP scope](mvp-scope.md#tiers)) |
+| Next milestone | Feature freeze 8:00 AM, then code freeze and submission 10:00 AM, Oct 10 |
 | Hard deadline | **10:00 AM, Oct 10, 2026.** Submission and code freeze ([JUDGING](JUDGING.md#submission)). |
-| Current blocker | Open assumptions in §4. Resolve them through `/wayfinder` on the GitHub tracker. |
-| Next-step owner | Project owner, with the team of 4 |
+| Current blocker | None for starting T0. Open assumptions A13 (Makati hero trip), A14 (offline map spike), A15 (shape routing engine) and A16 (GPS in Makati) are resolved inside the build checkpoints (see §4 and §7). |
+| Next-step owner | The four role owners ([D19](#5-decisions)), per [BUILD §1](build-commutenity.md#1-build-sequence) |
 
-CommuteNity is a **native Android app** that works as an on-device commute assistant for Metro Manila. A rider asks in Taglish how to get somewhere. The app automatically picks the most efficient route from a commute pack stored on the phone and shows the legs, fares, and where to say "para". It works with no signal. On request it shows alternatives, which come from the routing algorithm or from routes other riders submitted. Riders can suggest routes and vote "this worked"; those contributions sync when the phone is online and train an on-device route ranker.
+CommuteNity is a **native Android app** that works as an on-device commute assistant for **Makati City**. The rider sets point A and point B on a **map** (tap, drag, search pack places, or "use my location"). The app computes the best trip on the phone from a commute pack, draws it on stored road-following shapes over an offline map, and shows the legs, fares, minutes, distance, walk time, and where to say "para". It works with no signal. On request it shows alternatives, which come from the routing algorithm or from trips other riders submitted. When online it refreshes the pack, map, and community data. During a trip, offline GPS paired with map-matching shows whether the rider is still on route and raises a **para alert** before the alight stop. Later tiers add typed or spoken questions ("How to get from X to Y?", "Is this the correct vehicle?") and a learned ranker. Riders can suggest trips and vote "this worked"; those contributions sync when the phone is online.
 
 ## 2. Document Set
 
@@ -28,7 +28,7 @@ CommuteNity is a **native Android app** that works as an on-device commute assis
 | What and why | [IDEA](idea-commutenity.md), [MVP scope](mvp-scope.md) |
 | Is it sound? | [SCRUTINY](scrutiny-commutenity.md), [VALIDATION](val-commutenity.md) |
 | Behavior | [PRD](prd-commutenity.md), [user stories](user-stories.md) |
-| How it's built | [SDD](sdd-commutenity.md), [data and training plan](data-commutenity.md), [DSD](dsd-commutenity.md), [BUILD](build-commutenity.md) |
+| How it's built | [SDD](sdd-commutenity.md), [data and training plan](data-commutenity.md), [DSD](dsd-commutenity.md), [Figma brief](figma-brief-commutenity.md), [BUILD](build-commutenity.md) |
 | Correct and safe? | [QAD](qad-commutenity.md), [AIA](aia-commutenity.md), [CLR](clr-commutenity.md) |
 | Demo Day | [PITCH](pitch-commutenity.md) |
 | History | [LOG](log-commutenity.md) |
@@ -37,17 +37,21 @@ Deliberately absent: ops runbook, go-to-market, pricing, store release. Nothing 
 
 ## 3. Working Framework
 
-- **Working product before ambition.** Build tiers T0→T4 in order ([MVP scope](mvp-scope.md#tiers)). The T0 walking skeleton (pretrained models, the curated pack, and a deterministic lexicographic trip order, all offline on the phone) must be demoable before anything else lands. Trained models are upgrades that replace a working baseline. Nothing depends on them.
+- **Working product before ambition.** Build tiers T0→T4 in order ([MVP scope](mvp-scope.md#tiers)). The T0 walking skeleton (Makati pack with road shapes, the offline map, A/B pins, and a deterministic lexicographic trip order, all offline on the phone) must be demoable before anything else lands. Trained models and LLM/voice features are upgrades that replace or sit beside a working baseline. Nothing depends on them.
 - **Decisions live in the tracker.** Open questions are `wayfinder` tickets on `geadlydrim/appbuildersph-hackathon`. When a ticket closes, update the affected doc and move its row from §4 to §5.
-- **Stable IDs:** features `PRD-F1..F10`, stories `US-01..`, QA cases `QA-*` and `AI-*`, assumptions `A*`, decisions `D*`.
+- **Stable IDs:** features `PRD-F1..F11`, stories `US-01..US-14`, QA cases `QA-*` and `AI-*`, assumptions `A*`, decisions `D*`.
 - **Draft** means complete for everything decided so far, with open items marked. It doesn't mean an unfilled template.
 
 ## 4. Open Assumptions
 
 | ID | Assumption / unresolved input | Risk if wrong | Reversible? | Resolve by |
 |---|---|---|---|---|
-| A3 | **Route facts:** deterministic candidate generation over the pack. The LLM only parses the question and phrases the grounded answer. | Answers feel rigid, or Taglish parsing fails | Yes | Wayfinder prototype |
-| A4 | **Android models and runtimes** (narrowed by [runtime research](https://github.com/geadlydrim/appbuildersph-hackathon/issues/4)): LLM through LiteRT-LM (Gemma3-1B int4 first, then ungated Qwen2.5-0.5B or Qwen3-0.6B, with JSON-schema output), with llama.cpp via JNI as the fallback. Embeddings: EmbeddingGemma via LiteRT-LM. OCR: bundled ML Kit Text Recognition v2. Ranker: plain Kotlin weights. Voice: whisper.cpp. Speed on mid-range phones is unpublished; the spike decides. | Too slow on the demo phone | Yes | LLM spike ticket on the map |
+| A3 | **Route facts:** deterministic candidate generation over the pack and its stored road shapes. The LLM (T3) only extracts places from a free-form question and phrases the grounded answer. It never picks a route or decides the correct-vehicle verdict ([D27](#5-decisions)). | Answers feel rigid, or Taglish place extraction fails | Yes | T3 prototype (P2) |
+| A4 | **Android models and runtimes** (narrowed by [runtime research](https://github.com/geadlydrim/appbuildersph-hackathon/issues/4)): LLM through LiteRT-LM (Gemma3-1B int4 first, then ungated Qwen2.5-0.5B or Qwen3-0.6B, with JSON-schema output), with llama.cpp via JNI as the fallback. Embeddings: EmbeddingGemma via LiteRT-LM. Ranker: plain Kotlin weights. Speech-to-text: whisper.cpp ([D26](#5-decisions)); OCR is dropped and TTS is not planned. Speed on mid-range phones is unpublished; the [LLM speed test (issue #8)](https://github.com/geadlydrim/appbuildersph-hackathon/issues/8), run by geadlydrim, decides, and it now gates T3 only. | Too slow on the demo phone | Yes | LLM speed test at CP1 |
+| A13 | **Makati hero trip:** which origin–destination pair inside Makati, with at least two genuinely different trips ([D20](#5-decisions)). Facts for it must be `collected` or `known`; mock never supplies hero-trip facts ([D13](#5-decisions)). | No credible hero trip, or a hero pair whose alternatives are mock | Yes | Before CP2 (P4 + team) |
+| A14 | **Offline map:** does MapLibre Native Android render a local PMTiles file offline on the demo phone, and how big is the Makati extract? Fallback: a MapLibre offline region from a provider whose terms allow offline use ([D23](#5-decisions)). Unverified until the spike runs. | No offline map; T0 demo loses its visual core | Yes (fallback exists) | CP1 (P1) |
+| A15 | **Shape routing engine** for the data build: OSRM public demo server vs GraphHopper vs self-hosted, with its usage terms checked, and the rail geometry source ([D22](#5-decisions)). | Shapes cannot be produced in time, or a service's terms are breached | Yes | Before pack v0 (P4) |
+| A16 | **GPS in Makati:** urban-canyon accuracy among Ayala CBD high-rises and under MRT-3 / EDSA. Tune the off-route and para-alert thresholds ([D25](#5-decisions)). | False off-route flags or a missed or early para alert | Yes (thresholds are config) | During T2 (P3) |
 
 ## 5. Decisions
 
@@ -59,36 +63,51 @@ Deliberately absent: ops runbook, go-to-market, pricing, store release. Nothing 
 | D4 | Docs first. No code until the decisions the walking skeleton needs are made. | Human decision, 2026-10-09 | Deadline forces a cut |
 | D5 | Working product first. Training and contribution sync never block the T0 baseline demo. | Human decision, 2026-10-09 | — |
 | D6 | Tracker: GitHub Issues on public `geadlydrim/appbuildersph-hackathon`, with default triage and `wayfinder:*` labels | Human decision, 2026-10-09 | — |
-| D7 | Cloud is secondary only. One-way model and pack downloads, plus the contribution sync backend. Every core AI path (parse, pick, phrase, rank, read sign, transcribe) runs on the phone and works offline. | Rules ([JUDGING](JUDGING.md#rules)) and D2 | — |
+| D7 | Cloud is secondary only. One-way model, pack, and map downloads, plus the contribution sync backend. Every core AI path (parse, pick, phrase, rank, transcribe) runs on the phone and works offline. Extended by [D24](#5-decisions) (online refresh); "read sign" removed by [D26](#5-decisions). | Rules ([JUDGING](JUDGING.md#rules)) and D2 | — |
 | D8 | **Platform:** mobile first, as a native Android app (Kotlin and Jetpack Compose). A browser app comes second, after the event, as a separate effort. | Human decision, 2026-10-09: "a travel app is used on the phone" | Android on-device runtime fails CP1 |
 | D9 | **Name:** CommuteNity | Human decision, 2026-10-09 | — |
-| D10 | **Build order:** T0 offline question → auto-picked best route; T1 alternatives plus community suggest and vote, with sync; T2 trained ranker; T3 signboard check; T4 voice | Human decision, 2026-10-09 | CP3 slips (see BUILD cut rules) |
-| D11 | **Training target:** a learned on-device route ranker. It replaces the deterministic T0 baseline only if it beats it on held-out preferences. Signboard and voice use pretrained models. | Human decision, 2026-10-09 | Ranker data too thin by CP5 |
+| D10 | **Superseded by [D28](#5-decisions).** Original build order: T0 offline question → auto-picked best route; T1 alternatives plus community suggest and vote, with sync; T2 trained ranker; T3 signboard check; T4 voice. | Human decision, 2026-10-09 | Superseded by D28 |
+| D11 | **Training target:** a learned on-device route ranker, now T4 ([D28](#5-decisions)). It replaces the deterministic T0 baseline only if it beats it on held-out preferences. Voice uses a pretrained model (STT only, [D26](#5-decisions)); the signboard check is dropped. | Human decision, 2026-10-09 | Ranker data too thin by CP5 |
 | D12 | **Team:** 4 people: geadlydrim (owner), pablo-pica, storms23, Jrabara101 | Human decision, 2026-10-09; [ticket](https://github.com/geadlydrim/appbuildersph-hackathon/issues/2) | — |
 | D13 | **Mixed data is allowed.** Data is a mix of `collected` (verified during the event), `known` (team knowledge), and `mock` (synthetic). Every record carries its class. Precedence for the same fact: collected > known > mock. Mock is labelled in the app, the evals, and the README, and is never presented as real ([data plan §3.1](data-commutenity.md#31-mock-data-rules)). | Human decision, 2026-10-09; owner reports that the organizers allow mock data (not stated in the briefing) | Organizers say otherwise |
 | D14 | **Demo phone:** the owner's POCO X6 Pro (MediaTek Dimensity 8300-Ultra, HyperOS), mirrored with scrcpy over USB to the laptop, then HDMI. The spare is any teammate's Android phone with the APK and models pre-installed. RAM variant and the mirroring test are still to confirm. | Human decision, 2026-10-09; [ticket](https://github.com/geadlydrim/appbuildersph-hackathon/issues/3) | Model doesn't fit in RAM |
-| D15 | **Coverage:** the Valenzuela–Recto corridor, with the hero trip from Malanday to the Recto area. Its candidates are a direct Malanday–Recto e-jeep and Malanday → LRT-1 Monumento → LRT-1 Doroteo Jose → walk to Recto. Keanu (geadlydrim) and Jeff (storms23) verify it. Mock data extends only to adjacent stops and never supplies hero-trip facts. | Human decision, 2026-10-09; [Which corridors does the pack cover?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/6) | A verifier cannot substantiate either hero candidate |
+| D15 | **Superseded by [D20](#5-decisions).** Original coverage: the Valenzuela–Recto corridor, with the hero trip from Malanday to the Recto area. Its candidates were a direct Malanday–Recto e-jeep and Malanday → LRT-1 Monumento → LRT-1 Doroteo Jose → walk to Recto. Keanu (geadlydrim) and Jeff (storms23) were to verify it. Kept as history only. | Human decision, 2026-10-09; [Which corridors does the pack cover?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/6) | Superseded by D20 |
 | D16 | **Travel time and T0 pick:** record typical, non-peak team estimates as `known` per segment and transfer, then replace them only with event-verified `collected` values. Mock minutes never drive the hero trip. Rank candidates lexicographically: default/fewest-transfers = transfers → total minutes → fare → walk minutes; `fastest` or `cheapest` promotes that criterion, retaining the rest. Net votes (clamped to −3…+3) break only an otherwise equal result; stable candidate key is last. | Human decision, 2026-10-09; [Where do segment minutes come from, and how is "most efficient" weighted?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/7) | Team estimates contradict collected timing or the hero candidates cannot be ranked plausibly |
 | D17 | **Contribution sync:** Supabase with anonymous Auth and one authenticated Edge Function for batched push/pull. It validates every pack reference and note, enforces a server-side per-identity mutation limit, and is the only writer using the service role. The two contribution tables are `route_suggestions` and `route_votes`; raw vote rows and identity values never leave the function, while readers receive suggestions and vote aggregates only. | Human decision, 2026-10-09; [Which sync backend stores contributions?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/9) | Supabase setup or Edge Function deployment cannot complete before CP4 |
 | D18 | **Ranker data and model:** each scenario has exactly three candidates and a stated preference; all four teammates submit a strict top-3. Derive only within-ranking pairwise examples. Hold out a deterministic 25% of origin–destination pairs before labelling; only `known` human labels from those pairs decide shipment. Train pairwise logistic regression first, with preference-specific feature interactions; export feature spec, intercept, and weights as JSON for Kotlin. Primary metric: top-1 agreement with the strict-majority human choice; pairwise accuracy is diagnostic. Mock scenarios or labels augment training only. | Human decision, 2026-10-09; [What format do ranker scenarios and preference labels use, and which model?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/10) | The logistic model does not beat the baseline on the held-out known pairs |
 | D19 | **Role owners:** P1 Android app = geadlydrim; P2 on-device AI = pablo-pica; P3 routing and ranker = storms23; P4 data, evals, and story = Jrabara101. geadlydrim stays map keeper. The Demo Day presenter isn't decided yet. | Human decision, 2026-10-09; [Who owns each workstream?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/11) | Someone is overloaded at a checkpoint |
+| D20 | **Geography: Makati City only.** The demo hero trip is an origin–destination pair inside Makati with at least two genuinely different trips; P4 and the team choose it ([A13](#4-open-assumptions)). Supersedes D15 (Valenzuela–Recto); teammate work on that corridor is superseded, not deleted from history. | Human decision, 2026-10-09 (owner re-scope, Q1) | A13 finds no Makati pair with ≥2 real trips |
+| D21 | **Map-first trip builder.** The primary way to ask is a map: set point A and point B by tapping, dragging, searching pack places, or "use my location" for A. The ideas (A/B pin builder, location search, PH place labels) come from CommuteNity-Web; **no code is reused** ([D3](#5-decisions)). | Human decision, 2026-10-09 (owner re-scope, Q9) | — |
+| D22 | **Road-following lines via precomputed shapes.** At data-build time, route each pack route through an open routing engine (OSRM or GraphHopper: driving profile for jeepney, bus, and UV; foot for transfers; rail follows track geometry from OSM) and store the polyline per segment in the pack. The phone draws stored shapes; there is no on-device routing engine. First/last-mile walk from an arbitrary tapped point: online, a foot route is fetched via our server and cached; offline, a dashed straight line labelled "walk ~N m". Replaces the straight-line drawing of CommuteNity-Web. | Human decision, 2026-10-09 (owner re-scope, Q3) | [A15](#4-open-assumptions) finds no usable engine or rail geometry source |
+| D23 | **Offline map:** a Makati vector-tile extract (Protomaps PMTiles) rendered by MapLibre Native Android, bundled or downloaded once. Never bulk-download from tile.openstreetmap.org (its usage policy forbids offline and bulk use). OSM attribution is shown on the map. Verify MapLibre Android PMTiles support ([A14](#4-open-assumptions)). Replaces "map rendering parked" in the old MVP scope. | Human decision, 2026-10-09 (owner re-scope, Q4) | A14 spike fails and the fallback does too |
+| D24 | **Online refresh, offline compute.** When online, the app fetches and caches the latest pack (including shapes), map file, community suggestions, and vote aggregates from our server (Supabase Storage plus the D17 Edge Function). All trip computation, ranking, tracking, and AI run on the phone and work in airplane mode. Extends D7 and D17. | Human decision, 2026-10-09 (owner re-scope) | — |
+| D25 | **In-trip tracking (offline GPS + on-device map computation).** While a trip is active, a foreground service reads GPS (works without data) and snaps each fix to the active trip's polyline (map-matching: nearest point on the polyline, progress along the trip, current leg). Outputs: on-route / off-route status (proposed: >100 m from the polyline for ≥30 s), current leg, distance and stops to the para point, and a **para alert** (~300 m before the alight stop: vibration, heads-up notification, and on-screen banner). Thresholds are config, tuned in testing ([A16](#4-open-assumptions)). No TTS. Navigation stays out of scope; on-route status and the para alert are in. | Human decision, 2026-10-09 (owner re-scope, Q5) | A16 shows GPS too poor in Makati to tune usable thresholds |
+| D26 | **Voice = STT only.** On-device Whisper (whisper.cpp) transcribes spoken questions; the transcript is shown for confirmation before use. **OCR signboard scanning is dropped** for this event. **TTS is not planned.** Supersedes the signboard (T3) and voice (T4) parts of D10. | Human decision, 2026-10-09 (owner re-scope, Q2) | STT speed on the demo phone is unacceptable ([A4](#4-open-assumptions)) |
+| D27 | **"Is this the correct vehicle?"** The rider types or says the signboard text or route name. A deterministic fuzzy match against the active trip's legs (`routes.signboards[]`, route name) gives "Yes, ride this", "No, look for '<signboard>'", or "Not sure, check the signboard". The LLM only extracts the text from a free-form question; it never decides the verdict. Replaces the old OCR-based signboard check. | Human decision, 2026-10-09 (owner re-scope, Q6) | The held-out text eval ([AI-05](qad-commutenity.md#7-ai-evaluation)) shows any false "ride this" |
+| D28 | **Build order (supersedes D10):** T0 walking skeleton (Makati pack with road shapes, offline map, A/B pins, best trip on the phone, F1–F3) → T1 online refresh and community (F4–F6) → T2 in-trip tracking (F7) → T3 ask in words and voice (F8, F9) → T4 trained ranker (F10). MVP = T0 + T1 + T2. Table: [MVP scope](mvp-scope.md#tiers). | Human decision, 2026-10-09 (owner re-scope, Q8) | A checkpoint slips (see BUILD cut rules) |
+| D29 | **Design source of truth:** the existing Figma file (made from the earlier docs) is updated to this direction by a Figma MCP agent using [the Figma brief](figma-brief-commutenity.md) and [DSD](dsd-commutenity.md). Docs are canonical; Figma follows docs. | Human decision, 2026-10-09 | — |
 
 ## 6. Context Exclusions
 
-The original CommuteNity planned a Next.js web app with a Supabase backend, social feed, auth, comments, profiles, and catalog moderation. What survives:
+The original CommuteNity ("CommuteNity-Web") planned a Next.js web app with a Supabase backend, social feed, auth, comments, profiles, and catalog moderation. **Ideas only, no code** ([D3](#5-decisions), [D21](#5-decisions)). What survives as ideas:
 - the personas
 - the route → segment → stop data shape
+- the A/B pin trip builder, location search, and PH place labels ([D21](#5-decisions))
 - the auto route picker with alternatives
 - the idea of community-submitted routes and votes, now as the thin layer in D2
 - the "Jeepney Gold" visual direction
 
-Do **not** bring back its feed, comments, profiles, auth flows, Next.js app, RLS policies, or moderation thresholds.
+Do **not** bring back its code, its straight-line route drawing (replaced by stored road shapes, [D22](#5-decisions)), its feed, comments, profiles, auth flows, Next.js app, RLS policies, or moderation thresholds.
 
 ## 7. Next Actions
 
-1. Run `/wayfinder` to chart the map. Destination: the decisions that unblock the walking skeleton. Seed it with A3, A4, A6, A8–A12.
-2. Resolve frontier tickets. Fold each answer into the docs and move the row from §4 to §5.
-3. Start the [build sequence](build-commutenity.md#1-build-sequence) once A4, A6, A8, and A12 are decided.
+Planning is over; building is now. Order and times are in [BUILD §1](build-commutenity.md#1-build-sequence).
+
+1. **CP1 (~11:30 PM):** LLM speed test result ([issue #8](https://github.com/geadlydrim/appbuildersph-hackathon/issues/8); gates T3 only) and the map spike: MapLibre renders the Makati PMTiles offline on the POCO ([A14](#4-open-assumptions)).
+2. **CP2 (in parallel):** pack v0 for Makati with road shapes (P4; settle [A13](#4-open-assumptions) and [A15](#4-open-assumptions) first) and the trip finder module (P3).
+3. **T0 ~1:30 AM, T1 ~3:30 AM, T2 ~5:30 AM**, then T3 / T4 from 5:30 to 8:00 AM. Feature freeze 8:00 AM, code freeze 10:00 AM.
+4. A Figma MCP agent updates the Figma file from [the Figma brief](figma-brief-commutenity.md) ([D29](#5-decisions)).
+5. When an assumption resolves, fold the answer into the docs and move its row from §4 to §5 ([A16](#4-open-assumptions) is tuned during T2).
 
 ## 8. Delivery Checks
 
