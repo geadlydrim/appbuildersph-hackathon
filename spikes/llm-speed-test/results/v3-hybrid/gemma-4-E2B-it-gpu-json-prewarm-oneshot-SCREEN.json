@@ -1,0 +1,374 @@
+{
+  "config": {
+    "model": "gemma-4-E2B-it.litertlm",
+    "model_bytes": 2588147712,
+    "backend": "gpu",
+    "constrained": true,
+    "iters": 1,
+    "warmup": 1,
+    "think_off": false,
+    "threads": 0,
+    "max_output_tokens": 64,
+    "runtime": "LiteRT-LM litertlm-android 0.18.0"
+  },
+  "device": {
+    "manufacturer": "Xiaomi",
+    "model": "23122PCD1G",
+    "device": "garnet",
+    "soc_manufacturer": "QTI",
+    "soc_model": "SM7435",
+    "sdk": 35,
+    "total_ram_mb": 7301,
+    "avail_ram_mb": 3055,
+    "cpus": 8,
+    "thermal_before": {
+      "status": 0,
+      "headroom_10s": null
+    }
+  },
+  "load_ms": 28957.956916,
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "pure Tagalog (hero pair)",
+      "question": "Paano pumunta sa Dela Rosa, Pio del Pilar mula sa Ayala Center?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Ayala Center\",\"destination\":\"Dela Rosa, Pio del Pilar\",\"preference\":null,\"vehicle_text\":null}",
+      "llm_raw": "{\"intent\":\"trip\",\"origin\":\"Ayala Center\",\"destination\":\"Dela Rosa, Pio del Pilar\",\"preference\":null,\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 4272.185155,
+      "p95_ms": 4272.185155,
+      "latencies_ms": [
+        4272.185155
+      ],
+      "create_conversation_median_ms": 4521.500206,
+      "bench_first": {
+        "ttft_s": 1.229818724,
+        "prefill_tokens": 24,
+        "decode_tokens": 32,
+        "prefill_tps": 65.35479585555395,
+        "decode_tps": 8.208241376405194
+      },
+      "decode_tps_median": 8.208241376405194,
+      "prefill_tps_median": 65.35479585555395
+    },
+    {
+      "id": "q2",
+      "kind": "Taglish + pa- prefix + fastest",
+      "question": "Pa-Greenbelt ako galing Guadalupe, ano pinakamabilis?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Guadalupe\",\"destination\":\"Greenbelt\",\"preference\":\"fastest\",\"vehicle_text\":null}",
+      "llm_raw": "{\"intent\":\"trip\",\"origin\":\"Guadalupe\",\"destination\":\"Greenbelt\",\"preference\":\"fastest\",\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 3870.264113,
+      "p95_ms": 3870.264113,
+      "latencies_ms": [
+        3870.264113
+      ],
+      "create_conversation_median_ms": 4820.787238,
+      "bench_first": {
+        "ttft_s": 1.2701753734999999,
+        "prefill_tokens": 22,
+        "decode_tokens": 28,
+        "prefill_tps": 58.958486648848016,
+        "decode_tps": 8.019309234167478
+      },
+      "decode_tps_median": 8.019309234167478,
+      "prefill_tps_median": 58.958486648848016
+    },
+    {
+      "id": "q3",
+      "kind": "English, cheapest",
+      "question": "What's the cheapest way from Pio del Pilar to Ayala Triangle?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Pio del Pilar\",\"destination\":\"Ayala Triangle\",\"preference\":\"cheapest\",\"vehicle_text\":null}",
+      "llm_raw": "{\"intent\":\"trip\",\"origin\":\"Pio del Pilar\",\"destination\":\"Ayala Triangle\",\"preference\":\"cheapest\",\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 4126.614009,
+      "p95_ms": 4126.614009,
+      "latencies_ms": [
+        4126.614009
+      ],
+      "create_conversation_median_ms": 4789.490675,
+      "bench_first": {
+        "ttft_s": 1.28703172,
+        "prefill_tokens": 22,
+        "decode_tokens": 30,
+        "prefill_tps": 56.694584987314094,
+        "decode_tps": 8.035705207519822
+      },
+      "decode_tps_median": 8.035705207519822,
+      "prefill_tps_median": 56.694584987314094
+    },
+    {
+      "id": "q4",
+      "kind": "typo + abbreviation + fewest transfers",
+      "question": "frm RCBC pa-Pio del Pilar, ung walang lipat sana",
+      "output": "{\"intent\":\"trip\",\"origin\":\"RCBC\",\"destination\":\"Pio del Pilar\",\"preference\":\"fewest_transfers\",\"vehicle_text\":null}",
+      "llm_raw": "{\"intent\":\"trip\",\"origin\":\"RCBC\",\"destination\":\"Pio del Pilar\",\"preference\":\"fewest_transfers\",\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 4382.002134,
+      "p95_ms": 4382.002134,
+      "latencies_ms": [
+        4382.002134
+      ],
+      "create_conversation_median_ms": 4741.537342,
+      "bench_first": {
+        "ttft_s": 1.27241304375,
+        "prefill_tokens": 23,
+        "decode_tokens": 32,
+        "prefill_tps": 58.67382801656104,
+        "decode_tps": 8.030712669579609
+      },
+      "decode_tps_median": 8.030712669579609,
+      "prefill_tps_median": 58.67382801656104
+    },
+    {
+      "id": "q5",
+      "kind": "correct-vehicle check (D27)",
+      "question": "Ito ba yung tamang jeep? Nakasulat sa karatula: PASAY - GUADALUPE",
+      "output": "{\"intent\":\"vehicle_check\",\"origin\":null,\"destination\":null,\"preference\":null,\"vehicle_text\":\"PASAY - GUADALUPE\"}",
+      "llm_raw": "{\"intent\":\"vehicle_check\",\"origin\":null,\"destination\":null,\"preference\":null,\"vehicle_text\":\"PASAY - GUADALUPE\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 4488.421248,
+      "p95_ms": 4488.421248,
+      "latencies_ms": [
+        4488.421248
+      ],
+      "create_conversation_median_ms": 4657.909373,
+      "bench_first": {
+        "ttft_s": 1.2608092124999999,
+        "prefill_tokens": 31,
+        "decode_tokens": 33,
+        "prefill_tps": 81.09028302541265,
+        "decode_tps": 8.049265267566646
+      },
+      "decode_tps_median": 8.049265267566646,
+      "prefill_tps_median": 81.09028302541265
+    },
+    {
+      "id": "q6",
+      "kind": "non-trip",
+      "question": "Uulan ba mamaya?",
+      "output": "{\"intent\":\"other\",\"origin\":null,\"destination\":null,\"preference\":null,\"vehicle_text\":null}",
+      "llm_raw": "{\"intent\":\"other\",\"origin\":null,\"destination\":null,\"preference\":null,\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 3352.365884,
+      "p95_ms": 3352.365884,
+      "latencies_ms": [
+        3352.365884
+      ],
+      "create_conversation_median_ms": 4552.520311,
+      "bench_first": {
+        "ttft_s": 1.22714945025,
+        "prefill_tokens": 14,
+        "decode_tokens": 24,
+        "prefill_tps": 38.512660526855456,
+        "decode_tps": 8.048308439547007
+      },
+      "decode_tps_median": 8.048308439547007,
+      "prefill_tps_median": 38.512660526855456
+    },
+    {
+      "id": "q7",
+      "kind": "English landmark, no preference",
+      "question": "How do I get to Makati Med from Ayala Center?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Ayala Center\",\"destination\":\"Makati Med\",\"preference\":null,\"vehicle_text\":null}",
+      "llm_raw": "{\"intent\":\"trip\",\"origin\":\"Ayala Center\",\"destination\":\"Makati Med\",\"preference\":null,\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 3898.514322,
+      "p95_ms": 3898.514322,
+      "latencies_ms": [
+        3898.514322
+      ],
+      "create_conversation_median_ms": 4741.074789,
+      "bench_first": {
+        "ttft_s": 1.28611453175,
+        "prefill_tokens": 19,
+        "decode_tokens": 28,
+        "prefill_tps": 50.33422321590809,
+        "decode_tps": 7.964356072798992
+      },
+      "decode_tps_median": 7.964356072798992,
+      "prefill_tps_median": 50.33422321590809
+    },
+    {
+      "id": "q8",
+      "kind": "Tagalog, destination only",
+      "question": "Paano pumunta sa Poblacion?",
+      "output": "{\"intent\":\"trip\",\"origin\":null,\"destination\":\"Poblacion\",\"preference\":null,\"vehicle_text\":null}",
+      "llm_raw": "{\"intent\":\"trip\",\"origin\":null,\"destination\":\"Poblacion\",\"preference\":null,\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 4216.269946,
+      "p95_ms": 4216.269946,
+      "latencies_ms": [
+        4216.269946
+      ],
+      "create_conversation_median_ms": 4685.225884,
+      "bench_first": {
+        "ttft_s": 1.31856603875,
+        "prefill_tokens": 16,
+        "decode_tokens": 26,
+        "prefill_tps": 34.064194391617384,
+        "decode_tps": 6.951781528092376
+      },
+      "decode_tps_median": 6.951781528092376,
+      "prefill_tps_median": 34.064194391617384
+    },
+    {
+      "id": "q9",
+      "kind": "Taglish cheapest, papuntang",
+      "question": "Pinakamura papuntang Buendia galing Washington SyCip Park?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Washington SyCip Park\",\"destination\":\"Buendia\",\"preference\":\"cheapest\",\"vehicle_text\":null}",
+      "llm_raw": "{\"intent\":\"trip\",\"origin\":\"Washington SyCip Park\",\"destination\":\"Buendia\",\"preference\":\"cheapest\",\"vehicle_text\":null}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 4167.968332,
+      "p95_ms": 4167.968332,
+      "latencies_ms": [
+        4167.968332
+      ],
+      "create_conversation_median_ms": 5287.372186,
+      "bench_first": {
+        "ttft_s": 1.2078241577500002,
+        "prefill_tokens": 25,
+        "decode_tokens": 31,
+        "prefill_tps": 69.27188605962894,
+        "decode_tps": 8.157674808076036
+      },
+      "decode_tps_median": 8.157674808076036,
+      "prefill_tps_median": 69.27188605962894
+    },
+    {
+      "id": "q10",
+      "kind": "English vehicle check",
+      "question": "Is this the right bus? It says 'AYALA - FTI'",
+      "output": "{\"intent\":\"vehicle_check\",\"origin\":null,\"destination\":null,\"preference\":null,\"vehicle_text\":\"AYALA - FTI\"}",
+      "llm_raw": "{\"intent\":\"vehicle_check\",\"origin\":null,\"destination\":null,\"preference\":null,\"vehicle_text\":\"AYALA - FTI\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 4331.767655,
+      "p95_ms": 4331.767655,
+      "latencies_ms": [
+        4331.767655
+      ],
+      "create_conversation_median_ms": 5302.991091,
+      "bench_first": {
+        "ttft_s": 1.27164398925,
+        "prefill_tokens": 23,
+        "decode_tokens": 30,
+        "prefill_tps": 62.10697927179567,
+        "decode_tps": 7.587101708687863
+      },
+      "decode_tps_median": 7.587101708687863,
+      "prefill_tps_median": 62.10697927179567
+    }
+  ],
+  "summary": {
+    "worst_question_p95_ms": 4488.421248,
+    "overall_median_ms": 4167.968332,
+    "valid_json_questions": 10,
+    "od_exact_questions": 10,
+    "pass": true
+  },
+  "thermal_after": {
+    "status": 0,
+    "headroom_10s": null
+  },
+  "pss_kb_after": 720765
+}

@@ -1,0 +1,374 @@
+{
+  "config": {
+    "model": "gemma3-1b-it-int4.litertlm",
+    "model_bytes": 584417280,
+    "backend": "gpu",
+    "constrained": true,
+    "iters": 1,
+    "warmup": 1,
+    "think_off": false,
+    "threads": 0,
+    "max_output_tokens": 64,
+    "runtime": "LiteRT-LM litertlm-android 0.18.0"
+  },
+  "device": {
+    "manufacturer": "Xiaomi",
+    "model": "23122PCD1G",
+    "device": "garnet",
+    "soc_manufacturer": "QTI",
+    "soc_model": "SM7435",
+    "sdk": 35,
+    "total_ram_mb": 7301,
+    "avail_ram_mb": 3164,
+    "cpus": 8,
+    "thermal_before": {
+      "status": 0,
+      "headroom_10s": null
+    }
+  },
+  "load_ms": 50700.372116,
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "pure Tagalog (hero pair)",
+      "question": "Paano pumunta sa Dela Rosa, Pio del Pilar mula sa Ayala Center?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Ayala Center\",\"destination\":\"Dela Rosa\",\"preference\":null,\"vehicle_text\":null}",
+      "llm_raw": "{\"origin\":\"Ayala Center\",\"destination\":\"Dela Rosa\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 3566.863592,
+      "p95_ms": 3566.863592,
+      "latencies_ms": [
+        3566.863592
+      ],
+      "create_conversation_median_ms": 6334.632863,
+      "bench_first": {
+        "ttft_s": 1.31678951225,
+        "prefill_tokens": 213,
+        "decode_tokens": 14,
+        "prefill_tps": 185.95502135134248,
+        "decode_tps": 5.835966231930521
+      },
+      "decode_tps_median": 5.835966231930521,
+      "prefill_tps_median": 185.95502135134248
+    },
+    {
+      "id": "q2",
+      "kind": "Taglish + pa- prefix + fastest",
+      "question": "Pa-Greenbelt ako galing Guadalupe, ano pinakamabilis?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Guadalupe\",\"destination\":\"Greenbelt\",\"preference\":\"fastest\",\"vehicle_text\":null}",
+      "llm_raw": "{\"origin\":\"Guadalupe\",\"destination\":\"Pa-Greenbelt\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 2734.349738,
+      "p95_ms": 2734.349738,
+      "latencies_ms": [
+        2734.349738
+      ],
+      "create_conversation_median_ms": 4578.347863,
+      "bench_first": {
+        "ttft_s": 1.08499800675,
+        "prefill_tokens": 211,
+        "decode_tokens": 15,
+        "prefill_tps": 217.96816993253057,
+        "decode_tps": 8.549437693138103
+      },
+      "decode_tps_median": 8.549437693138103,
+      "prefill_tps_median": 217.96816993253057
+    },
+    {
+      "id": "q3",
+      "kind": "English, cheapest",
+      "question": "What's the cheapest way from Pio del Pilar to Ayala Triangle?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Pio del Pilar\",\"destination\":\"Ayala Triangle\",\"preference\":\"cheapest\",\"vehicle_text\":null}",
+      "llm_raw": "{\"origin\":\"Pio del Pilar\",\"destination\":\"Ayala Triangle\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 4180.325155,
+      "p95_ms": 4180.325155,
+      "latencies_ms": [
+        4180.325155
+      ],
+      "create_conversation_median_ms": 5147.499581,
+      "bench_first": {
+        "ttft_s": 1.5969629090000002,
+        "prefill_tokens": 211,
+        "decode_tokens": 15,
+        "prefill_tps": 149.07830665958915,
+        "decode_tps": 5.506627093548035
+      },
+      "decode_tps_median": 5.506627093548035,
+      "prefill_tps_median": 149.07830665958915
+    },
+    {
+      "id": "q4",
+      "kind": "typo + abbreviation + fewest transfers",
+      "question": "frm RCBC pa-Pio del Pilar, ung walang lipat sana",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Pio del Pilar\",\"destination\":null,\"preference\":\"fewest_transfers\",\"vehicle_text\":null}",
+      "llm_raw": "{\"origin\":\"Pio del Pilar\",\"destination\":\"Cubao\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": false,
+        "destination_ok": false,
+        "vehicle_text_ok": true,
+        "od_exact": false,
+        "preference_ok": true
+      },
+      "median_ms": 2599.534166,
+      "p95_ms": 2599.534166,
+      "latencies_ms": [
+        2599.534166
+      ],
+      "create_conversation_median_ms": 3464.596249,
+      "bench_first": {
+        "ttft_s": 1.0745138085000001,
+        "prefill_tokens": 212,
+        "decode_tokens": 14,
+        "prefill_tps": 221.3667538824528,
+        "decode_tps": 8.559658499462396
+      },
+      "decode_tps_median": 8.559658499462396,
+      "prefill_tps_median": 221.3667538824528
+    },
+    {
+      "id": "q5",
+      "kind": "correct-vehicle check (D27)",
+      "question": "Ito ba yung tamang jeep? Nakasulat sa karatula: PASAY - GUADALUPE",
+      "output": "{\"intent\":\"vehicle_check\",\"origin\":null,\"destination\":null,\"preference\":null,\"vehicle_text\":\"PASAY - GUADALUPE\"}",
+      "llm_raw": "{\"vehicle_text\":\"PASAY - GUADALUPE\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 2854.593385,
+      "p95_ms": 2854.593385,
+      "latencies_ms": [
+        2854.593385
+      ],
+      "create_conversation_median_ms": 3456.141405,
+      "bench_first": {
+        "ttft_s": 1.12296276325,
+        "prefill_tokens": 220,
+        "decode_tokens": 15,
+        "prefill_tps": 220.0648504706555,
+        "decode_tps": 8.113099769486823
+      },
+      "decode_tps_median": 8.113099769486823,
+      "prefill_tps_median": 220.0648504706555
+    },
+    {
+      "id": "q6",
+      "kind": "non-trip",
+      "question": "Uulan ba mamaya?",
+      "output": "{\"intent\":\"other\",\"origin\":null,\"destination\":null,\"preference\":null,\"vehicle_text\":null}",
+      "llm_raw": "{\"origin\":\"N\/A\",\"destination\":\"Cubao\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 2618.095989,
+      "p95_ms": 2618.095989,
+      "latencies_ms": [
+        2618.095989
+      ],
+      "create_conversation_median_ms": 3521.264582,
+      "bench_first": {
+        "ttft_s": 1.05187305325,
+        "prefill_tokens": 203,
+        "decode_tokens": 13,
+        "prefill_tps": 220.20719668294893,
+        "decode_tps": 7.691479952529653
+      },
+      "decode_tps_median": 7.691479952529653,
+      "prefill_tps_median": 220.20719668294893
+    },
+    {
+      "id": "q7",
+      "kind": "English landmark, no preference",
+      "question": "How do I get to Makati Med from Ayala Center?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Ayala Center\",\"destination\":\"Makati Med\",\"preference\":null,\"vehicle_text\":null}",
+      "llm_raw": "{\"origin\":\"Ayala Center\",\"destination\":\"Makati Med\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 2701.39427,
+      "p95_ms": 2701.39427,
+      "latencies_ms": [
+        2701.39427
+      ],
+      "create_conversation_median_ms": 3322.276196,
+      "bench_first": {
+        "ttft_s": 1.04832598575,
+        "prefill_tokens": 208,
+        "decode_tokens": 14,
+        "prefill_tps": 225.68268499542518,
+        "decode_tps": 7.894032719611966
+      },
+      "decode_tps_median": 7.894032719611966,
+      "prefill_tps_median": 225.68268499542518
+    },
+    {
+      "id": "q8",
+      "kind": "Tagalog, destination only",
+      "question": "Paano pumunta sa Poblacion?",
+      "output": "{\"intent\":\"trip\",\"origin\":null,\"destination\":\"Poblacion\",\"preference\":null,\"vehicle_text\":null}",
+      "llm_raw": "{\"origin\":\"Poblacion\",\"destination\":\"Poblacion\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 2649.399947,
+      "p95_ms": 2649.399947,
+      "latencies_ms": [
+        2649.399947
+      ],
+      "create_conversation_median_ms": 3310.199217,
+      "bench_first": {
+        "ttft_s": 1.04352598575,
+        "prefill_tokens": 205,
+        "decode_tokens": 14,
+        "prefill_tps": 222.6973400568014,
+        "decode_tps": 8.130470586044918
+      },
+      "decode_tps_median": 8.130470586044918,
+      "prefill_tps_median": 222.6973400568014
+    },
+    {
+      "id": "q9",
+      "kind": "Taglish cheapest, papuntang",
+      "question": "Pinakamura papuntang Buendia galing Washington SyCip Park?",
+      "output": "{\"intent\":\"trip\",\"origin\":\"Washington SyCip Park\",\"destination\":\"Buendia\",\"preference\":\"cheapest\",\"vehicle_text\":null}",
+      "llm_raw": "{\"origin\":\"Washington SyCip Park\",\"destination\":\"Buendia\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 2907.179739,
+      "p95_ms": 2907.179739,
+      "latencies_ms": [
+        2907.179739
+      ],
+      "create_conversation_median_ms": 3299.524842,
+      "bench_first": {
+        "ttft_s": 1.05562080675,
+        "prefill_tokens": 214,
+        "decode_tokens": 16,
+        "prefill_tps": 229.4676238430359,
+        "decode_tps": 8.128272611469042
+      },
+      "decode_tps_median": 8.128272611469042,
+      "prefill_tps_median": 229.4676238430359
+    },
+    {
+      "id": "q10",
+      "kind": "English vehicle check",
+      "question": "Is this the right bus? It says 'AYALA - FTI'",
+      "output": "{\"intent\":\"vehicle_check\",\"origin\":null,\"destination\":null,\"preference\":null,\"vehicle_text\":\"AYALA - FTI\"}",
+      "llm_raw": "{\"vehicle_text\":\"AYALA - FTI\"}",
+      "distinct_outputs": 1,
+      "valid_runs": 1,
+      "score": {
+        "valid": true,
+        "intent_ok": true,
+        "origin_ok": true,
+        "destination_ok": true,
+        "vehicle_text_ok": true,
+        "od_exact": true,
+        "preference_ok": true
+      },
+      "median_ms": 2428.116301,
+      "p95_ms": 2428.116301,
+      "latencies_ms": [
+        2428.116301
+      ],
+      "create_conversation_median_ms": 3298.821301,
+      "bench_first": {
+        "ttft_s": 1.0535590355,
+        "prefill_tokens": 212,
+        "decode_tokens": 12,
+        "prefill_tps": 228.162637384446,
+        "decode_tps": 8.038761907753535
+      },
+      "decode_tps_median": 8.038761907753535,
+      "prefill_tps_median": 228.162637384446
+    }
+  ],
+  "summary": {
+    "worst_question_p95_ms": 4180.325155,
+    "overall_median_ms": 2701.39427,
+    "valid_json_questions": 10,
+    "od_exact_questions": 9,
+    "pass": true
+  },
+  "thermal_after": {
+    "status": 0,
+    "headroom_10s": null
+  },
+  "pss_kb_after": 860229
+}

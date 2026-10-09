@@ -1,0 +1,17 @@
+org.json.JSONException: Expected ':' after { at character 5 of {"{"box: "originchatbot
+"destination
+"destination
+"to": "destination
+}
+	at org.json.JSONTokener.syntaxError(JSONTokener.java:469)
+	at org.json.JSONTokener.readObject(JSONTokener.java:397)
+	at org.json.JSONTokener.nextValue(JSONTokener.java:104)
+	at org.json.JSONObject.<init>(JSONObject.java:168)
+	at org.json.JSONObject.<init>(JSONObject.java:185)
+	at ph.commutenity.spike.MainActivityKt.hybridParse(MainActivity.kt:155)
+	at ph.commutenity.spike.MainActivityKt.access$hybridParse(MainActivity.kt:1)
+	at ph.commutenity.spike.MainActivity.run(MainActivity.kt:308)
+	at ph.commutenity.spike.MainActivity.onCreate$lambda$2(MainActivity.kt:233)
+	at ph.commutenity.spike.MainActivity.$r8$lambda$ARyXSVKyE94LcreHiJvrLAQpxRI(MainActivity.kt:0)
+	at ph.commutenity.spike.MainActivity$$ExternalSyntheticLambda2.invoke(D8$$SyntheticClass:0)
+	at kotlin.concurrent.ThreadsKt$thread$thread$1.run(Thread.kt:30)

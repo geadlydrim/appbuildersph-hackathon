@@ -58,6 +58,15 @@ private val QUESTIONS = listOf(
         "vehicle_check", null, null, null, setOf("pasay - guadalupe")),
     Question("q6", "non-trip", "Uulan ba mamaya?",
         "other", null, null, null),
+    // Added before the hybrid parser was run, as unseen checks against overfitting the rules.
+    Question("q7", "English landmark, no preference", "How do I get to Makati Med from Ayala Center?",
+        "trip", setOf("ayala center"), setOf("makati med"), null),
+    Question("q8", "Tagalog, destination only", "Paano pumunta sa Poblacion?",
+        "trip", null, setOf("poblacion"), null),
+    Question("q9", "Taglish cheapest, papuntang", "Pinakamura papuntang Buendia galing Washington SyCip Park?",
+        "trip", setOf("washington sycip park"), setOf("buendia"), "cheapest"),
+    Question("q10", "English vehicle check", "Is this the right bus? It says 'AYALA - FTI'",
+        "vehicle_check", null, null, null, setOf("ayala - fti")),
 )
 
 /** Ticket rule (≥ 4/5 exact origin and destination) scaled to the question count: ≥ 80 %, rounded up. */
@@ -82,6 +91,86 @@ private const val PARSER_SCHEMA = """{"type":"object","properties":{
 "vehicle_text":{"type":["string","null"]}},
 "required":["intent","origin","destination","preference","vehicle_text"],"additionalProperties":false}"""
 
+// ---- Hybrid parser: code classifies, the LLM only copies spans out of the question. ----
+
+private const val HYBRID_SYSTEM = """You copy place names and signboard text out of Metro Manila commute questions (English, Tagalog, or Taglish). Reply with JSON only.
+Trip question: origin is where the rider starts (after "galing", "mula sa", "from"); destination is where they are going (after "sa", "papunta", "pa-", "to"). Use null for a place the question does not name.
+Vehicle question: vehicle_text is the signboard or route text the rider read.
+Q: Paano pumunta sa Cubao galing Fairview?
+A: {"origin":"Fairview","destination":"Cubao"}
+Q: Saan masarap kumain?
+A: {"origin":null,"destination":null}
+Q: Tama ba 'tong bus? QUIAPO - CUBAO nakalagay
+A: {"vehicle_text":"QUIAPO - CUBAO"}"""
+
+private val IGNORE = setOf(RegexOption.IGNORE_CASE)
+
+private val VEHICLE_CUES = Regex(
+    """\b(tama ba|tamang|ito ba|eto ba|right (jeep|jeepney|bus|van)|correct (jeep|jeepney|bus|van|vehicle)|karatula|signboard|nakasulat|nakalagay|it says)\b""",
+    IGNORE,
+)
+
+/** First match wins, so the more specific transfer cue goes first. */
+private val PREFERENCE_CUES = listOf(
+    "fewest_transfers" to Regex("""\b(walang lipat|walang transfer|konting lipat|isang sakay|diretso|direct|no transfers?|fewest transfers?|less transfers?)\b""", IGNORE),
+    "cheapest" to Regex("""\b(pinakamura|mura|tipid|cheap|cheapest|cheaper|least expensive)\b""", IGNORE),
+    "fastest" to Regex("""\b(pinakamabilis|mabilis|bilis|fastest|quickest|fast)\b""", IGNORE),
+)
+
+private fun preferenceOf(q: String): String? = PREFERENCE_CUES.firstOrNull { it.second.containsMatchIn(q) }?.first
+
+// Enum-of-spans constraints were tried first and failed: the decoder closed every string after its
+// first word ("Ayala" is itself a valid span). So the schema allows free strings and code checks the copy.
+private val FREE_STRING = JSONObject().put("type", JSONArray().put("string").put("null"))
+
+private fun fieldSchema(fields: List<String>): String {
+    val props = JSONObject().apply { fields.forEach { put(it, FREE_STRING) } }
+    return JSONObject()
+        .put("type", "object").put("properties", props)
+        .put("required", JSONArray(fields)).put("additionalProperties", false)
+        .toString()
+}
+
+private fun norm(s: String) = s.lowercase().replace(Regex("[^\\p{L}\\p{N}]+"), " ").trim()
+
+/**
+ * Keeps an extracted value only if the rider actually wrote it: edge punctuation and a "pa-" prefix are
+ * stripped, then the value must appear word-aligned in the question. Anything else becomes null, so an
+ * invented place can never reach place search.
+ */
+private fun copied(value: String?, question: String): String? {
+    if (value == null) return null
+    var v = value.trim { !it.isLetterOrDigit() }
+    if (v.length > 3 && v.startsWith("pa-", ignoreCase = true)) v = v.substring(3)
+    val nv = norm(v)
+    if (nv.isEmpty()) return null
+    return v.takeIf { " ${norm(question)} ".contains(" $nv ") }
+}
+
+/** Runs the hybrid parser and returns (SDD §4 JSON text, raw LLM text). */
+private fun hybridParse(conv: com.google.ai.edge.litertlm.Conversation, q: String): Pair<String, String> {
+    val vehicle = VEHICLE_CUES.containsMatchIn(q)
+    val fields = if (vehicle) listOf("vehicle_text") else listOf("origin", "destination")
+    val raw = conv.sendMessage(q, responseFormat = ResponseFormat.json(fieldSchema(fields))).toString()
+    val llm = JSONObject(raw.trim())
+    fun field(k: String): String? = copied(if (llm.isNull(k)) null else llm.getString(k), q)
+    val out = JSONObject()
+    if (vehicle) {
+        out.put("intent", "vehicle_check").put("origin", JSONObject.NULL).put("destination", JSONObject.NULL)
+            .put("preference", JSONObject.NULL).put("vehicle_text", field("vehicle_text") ?: JSONObject.NULL)
+    } else {
+        val destination = field("destination")
+        // A trip cannot start where it ends; the model echoes the one place it found into both fields.
+        val origin = field("origin")?.takeUnless { destination != null && norm(it) == norm(destination) }
+        val isTrip = origin != null || destination != null
+        out.put("intent", if (isTrip) "trip" else "other")
+            .put("origin", origin ?: JSONObject.NULL).put("destination", destination ?: JSONObject.NULL)
+            .put("preference", if (isTrip) preferenceOf(q) ?: JSONObject.NULL else JSONObject.NULL)
+            .put("vehicle_text", JSONObject.NULL)
+    }
+    return out.toString() to raw
+}
+
 private const val PHRASE_SYSTEM = """You are CommuteNity, a Metro Manila commute helper. Turn the trip facts into a short, friendly Taglish answer of 2 to 3 sentences.
 Use only the given facts. Never add stops, routes, fares, or times. Say where to board, the signboard to look for, and where to say "para"."""
 
@@ -100,9 +189,11 @@ private data class RunConfig(
     val threads: Int,
     /** Create the conversation (system prompt prefilled) before the question arrives; time only the send. */
     val prewarm: Boolean,
+    /** Keyword rules + span-constrained LLM extraction instead of the one-shot parser. */
+    val hybrid: Boolean,
 ) {
     val tag get() = "${model.substringBeforeLast('.')}-$backend-${if (constrained) "json" else "free"}" +
-        (if (threads > 0) "-t$threads" else "") + (if (prewarm) "-prewarm" else "")
+        (if (threads > 0) "-t$threads" else "") + (if (prewarm) "-prewarm" else "") + (if (hybrid) "-hybrid" else "")
 }
 
 class MainActivity : Activity() {
@@ -133,6 +224,7 @@ class MainActivity : Activity() {
             thinkOff = intent.getBooleanExtra("thinkoff", false),
             threads = intent.getIntExtra("threads", 0),
             prewarm = intent.getBooleanExtra("prewarm", false),
+            hybrid = intent.getBooleanExtra("hybrid", false),
         )
         thread(name = "spike") {
             // App-created dir: a dir made by `adb shell mkdir` is not writable by the app (EACCES).
@@ -183,11 +275,11 @@ class MainActivity : Activity() {
         val sampler = SamplerConfig(topK = 1, topP = 1.0, temperature = 0.0)
         val thinking = if (cfg.thinkOff) ThinkingConfig(enableThinking = false) else null
         val parserConfig = ConversationConfig(
-            systemInstruction = Contents.of(PARSER_SYSTEM),
+            systemInstruction = Contents.of(if (cfg.hybrid) HYBRID_SYSTEM else PARSER_SYSTEM),
             samplerConfig = sampler,
             maxOutputToken = 64,
             thinkingConfig = thinking,
-            enableResponseFormat = cfg.constrained,
+            enableResponseFormat = cfg.constrained || cfg.hybrid,
             prefillPrefaceOnInit = cfg.prewarm,
         )
         val format = if (cfg.constrained) ResponseFormat.json(PARSER_SCHEMA) else null
@@ -203,6 +295,7 @@ class MainActivity : Activity() {
             val outputs = linkedSetOf<String>()
             var validRuns = 0
             var firstText = ""
+            var firstRaw = ""
             repeat(cfg.warmup + cfg.iters) { i ->
                 val text: String
                 val ms: Double
@@ -210,13 +303,20 @@ class MainActivity : Activity() {
                 engine.createConversation(parserConfig).use { conv ->
                     val created = System.nanoTime()
                     val t0 = if (cfg.prewarm) created else tc
-                    text = conv.sendMessage(q.text, responseFormat = format).toString()
+                    val raw: String
+                    if (cfg.hybrid) {
+                        val (assembled, llmText) = hybridParse(conv, q.text)
+                        text = assembled; raw = llmText
+                    } else {
+                        text = conv.sendMessage(q.text, responseFormat = format).toString(); raw = text
+                    }
                     val ok = parse(text) != null // validation is inside the timed region
                     ms = (System.nanoTime() - t0) / 1e6
                     if (i >= cfg.warmup) {
                         latencies += ms
                         createMs += (created - tc) / 1e6
                         if (ok) validRuns++
+                        if (firstRaw.isEmpty()) firstRaw = raw
                         outputs += text
                         if (firstText.isEmpty()) firstText = text
                         runCatching { conv.getBenchmarkInfo() }.getOrNull()?.let { b ->
@@ -240,7 +340,7 @@ class MainActivity : Activity() {
             val p95 = percentile(latencies, 0.95)
             questions.put(JSONObject().apply {
                 put("id", q.id); put("kind", q.kind); put("question", q.text)
-                put("output", firstText); put("distinct_outputs", outputs.size)
+                put("output", firstText); put("llm_raw", firstRaw); put("distinct_outputs", outputs.size)
                 put("valid_runs", validRuns); put("score", score)
                 put("median_ms", med); put("p95_ms", p95)
                 put("latencies_ms", JSONArray(latencies))
