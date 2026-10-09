@@ -5,7 +5,7 @@
 **Version:** 0.4
 **Owner:** Implementer
 **Status:** Draft. Makati only ([D20](state.md#5-decisions)), map-first with precomputed road shapes and an offline PMTiles map ([D21](state.md#5-decisions) to [D23](state.md#5-decisions)), online refresh and in-trip tracking ([D24](state.md#5-decisions), [D25](state.md#5-decisions)). The map pack is pending [A14](state.md#4-open-assumptions); LLM runtimes are pending [A4](state.md#4-open-assumptions) and pick the model for PRD-F8, which is release-critical and part of the MVP ([D31](state.md#5-decisions)). Contribution sync and the ranker plan are decided in [D17](state.md#5-decisions) and [D18](state.md#5-decisions).
-**Last reconciled:** 2026-10-09
+**Last reconciled:** 2026-10-10
 **PRD:** [Product requirements](prd-commutenity.md)
 
 ## 1. Architecture
@@ -68,6 +68,7 @@ flowchart LR
 | PRD-F4 | Refresh client | Manifest, pack, map pack, foot-route cache ([data plan §2.3](data-commutenity.md#23-refresh-manifest-and-versioning)) |
 | PRD-F5 | Candidate generator, scorer, alternatives UI | Same as F2 |
 | PRD-F6 | Contribution store, sync client, backend | [Data plan §2.1](data-commutenity.md#21-contribution-schema) |
+| PRD-F12 | Rider Q&A evidence module, Questions screen, trip-card evidence line | Bundled `data/mock/rider-qa.json`; the rider's own answers in Room or memory ([D34](state.md#5-decisions)) |
 | PRD-F7 | Tracking service, map-matcher, para alert, notification | Active trip's shapes and para points; `TrackingConfig` |
 | PRD-F8 | Query parser (hybrid: keyword cues plus LLM extraction), place search, correct-vehicle matcher, trip composer (template; LLM phrasing off per [D32](state.md#5-decisions)) | Pack places; `routes.signboards[]` and route names |
 | PRD-F9 | Speech-to-text (whisper.cpp) | Whisper model file |
@@ -85,7 +86,7 @@ The pack schema lives in the [data plan §2](data-commutenity.md#2-commute-pack-
 | Suggestion validity | Every leg references pack routes and stops, the legs are continuous, and the route ID exists. Fares, minutes, distance, and shapes are taken from the pack, never from the suggestion. |
 | Features per candidate | Base features: `total_minutes`, `fare_php`, `transfers`, `walk_minutes`, `modes_count`, `net_votes`, `vote_count`, `is_community`, `unknown_fare_legs`. Ranker input also includes preference-specific interactions: each applicable base feature × `fastest`, `cheapest`, `fewest_transfers`, or `default`. This feature spec is the D18 spec and is unchanged. `walk_minutes` includes first/last-mile and transfer walking. |
 | Display values per trip | `distance_m` (sum of leg distances), `walk_m` and `walk_minutes` (first/last-mile plus transfers), per-leg distance and shape, para point per ride leg. Display values are not ranker features. |
-| Baseline order (T0) | Deterministic lexicographic order, not a weighted sum ([D16](state.md#5-decisions)). Default and `fewest_transfers`: transfers → `total_minutes` → `fare_php` → `walk_minutes`; `fastest` or `cheapest` promotes that requested criterion and retains the remaining order. `net_votes`, clamped to −3…+3, breaks only a tie after those criteria; stable `candidateKey` is last. Missing fare sorts after known fare. |
+| Baseline order (T0) | Deterministic lexicographic order, not a weighted sum ([D16](state.md#5-decisions)). Default and `fewest_transfers`: transfers → `total_minutes` → `fare_php` → `walk_minutes`; `fastest` or `cheapest` promotes that requested criterion and retains the remaining order. The vote term breaks only a tie after those criteria: trip `net_votes` plus tied rider Q&A answers (one "worked" vote each, [D34](state.md#5-decisions)), clamped together to −3…+3, with mock answers left out on the hero pair ([D13](state.md#5-decisions)); stable `candidateKey` is last. Missing fare sorts after known fare. |
 | Ranker (T4) | Pairwise logistic regression trained on the D18 feature spec and exported as JSON `{ feature_names, normalization, intercept, weights }`, evaluated in Kotlin. It is swapped in by a feature flag only if it beats T0 top-1 agreement on held-out `known` pairs. |
 | Pick | The first candidate in the baseline order is the auto pick. The rest, in order, are alternatives (show at most 5). |
 | Fare | Sum of segment fares. First/last-mile walks cost nothing. If any segment fare is missing, the trip fare is "unknown"; no partial totals. |
@@ -111,7 +112,7 @@ Proposed shapes. Final names are settled at CP3.
 
 **Trip builder:** `setPoint(which: A | B, source: tap | drag | search | myLocation, latLng, placeId?) → TripRequest { a, b, preference? }`. A request is computed as soon as both points are set and re-computed when either is moved. `myLocation` needs the location permission; without it the other three sources still work.
 
-**Place search** (P2; also resolves LLM-extracted places): `resolvePlace(text) → { status: ok | ambiguous | unknown, candidates: PlaceRef[] }`. It tries an exact alias, then a normalized alias, then fuzzy string match, then (PRD-F8 only, if the embedding model is installed) embedding similarity above a threshold. Online geocoding through the server is an optional extra; its failure falls back to pack places.
+**Place search** (also resolves LLM-extracted places): `resolvePlace(text) → { status: ok | ambiguous | unknown, candidates: PlaceRef[] }`. It tries an exact alias, then a normalized alias, then fuzzy string match, then (PRD-F8 only, if the embedding model is installed) embedding similarity above a threshold. Online geocoding through the server is an optional extra; its failure falls back to pack places.
 
 **Candidate generator:** `candidates(a: Point, b: Point) → Candidate[]`. Each `Candidate` has `{ source: algorithm | community, suggestionId?, legs[{ kind: first_mile | ride | transfer_walk | last_mile, mode, routeId?, boardStopId, alightStopId, fare?, minutes?, distance_m, signboards[], shapeRef }], features, display{ distance_m, walk_m, walk_minutes } }`.
 
@@ -167,13 +168,21 @@ How the JSON is produced (measured in the [LLM speed test](https://github.com/ge
 
 Enum-constrained spans were tried and failed (the decoder closed each string after its first word), so the copy check runs after decoding instead.
 
-**Correct-vehicle matcher** (P2, deterministic, [D27](state.md#5-decisions)): `matchVehicle(text, trip, progress) → { verdict: yes_ride | no_look_for | not_sure, expected: signboard?, matchedLegIndex?, score }`. It normalizes the text and fuzzy-matches it against `routes.signboards[]` and the route name of the active trip's next boarding leg (or the first ride leg before the trip starts). It returns `yes_ride` only above a conservative threshold; a clear match to a different route or no match returns `no_look_for` with the expected signboard; anything in between returns `not_sure`. The model never sets the verdict.
+**Correct-vehicle matcher** (deterministic, [D27](state.md#5-decisions)): `matchVehicle(text, trip, progress) → { verdict: yes_ride | no_look_for | not_sure, expected: signboard?, matchedLegIndex?, score }`. It normalizes the text and fuzzy-matches it against `routes.signboards[]` and the route name of the active trip's next boarding leg (or the first ride leg before the trip starts). It returns `yes_ride` only above a conservative threshold; a clear match to a different route or no match returns `no_look_for` with the expected signboard; anything in between returns `not_sure`. The model never sets the verdict.
 
 **Contribution store and sync:**
 - `saveSuggestion(od, legs, note)` and `vote(candidateKey, +1 | -1 | 0)` write to Room first.
 - `sync()` signs in anonymously if needed, then sends a batched push/pull request to the Supabase Edge Function; Room retains unsynced mutations until acknowledged.
 - The function validates legs and note length, writes suggestions or current votes, applies a server-side per-identity mutation limit, and returns suggestions plus aggregate vote totals only.
 - `candidateKey` is a stable hash of the leg sequence, so the same route gets the same votes everywhere.
+
+**Rider Q&A evidence** ([D34](state.md#5-decisions); T1, the first thing cut; not part of the MVP gate):
+- **Sources:** the bundled `data/mock/rider-qa.json` (read-only; every thread and answer is `source_class: mock`, `source: hand-written sample`) and the rider's own threads and answers, kept in Room or memory. The rider's own answers are marked as theirs and are never synced or sent anywhere.
+- **Tie:** an answer is tied to one candidate only through the optional "This trip worked" chip, which lists the pack-valid candidates on screen. The answer stores that candidate's stable `candidateKey`. Without the chip an answer has no key, is text only, and counts for nothing. A key that is not a pack-valid candidate for the pair is dropped.
+- **Contract:** `evidenceFor(candidateKey, odPair) → { tiedAnswers, sample: Boolean }`. `tiedAnswers` is the number of answers tied to that candidate for that pair, and `sample` is true when any of them is mock. The trip card shows "N riders say this works" from it, marked Sample when `sample` is true.
+- **Ordering:** `orderingAnswers(candidateKey, odPair)` equals `tiedAnswers`, except that on the D30 pair it leaves mock answers out. Each counted answer is one "worked" vote added to the trip `net_votes` before the D16 clamp (−3…+3). It only breaks an otherwise exact tie. There is no new ordering rule, no votes on answers, and the D18 ranker feature spec is unchanged.
+- **Counting is structural.** Code counts keys; no model reads answer text to count it. Q&A text is never a fact source, so fares, stops, minutes, and shapes still come only from the pack ([D33](state.md#5-decisions)).
+- **Stretch (not MVP):** after the `demo-safe-f8` tag exists, the on-device LLM may read untied answers and extract a route or signboard mention. Code keeps it only if it matches a pack route (the copy-check idea of [D32](state.md#5-decisions)) and then ties the answer as above. Cut if not working by 7:00 AM.
 
 **Error codes:** `MODEL_LOAD_FAILED`, `PARSE_FAILED`, `AMBIGUOUS_PLACE`, `NOT_IN_PACK`, `NO_ROUTE`, `INVALID_SUGGESTION`, `SYNC_FAILED`, `REFRESH_FAILED`, `MAP_FILE_MISSING`, `LOCATION_DENIED`, `GPS_UNAVAILABLE`, `MIC_DENIED`. No stack traces are shown in the UI.
 
@@ -250,6 +259,7 @@ sequenceDiagram
   - refresh downloads (manifest, pack, map), which are plain reads with no rider data;
   - **only when online and only when needed:** the two endpoints of a first/last-mile walk (pin and stop) for a foot route, and typed search text for online geocoding. "Use my location" as point A makes the foot-route request carry that point. The GPS track is never sent. Both requests fail soft: offline or denied, the app uses the dashed walk line and pack places.
   - There are no user-facing accounts or names.
+  - Rider Q&A text never leaves the phone: the rider's own questions and answers are never synced ([D34](state.md#5-decisions)).
 - **Foreground service:** tracking runs as an Android foreground service of type `location`, with an ongoing notification the rider can see and stop. It needs the location permission (fine) and, on newer Android, the notification permission. Tracking starts only from an explicit "Start trip" and stops on arrival or on cancel. Whether the demo phone's HyperOS battery rules keep it alive with the screen off is verified at T2 (QA-11).
 - **Map data:** the offline map is an OSM-derived extract. OSM attribution is shown on the map and in the README. The app never bulk-downloads tiles from tile.openstreetmap.org ([D23](state.md#5-decisions)).
 - **Backend:**

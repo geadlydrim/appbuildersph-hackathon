@@ -5,7 +5,7 @@
 **Version:** 0.4
 **Owner:** Implementer
 **Status:** Draft. Rewritten for the Makati-only, map-first scope ([D20](state.md#5-decisions)–[D28](state.md#5-decisions)). Supersedes the v0.2 scenario table; QA IDs are renumbered. The hero pair is set by [D30](state.md#5-decisions), and QA-12, QA-13, and AI-01..AI-05 joined the MVP gate under [D31](state.md#5-decisions).
-**Last reconciled:** 2026-10-09
+**Last reconciled:** 2026-10-10
 **PRD:** [Requirements](prd-commutenity.md) · **SDD:** [System design](sdd-commutenity.md) · **Data:** [Data plan](data-commutenity.md)
 
 ## 1. Strategy
@@ -23,9 +23,9 @@ No tests exist yet. Docs only.
 ## 2. Data and Environment
 
 - **Fixture pack:** about 8 stops, 3 routes, and 2 transfers, with a stored road shape on every segment, built so the fixture origin–destination pair has at least 3 candidates. It is kept separate from the real Makati pack. Fixture shapes are synthetic, so they test the code and say nothing about real roads.
-- **Hero pair ([D30](state.md#5-decisions)):** **A = Ayala Center** (Station Road, San Lorenzo, Makati) and **B = Dela Rosa Street, Pio del Pilar** (Makati). Its at least 2 genuinely different candidate trips are listed and verified by P4 and the team ([A13](state.md#4-open-assumptions)). QA-02, QA-05, QA-10, QA-11, and QA-12 also run on it.
+- **Hero pair ([D30](state.md#5-decisions)):** **A = Ayala Center** (Station Road, San Lorenzo, Makati) and **B = Dela Rosa Street, Pio del Pilar** (Makati). Its at least 2 genuinely different candidate trips are listed and verified by the team ([A13](state.md#4-open-assumptions)). QA-02, QA-05, QA-10, QA-11, and QA-12 also run on it.
 - **Eval sets:** held-out O–D pairs for the ranker, held-out place-search queries, held-out questions (PRD-F8, MVP per [D31](state.md#5-decisions)), held-out signboard and route-name texts for the correct-vehicle check (PRD-F8), and short Taglish voice clips (T3 voice, optional). None are used in training. Signboard texts are written transcriptions, not photos.
-- **GPS test tracks** (P3 prepares them with P4; files live in `data/tracks/`, see [data plan §3.3](data-commutenity.md#33-gps-test-tracks); export to GPX where the mock-location app needs it). Each is recorded or hand-traced along the hero trip's stored shapes:
+- **GPS test tracks** (prepared by whoever claims the issue; files live in `data/tracks/`, see [data plan §3.3](data-commutenity.md#33-gps-test-tracks); export to GPX where the mock-location app needs it). Each is recorded or hand-traced along the hero trip's stored shapes:
 
 | Track | Shape | Used by |
 |---|---|---|
@@ -37,7 +37,7 @@ No tests exist yet. Docs only.
 
   The 100 m, 30 s, and ~300 m values are the proposed thresholds from [D25](state.md#5-decisions). They are config and get tuned in testing ([A16](state.md#4-open-assumptions)).
 - **Simulating GPS on the demo phone.** Real fixes are not needed to test tracking:
-  - **Real phone (POCO X6 5G):** select a mock-location app in Developer options, then replay a GPX track with it. A debug-build replayer that registers a test location provider is the alternative. P1 and P3 pick one at CP5 and record it in [BUILD §3](build-commutenity.md#3-stack-currency). Not yet tried on HyperOS, so confirm on the first run that the app receives the mock fixes.
+  - **Real phone (POCO X6 5G):** select a mock-location app in Developer options, then replay a GPX track with it. A debug-build replayer that registers a test location provider is the alternative. Whoever builds tracking picks one at CP5 and records it in [BUILD §3](build-commutenity.md#3-stack-currency). Not yet tried on HyperOS, so confirm on the first run that the app receives the mock fixes.
   - **Emulator:** `adb emu geo fix <longitude> <latitude>` sets one fix, and the emulator's Extended controls load a GPX track. This is for early development only; the demo phone is the gate.
   - **Airplane mode still applies.** GPS needs no data, so replay and tracking run with the network off.
   - **Labelling:** any demo or screenshot that uses a replayed track says "simulated route".
@@ -70,11 +70,15 @@ Tiers follow [MVP scope](mvp-scope.md#tiers). Stories are in [user stories](user
 | QA-17 | A trip whose route uses mock stops, fares, minutes, or shapes | Each mock value shows the "sample data" marker. Collected and known values don't. | US-02, D13 | T0 | Not run |
 | QA-18 | UI states, TalkBack, both themes, small and large phones: empty map, loading, refresh states, GPS weak, tracking, alert | [DSD gate](dsd-commutenity.md#8-quality-gate) passes | DSD | T0, rechecked each tier | Not run |
 | QA-19 | Missing segment fare or minutes | The leg and total show "unknown". No partial total. | US-02 | T0 | Not run |
+| QA-20 | **Tied answers count within the clamp.** On a non-hero pair, tie answers to candidates through the optional "This trip worked" chip and from the mock file. Include one pair whose top two candidates are exactly tied on transfers, minutes, fare, and walk minutes, and a case with more than 3 tied answers plus trip votes on one candidate. | The trip card shows "N riders say this works" with the tied count, marked Sample when mock. Each tied answer adds one "worked" vote to that candidate's vote term. The sum of trip votes and tied answers is clamped to −3…+3 and only breaks an otherwise exact tie; it never overrides transfers, minutes, fare, or walk minutes. At least one non-hero mock pair has an otherwise exactly tied pick decided by tied answers. | US-15, D34, D16 | T1 (first cut) | Not run |
+| QA-21 | **Hero pair keeps its order.** Run the hero pair with and without `data/mock/rider-qa.json`. Then run the same kind of tied mock answers on a non-hero pair. | The hero-trip cards show the mock evidence line, marked Sample, but the hero-pair order is identical with and without the file. On the non-hero pair the same evidence does count. | US-15, D13, D34 | T1 (first cut) | Not run |
+| QA-22 | **Untied answers count zero.** Save an answer without the chip, an answer whose key is not a pack-valid candidate for its pair, and a long answer that names a route in its text. | The text is shown in the thread. Evidence lines, vote terms, and ordering do not change. An invalid key is dropped. No model reads the text to count it. | US-15, D34 | T1 (first cut) | Not run |
+| QA-23 | **Q&A never syncs.** Write a question and answers (tied and untied) offline, go online, run a sync and a refresh, and watch the network inspector and the Edge Function payload. | No Q&A text, key, or answer is in any request. The rider's items stay on the phone, marked as their own, and are not marked unsynced. There are no up or down marks on answers. Q&A text never changes a fare, stop, minute, or shape. | US-15, D34 | T1 (first cut) | Not run |
 
 ## 4. Automation and Manual Checks
 
-- **Automated:** the generator and D16 ordering, place search, correct-vehicle matcher, map-matching and para-alert logic on the GPX tracks, suggestion and pack validators, ranker parity, and the eval script.
-- **Manual:** QA-01..QA-13 and QA-18 on the demo phone before every `demo-safe-*` tag (QA-12 and QA-13 from `demo-safe-f8` on), plus the 5-minute rehearsal. QA-14 is added once voice ships.
+- **Automated:** the generator and D16 ordering, place search, correct-vehicle matcher, map-matching and para-alert logic on the GPX tracks, suggestion and pack validators, ranker parity, the rider Q&A evidence counter (QA-20..QA-22), and the eval script.
+- **Manual:** QA-01..QA-13 and QA-18 on the demo phone before every `demo-safe-*` tag (QA-12 and QA-13 from `demo-safe-f8` on), plus the 5-minute rehearsal. QA-14 is added once voice ships. QA-20..QA-23 are run only if rider Q&A ships ([D34](state.md#5-decisions)); they are not part of the MVP gate.
 
 ## 5. Triage
 
@@ -107,6 +111,7 @@ The **MVP gate (T0 + T1 + T2 + PRD-F8) has not passed.** No code exists yet.
 |---|---|
 | T0 | QA-01..QA-03, QA-16..QA-19 |
 | T1 | QA-04..QA-09 |
+| Rider Q&A (T1 add-on, first thing cut, [D34](state.md#5-decisions)) | QA-20..QA-23 only; not part of the MVP gate |
 | T2 | QA-10, QA-11, and the tracking release criteria above. |
 | F8 (T3 label, MVP per [D31](state.md#5-decisions)) | QA-12, QA-13; AI-01..AI-05; the Local-AI floor release criterion above. **T0+T1+T2+F8 is the MVP gate.** |
 | T3 voice (add-on) | QA-14 only |

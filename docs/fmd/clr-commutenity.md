@@ -5,7 +5,7 @@
 **Version:** 0.4
 **Owner:** Project owner
 **Status:** Draft. Updated for the Makati-only, map-first scope, with in-trip GPS tracking ([D25](state.md#5-decisions)) and OCR dropped ([D26](state.md#5-decisions)).
-**Last reconciled:** 2026-10-09
+**Last reconciled:** 2026-10-10
 **PRD:** [Requirements](prd-commutenity.md) · **SDD:** [System design](sdd-commutenity.md)
 
 ## 0. Scope
@@ -30,6 +30,7 @@ Three exposures remain:
 | Online requests (T0/T1) | (1) The pin and stop coordinates of a first/last-mile foot route. When "use my location" sets Point A, **that current location is one of them**. (2) The typed search text, for online geocoding. | Phone and our server; the routing engine if the server proxies one ([A15](state.md#4-open-assumptions)) | Foot routes are cached on the phone, local only. Server-side log retention is **not yet decided**. | Only when online and only when needed; never on the offline answer path or the tracking path. Both fail soft: offline or denied, the app draws the dashed "walk ~N m" line and uses pack places. Same anonymous credential and no service-role rule as sync. |
 | Local events (PRD §5.6) | Latencies and flags | Phone | Until cleared | No question text and no coordinates |
 | Contributions | Suggested legs (pack IDs), note, vote, anonymous Auth UID, timestamp | Phone (Room) and Supabase sync backend | Event duration | No user-facing account, name, or location trace. Raw UIDs and votes are not exposed to readers. Notes are free text and could contain personal data, so the UI warns against it. |
+| Rider Q&A (T1, first cut, [D34](state.md#5-decisions)) | The rider's own questions and answers, and the key of a trip an answer is tied to | Phone only (memory or Room) | Until cleared or the app is reset | Never synced and never sent anywhere. No account, name, or profile. The bundled mock threads are hand-written samples marked Sample. The UI warns against typing personal data. |
 | Team signboard text collection | Signboard and route-name text noted from public vehicles. No photos. | Team notes, then the pack and eval set in the repo | Event duration plus the repo | Text only; nothing that identifies a person or a plate |
 | Team GPX test tracks | Recorded or hand-traced tracks along the hero trip | Repo (test fixtures) | Event duration plus the repo | A recorded track is a teammate's movement. Trim the start and end away from private places before committing. |
 | Team preference labels | Rankings per scenario per rater | Repo | Permanent | Raters shown as R1–R4, not by name |
@@ -42,7 +43,7 @@ No payment data and no ad tracking. Location is used only for the active trip an
 - **Rider-facing text (proposed):** "CommuteNity uses your location during a trip to show whether you're still on route and to alert you before your stop. Your location track stays on this phone and is deleted when the trip ends." Next to "use my location": "When you're online, this point is sent to our server to fetch a walking route. Offline, nothing is sent."
 - **If denied:** pins by tap, drag, and search still work, and the best trip is unchanged. Tracking and "use my location" show a clear unavailable message.
 - **Foreground-service notification:** shows for the whole trip, says that CommuteNity is tracking the trip, and has a Stop action. It is the disclosure that tracking is on.
-- **Permission set:** foreground location only, with a foreground service of location type. No background-location permission is planned. P1 confirms the final set at build and records it here.
+- **Permission set:** foreground location only, with a foreground service of location type. No background-location permission is planned. Whoever builds tracking confirms the final set at build and records it here.
 
 ## 2. Regulatory Awareness
 
@@ -98,7 +99,7 @@ None. The APK is built from the public repo. There is no Play Store listing.
 | CLR-P1 | Collecting data in public spaces | Signboard text only, by hand. No photos, so nothing to blur. (Supersedes the photo collection plan, [D26](state.md#5-decisions).) | Any photo or video collection, or publishing a dataset | Keep raw data off the repo |
 | CLR-P2 | Contribution data | Anonymous UUID; no accounts | Real users, accounts, or moderation | Local-only contributions |
 | CLR-P3 | Telemetry | Nothing leaves the phone except contributions, refresh requests, and optional online lookups | Any analytics proposal | On-device logs only |
-| CLR-P4 | Full social layer (parked) | Not built | Un-parking it | — |
+| CLR-P4 | Full social layer (parked) | Not built. Exception: rider Q&A as bounded trip evidence, saved on the phone only and never synced ([D34](state.md#5-decisions)) | Un-parking it | — |
 | CLR-P5 | Location and tracking | On device only, never uploaded, discarded after the trip; notification discloses tracking | Any proposal to upload, store, or share a trace, or to track in the background | Turn tracking off and show the trip card only |
 | CLR-P6 | Online requests (geocoding, foot routes) | Optional, only when online and needed. The foot-route request carries the pin and stop coordinates, including a "use my location" Point A; geocoding carries the typed text. The GPS track is never sent. | Server logs retained, a third-party routing or geocoding service added, or the track or any trace sent | Dashed "walk ~N m" line and pack-place search only |
 | CLR-P7 | Map and routing-engine terms | OSM attribution on the map; own-hosted copy of the map pack; no OSM tile server; engine terms checked before pack v0 | A14 or A15 resolves, or a term is found to forbid our use | Switch to a provider that allows offline use, or a self-hosted engine |

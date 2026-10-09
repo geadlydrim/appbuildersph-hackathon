@@ -5,7 +5,7 @@
 **Version:** 0.4
 **Owner:** Project owner
 **Status:** Draft. Re-run at about 10:40 PM on Oct 9 for the Makati-only, map-first scope ([D20](state.md#5-decisions)–[D28](state.md#5-decisions)). Supersedes the v0.2 verdict. Updated at about 11:05 PM for the hero pair ([D30](state.md#5-decisions)) and the Local-AI floor ([D31](state.md#5-decisions)), which mitigates FC-18.
-**Last reconciled:** 2026-10-09
+**Last reconciled:** 2026-10-10
 **IDEA:** [Idea brief](idea-commutenity.md)
 
 ## 1. Verdict
@@ -31,7 +31,7 @@ The map is the first thing a judge sees, so a map that fails sinks T0. The fixes
 | The hero pair is set ([D30](state.md#5-decisions): Ayala Center to Dela Rosa St., Pio del Pilar). List and verify at least 2 real candidate trips for it before pack v0; settle the shape routing engine and its terms before pack v0 | [A13](state.md#4-open-assumptions), [A15](state.md#4-open-assumptions), [data plan §3](data-commutenity.md#3-collection-protocol) |
 | Build the pack validator to reject straight-line or mismatched shapes, so a bad shape fails the build, not the demo | [QAD QA-16](qad-commutenity.md#3-scenarios) |
 | Tune tracking thresholds on mock tracks first and on a real Makati trip when possible; if not passing by 6:30 AM, demo with a labelled simulated route | [A16](state.md#4-open-assumptions), [QAD §2](qad-commutenity.md#2-data-and-environment) |
-| Keep P2's LLM work running in parallel from now, so PRD-F8 (ask in words) merges behind its flag as soon as T0 is demo-safe (CP-F8, ~4:30 AM). Drop voice and the ranker before dropping the LLM, because the LLM carries the Local AI claim. *(Decided: [D31](state.md#5-decisions); answers §7.)* | [BUILD §1](build-commutenity.md#1-build-sequence), FC-18 |
+| Keep the LLM work running in parallel from now, so PRD-F8 (ask in words) merges behind its flag as soon as T0 is demo-safe (CP-F8, ~4:30 AM). Drop voice and the ranker before dropping the LLM, because the LLM carries the Local AI claim. *(Decided: [D31](state.md#5-decisions); answers §7.)* | [BUILD §1](build-commutenity.md#1-build-sequence), FC-18 |
 | The ranker ships only if it beats the deterministic baseline on held-out pairs | [Data plan §5](data-commutenity.md#5-training-plan) |
 | Contribution and preference data is team-generated, and disclosed as such | [Data plan §4](data-commutenity.md#4-training-data-collection), [CLR §5](clr-commutenity.md#5-ip-provenance-and-disclosure) |
 | Fresh repo; disclose what we reused from the original CommuteNity concept and the CommuteNity-Web ideas | [D3](state.md#5-decisions), [D21](state.md#5-decisions) |
@@ -58,7 +58,7 @@ The map is the first thing a judge sees, so a map that fails sinks T0. The fixes
 | FC-14 | Data | Shapes precomputed through an open routing engine are allowed by its terms and are plausible paths for jeepney, bus, UV, and walk legs ([A15](state.md#4-open-assumptions)) | Unverified. The OSRM wiki limits its public demo server to reasonable, non-commercial use at 1 request per second, with no guarantees ([OSRM demo server](https://github.com/Project-OSRM/osrm-backend/wiki/Demo-server)); GraphHopper terms are unchecked. A driving profile may not follow the real jeepney path. | — | Significant (fall back to a self-hosted engine, or hand-checked shapes for the hero trip only) |
 | FC-15 | Rules | Protomaps and OSM data may be bundled in the APK or hosted by us with only OSM attribution | Partly verified: Protomaps calls its basemap an ODbL Produced Work needing OSM attribution. The OSMF tile policy forbids offline use of `tile.openstreetmap.org` ([OSMF policy](https://operations.osmfoundation.org/policies/tiles/)), so we don't use it. Unchecked: the basemap style, fonts, and sprites; whether stored shapes are a derivative database. | [CLR §5](clr-commutenity.md#5-ip-provenance-and-disclosure) | Significant |
 | FC-16 | Feasibility | GPS in Makati is accurate enough for an off-route flag (more than 100 m for at least 30 s) and a para alert about 300 m before the stop ([A16](state.md#4-open-assumptions)) | Unverified. Ayala CBD high-rises and MRT-3 or EDSA overhead are likely to degrade it. [INFERENCE] | — | Significant (wrong alert on a physical-world path; fall back to a labelled simulated route) |
-| FC-17 | Data | Makati has at least 2 genuinely different candidate trips between the D30 pair (Ayala Center to Dela Rosa St., Pio del Pilar) that the team can verify ([A13](state.md#4-open-assumptions)) | Unverified; the pair is decided ([D30](state.md#5-decisions)), the candidate trips are listed and verified by P4 and the team before pack v0 | — | Significant (no real alternatives makes "best trip" and "alternatives" look trivial) |
+| FC-17 | Data | Makati has at least 2 genuinely different candidate trips between the D30 pair (Ayala Center to Dela Rosa St., Pio del Pilar) that the team can verify ([A13](state.md#4-open-assumptions)) | Unverified; the pair is decided ([D30](state.md#5-decisions)), the candidate trips are listed and verified by the team before pack v0 | — | Significant (no real alternatives makes "best trip" and "alternatives" look trivial) |
 | FC-18 | Rules | The demo satisfies "a meaningful part of AI inference executes locally" | **Mitigated by [D31](state.md#5-decisions) and [D32](state.md#5-decisions).** The T0–T2 path has no learned model (map-matching, ordering, and the para alert are deterministic), but PRD-F8 (the on-device LLM) is release-critical and part of the MVP. The F8 parser passed the LLM speed test on the demo phone (Gemma 4 E2B, worst p95 2.84 s, 10/10 exact on 10 questions); the claim still needs F8 merged and passing US-11 and US-12. Any later failure falls back to on-device inference only; never a cloud model. | [JUDGING](JUDGING.md#rules); [RESULTS](https://github.com/geadlydrim/appbuildersph-hackathon/blob/prototype/llm-speed-test/spikes/llm-speed-test/RESULTS.md) | **Fatal** if F8 and every on-device fallback fail on the demo phone |
 | FC-19 | Feasibility | A foreground service keeps tracking with the screen off on the POCO X6 5G (HyperOS) | Unverified. Vendor battery limits are a known risk on Android phones. [INFERENCE] | — | Significant (QA-11 background case) |
 
@@ -70,11 +70,11 @@ External sources read on 2026-10-09: the OSMF tile policy, the Protomaps basemap
 
 | Gap | Needed by | Treatment |
 |---|---|---|
-| Offline map not proven on our phone | T0 | A14; CP1 map spike (P1) |
+| Offline map not proven on our phone | T0 | A14; CP1 map spike |
 | LLM runtime and model | PRD-F8 (MVP) | Decided and measured on our phone ([D32](state.md#5-decisions)): Gemma 4 E2B on LiteRT-LM with the hybrid parser. Still to prove: the 30-question eval |
 | The D30 pair's candidate trips not yet listed or verified, and no pair minutes | Pack, demo | A13 (before pack v0); data plan §3 |
-| No road shapes, and the routing engine's terms are unread | Pack v0 | A15 (P4, before pack v0); QA-16 |
-| GPS behaviour in Makati unknown | T2 | A16 (P3, during T2) |
+| No road shapes, and the routing engine's terms are unread | Pack v0 | A15 (before pack v0); QA-16 |
+| GPS behaviour in Makati unknown | T2 | A16 (during T2) |
 | Sync backend not deployed or tested | T1 | D17; the CP4 fallback is a bundled pack plus local contributions |
 | No problem evidence | Pitch | [VALIDATION](val-commutenity.md) |
 | Nothing AI in the MVP | Submission | Mitigated by D31 (FC-18): PRD-F8 is in the MVP; §7 answered |
@@ -120,7 +120,7 @@ External sources read on 2026-10-09: the OSMF tile policy, the Protomaps basemap
 - **T0 (target CP3, about 1:30 AM):** bigger than before. It needs the map spike, pack v0 with shapes, A/B pins, candidate generation, and the drawn trip. Feasible only if the CP1 spike passes. If T0 slips past 2:30 AM, the cut rule drops T3 voice and T4, never F8 ([D31](state.md#5-decisions)).
 - **T1 (CP4, about 3:30 AM):** adds refresh and sync, which is where hackathons lose hours. Keep the backend to two tables, a push/pull, and file storage. If it isn't working by 4:00 AM, demo with the bundled pack and local contributions, and say so.
 - **T2 (CP5, about 5:30 AM):** the foreground service and map-matching are conventional, but GPS accuracy is the risk. If it isn't passing by 6:30 AM, demo tracking with a recorded mock-GPS route, labelled as simulated.
-- **PRD-F8 (CP-F8, about 4:30 AM):** built in parallel by P2 and merged behind its flag once T0 is demo-safe, independent of T1 and T2. If it isn't passing by 6:30 AM, ship the smallest model that produces valid JSON with template phrasing, plus the D27 matcher. F8 carries the local-AI claim (FC-18).
+- **PRD-F8 (CP-F8, about 4:30 AM):** built in parallel and merged behind its flag once T0 is demo-safe, independent of T1 and T2. If it isn't passing by 6:30 AM, ship the smallest model that produces valid JSON with template phrasing, plus the D27 matcher. F8 carries the local-AI claim (FC-18).
 - **T3 voice and T4 (5:30–8:00 AM):** optional; the ranker is cheap to train and expensive to *prove*, and replaces the D16 order only if it wins by 7:00 AM. Both are cut before F8.
 
 ## 6. Risk Pre-flight

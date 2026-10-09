@@ -90,7 +90,7 @@ The v0.2 stories (question-first, including the OCR signboard story) are retired
 > As a **rider** who just took a trip, I want to mark it worked or didn't so that good trips rise for everyone.
 
 - Given any shown trip (algorithm or community), when I vote up or down, then my vote is stored locally. Voting again the same way clears it.
-- My vote influences ordering only through synced aggregate counts (the bounded tie-break in D16) and the ranker's features. It is never treated as fact for fares or stops.
+- My vote influences ordering only through synced aggregate counts (the bounded tie-break in D16, which also counts answers tied to the trip in rider Q&A, [D34](state.md#5-decisions)) and the ranker's features. It is never treated as fact for fares or stops.
 
 ### US-08: Sync between phones
 **PRD-F6** · QA-08, QA-09
@@ -101,16 +101,21 @@ The v0.2 stories (question-first, including the OCR signboard story) are retired
 - Given phone A suggests a trip and syncs, when phone B syncs, then B shows that trip as a Community alternative for the same pair.
 - Given sync fails, then nothing is lost. The app retries later and never blocks the map, the trip, or tracking.
 
-### US-15: Read a sample question, and add one without logging in
-**PRD-F12** · Mock only. Not in the current MVP cut. No login.
+### US-15: Ask, answer, and see rider evidence for a trip
+**PRD-F12** · QA-20 to QA-23 · T1, the first thing cut ([D34](state.md#5-decisions)). Not part of the MVP gate. No login.
 
-> As a **New Arrival**, I want to see how a question and an answer would look, with a place name on them, so that "doon sa kanto" can point at a place later.
+> As a **New Arrival**, I want to see what other riders say about my trip, and to ask or answer myself, so that I can tell which trip riders say works, without any account.
 
-- Every question and answer on this screen is mock data. The screen says "Sample data. Walang account at walang login." There is no account, no login, and no sync of other riders.
-- Given the sample threads, when I open "Mga tanong", then I can read a question, its place name, and its answers. Each one is marked Sample.
-- Given I type a question or an answer, when the text is empty, then it is not saved. When it has text, then it stays on this phone for the session and is still marked Sample.
-- Given I vote up or down, voting the same way again clears it. A vote never changes a fare, a stop, or a pack route.
-- A map reference is a place name. It is labeled sample, not verified. Missing map tiles do not hide the name.
+- Mock threads and answers come from the bundled `data/mock/rider-qa.json`. Each is marked Sample. The screen says there is no account and no login. Nothing syncs.
+- Given I open the Questions screen for a pair of points, then I see that pair's threads. An "All" view may show the rest.
+- Given I type a question or an answer, when the text is empty, then it is not saved. When it has text, then it is saved on this phone only (memory or Room), marked as mine, and never synced.
+- Given I write an answer, then an optional "This trip worked" chip lists the candidates on screen. With the chip, the answer is tied to that candidate trip. Without it, the answer is text only.
+- Given answers are tied to a candidate, then its trip card shows "N riders say this works", marked Sample when they are mock. Each tied answer counts as one "worked" vote inside the D16 clamp (net votes −3…+3) and only breaks an otherwise exact tie. Untied answers count for nothing.
+- Given the hero pair, then mock evidence shows on its trip cards, marked Sample, but does not change its ordering ([D13](state.md#5-decisions)). On at least one other pair, tied mock answers decide an otherwise exactly tied pick.
+- There are no votes on answers. I vote on trips only ([US-07](#us-07-vote)).
+- Q&A text never changes a fare, a stop, minutes, a shape, or a pack route. The LLM never uses it as a fact ([D33](state.md#5-decisions)).
+- A place name may sit on a question or an answer. It is labelled sample when mock, not verified. Missing map tiles do not hide the name.
+- Stretch, not MVP: the on-device LLM extracts a route or signboard mention from untied answers, and code ties it only if it matches a pack route. This starts after the `demo-safe-f8` tag exists and is cut if not working by 7:00 AM.
 
 ## T2: In-trip tracking
 

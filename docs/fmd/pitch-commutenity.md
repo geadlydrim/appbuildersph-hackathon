@@ -3,7 +3,7 @@
 **Project:** CommuteNity  
 **Date:** 2026-10-09  
 **Version:** 0.5 (Shortened: 3:50 Spoken Pitch + 1:00 Demo Video)  
-**Presenter:** P4 (Jrabara101)  
+**Presenter:** Jrabara101 (not a fixed role; [D35](state.md#5-decisions))  
 **Total Presentation:** 4:50 (Within 5:00 limit; 10s buffer) + 3:00 Judge Q&A  
 **Phone Setup:** POCO X6 5G mirrored via `scrcpy` over USB to projector  
 **Hero Trip ([D30](state.md#5-decisions)):** Ayala Center (Station Rd, San Lorenzo) → Dela Rosa St, Pio del Pilar, Makati  
