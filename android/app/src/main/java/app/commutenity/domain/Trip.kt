@@ -24,6 +24,22 @@ data class Trip(
     val reason: String,
     val sample: Boolean,
     val legs: List<Leg>,
+    /** Where to draw the trip on the map. Null when the source has no coordinates (sample data). */
+    val path: TripPath? = null,
+)
+
+data class GeoPoint(val lat: Double, val lng: Double)
+
+/** Map geometry of a trip, in travel order. */
+data class TripPath(
+    /** One road-following line per ride leg. */
+    val rides: List<List<GeoPoint>>,
+    /** One line per walk (drawn dashed); a straight two-point line when no foot route is stored. */
+    val walks: List<List<GeoPoint>>,
+    /** Where the rider boards each ride. */
+    val boardStops: List<GeoPoint>,
+    /** Where the rider says "para" on the last ride. */
+    val para: GeoPoint?,
 )
 
 sealed interface Leg {
@@ -53,5 +69,8 @@ sealed interface SearchRow {
 interface TripSource {
     val myLocation: Place
     fun search(field: Field, query: String): List<SearchRow>
-    fun resolve(origin: Place, destination: Place): TripResult
+    fun resolve(origin: Place, destination: Place, preference: TripPreference = TripPreference.Default): TripResult
 }
+
+/** The rider's stated preference (from the ask bar); promotes one criterion in the D16 order. */
+enum class TripPreference { Default, Fastest, Cheapest, FewestTransfers }

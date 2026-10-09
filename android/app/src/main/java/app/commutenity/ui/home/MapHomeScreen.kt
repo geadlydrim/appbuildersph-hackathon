@@ -66,6 +66,8 @@ fun MapHomeScreen(
     workedCount: Int = 0,
     onMenu: () -> Unit = {},
     onMic: (() -> Unit)? = null,
+    /** One-line on-device AI status for the ask box (loading / ready / unavailable). */
+    aiStatus: String? = null,
     modifier: Modifier = Modifier,
     map: MapSurface = MapLibreSurface,
     designStatusBar: Boolean = false,
@@ -84,7 +86,7 @@ fun MapHomeScreen(
         if (reduceMotion) sheetHeight.snapTo(target) else sheetHeight.animateTo(target)
     }
     val trip = if (canOpenTrip(state)) {
-        source.resolve(state.origin!!, state.destination!!) as? TripResult.Ready
+        source.resolve(state.origin!!, state.destination!!, state.preference) as? TripResult.Ready
     } else {
         null
     }
@@ -97,6 +99,7 @@ fun MapHomeScreen(
             origin = state.origin,
             destination = state.destination,
             onTap = { lat, lng -> onEvent(HomeEvent.MapTap(lat, lng)) },
+            path = trip?.trip?.path?.takeIf { state.sheet == Sheet.Half },
         )
         // The placeholder picture has no coordinates, so it gets these fixed-position pins. The real
         // map draws A and B itself at their coordinates.
@@ -158,6 +161,8 @@ fun MapHomeScreen(
                         onSubmit = { onEvent(HomeEvent.SubmitAsk) },
                         onClose = { onEvent(HomeEvent.CloseAsk) },
                         listening = state.listening,
+                        thinking = state.thinking,
+                        aiStatus = aiStatus,
                         onMic = onMic,
                         modifier = Modifier.padding(top = 8.dp),
                     )

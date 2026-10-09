@@ -1,5 +1,9 @@
 package app.commutenity.domain
 
+import app.commutenity.ai.Intent
+import app.commutenity.ai.ParserOutput
+import app.commutenity.ai.Preference as TripPreferenceHint
+
 const val VOICE_HEARD_FEEDBACK = "Heard by voice. Fix any words, then tap Find."
 private const val VOICE_NOT_HEARD_FEEDBACK = "I didn't catch that. Try again or type your question."
 
@@ -14,6 +18,8 @@ data class HomeState(
     val askDraft: String = "",
     val askFeedback: String? = null,
     val listening: Boolean = false,
+    val preference: TripPreference = TripPreference.Default,
+    val thinking: Boolean = false,
 )
 
 sealed interface HomeEvent {
@@ -28,6 +34,10 @@ sealed interface HomeEvent {
     data object CloseAsk : HomeEvent
     data class AskDraft(val value: String) : HomeEvent
     data object SubmitAsk : HomeEvent
+    /** The on-device AI started reading the question. */
+    data object AskThinking : HomeEvent
+    data class AskParsed(val output: ParserOutput) : HomeEvent
+    data class AskFailed(val message: String) : HomeEvent
     data object VoiceStart : HomeEvent
     data class VoicePartial(val text: String) : HomeEvent
     data class VoiceResult(val text: String) : HomeEvent
@@ -97,13 +107,13 @@ fun matchAsk(text: String, source: TripSource): AskMatch {
     }
     val feedback = when {
         origin == null && destination == null ->
-            "Not understood. Pick A and B on the map. This build has no on-device model."
+            "AI unavailable on this phone; used simple matching. I didn't understand; pick A and B on the map."
         origin != null && destination != null ->
-            "Sample match only: ${origin.name} → ${destination.name}. This is not the on-device model."
+            "Simple matching: ${origin.name} → ${destination.name}."
         origin != null ->
-            "Sample match for the start only. The destination is still missing."
+            "Simple matching found the start only. The destination is still missing."
         else ->
-            "Sample match for the destination only. The start is still missing."
+            "Simple matching found the destination only. The start is still missing."
     }
     return AskMatch(origin, destination, feedback)
 }
@@ -174,6 +184,9 @@ fun reduce(state: HomeState, event: HomeEvent, source: TripSource): HomeState {
         HomeEvent.CloseAsk -> state.copy(asking = false, listening = false, askDraft = "", askFeedback = null)
         is HomeEvent.AskDraft -> state.copy(askDraft = event.value, askFeedback = null)
         HomeEvent.SubmitAsk -> submitAsk(state, source).copy(listening = false)
+        HomeEvent.AskThinking -> state.copy(thinking = true, askFeedback = "Thinking…")
+        is HomeEvent.AskParsed -> applyParsed(state, event.output, source)
+        is HomeEvent.AskFailed -> state.copy(thinking = false, askFeedback = event.message)
         HomeEvent.VoiceStart -> state.copy(
             asking = true,
             listening = true,
@@ -208,10 +221,64 @@ private fun settle(state: HomeState, source: TripSource): HomeState {
     val sheet = when {
         origin == null || destination == null -> Sheet.Peek
         origin.id == destination.id -> Sheet.Peek
-        source.resolve(origin, destination) is TripResult.NotInData -> Sheet.Notice
+        source.resolve(origin, destination, state.preference) is TripResult.NotInData -> Sheet.Notice
         else -> Sheet.Half
     }
     return state.copy(sheet = sheet, cardExpanded = false)
+}
+
+private const val TRIP_EXAMPLE_FEEDBACK = "Which places? Try: V.A. Rufino to Dela Rosa St."
+private const val OTHER_INTENT_FEEDBACK = "I can help with trips in Makati. Try: V.A. Rufino to Dela Rosa St."
+private const val ASK_START_FEEDBACK = "Where are you starting? Tap the map, use my location, or type it."
+private const val ASK_DESTINATION_FEEDBACK = "Where are you going? Tap the map or type it."
+
+private fun firstPlace(source: TripSource, field: Field, text: String): Place? =
+    source.search(field, text).filterIsInstance<SearchRow.PlaceRow>().firstOrNull()?.place
+
+private fun TripPreferenceHint?.toPreference(): TripPreference = when (this) {
+    TripPreferenceHint.CHEAPEST -> TripPreference.Cheapest
+    TripPreferenceHint.FASTEST -> TripPreference.Fastest
+    TripPreferenceHint.FEWEST_TRANSFERS -> TripPreference.FewestTransfers
+    null -> TripPreference.Default
+}
+
+/** Applies what the on-device parser read. The parser only names things; [source] decides which real places match. */
+private fun applyParsed(state: HomeState, output: ParserOutput, source: TripSource): HomeState {
+    val base = state.copy(thinking = false, listening = false)
+    return when (output.intent) {
+        Intent.VEHICLE_CHECK -> base.copy(
+            askFeedback = "You read \"${output.vehicleText.orEmpty()}\". The signboard check is coming next.",
+        )
+        Intent.OTHER -> base.copy(askFeedback = OTHER_INTENT_FEEDBACK)
+        Intent.TRIP -> {
+            val originText = output.origin?.takeIf { it.isNotBlank() }
+            val destinationText = output.destination?.takeIf { it.isNotBlank() }
+            if (originText == null && destinationText == null) {
+                return base.copy(askFeedback = TRIP_EXAMPLE_FEEDBACK)
+            }
+            val foundOrigin = originText?.let { firstPlace(source, Field.A, it) }
+            val foundDestination = destinationText?.let { firstPlace(source, Field.B, it) }
+            val next = base.copy(
+                origin = foundOrigin ?: base.origin,
+                destination = foundDestination ?: base.destination,
+                preference = output.preference.toPreference(),
+                activeField = null,
+                query = "",
+            )
+            when {
+                originText != null && foundOrigin == null ->
+                    next.copy(askFeedback = "I couldn't find \"$originText\" in Makati yet.")
+                destinationText != null && foundDestination == null ->
+                    next.copy(askFeedback = "I couldn't find \"$destinationText\" in Makati yet.")
+                next.origin != null && next.destination != null -> settle(
+                    next.copy(asking = false, askDraft = "", askFeedback = null),
+                    source,
+                )
+                next.destination != null -> next.copy(askFeedback = ASK_START_FEEDBACK)
+                else -> next.copy(askFeedback = ASK_DESTINATION_FEEDBACK)
+            }
+        }
+    }
 }
 
 private fun submitAsk(state: HomeState, source: TripSource): HomeState {

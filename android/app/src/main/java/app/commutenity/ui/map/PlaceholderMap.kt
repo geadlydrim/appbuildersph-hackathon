@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.commutenity.domain.Place
+import app.commutenity.domain.TripPath
 import app.commutenity.ui.theme.LocalCommuteColors
 
 private data class Block(val x: Float, val y: Float, val w: Float, val h: Float, val r: Float, val park: Boolean)
@@ -66,6 +67,7 @@ object PlaceholderMap : MapSurface {
         origin: Place?,
         destination: Place?,
         onTap: ((lat: Double, lng: Double) -> Unit)?,
+        path: TripPath?,
     ) {
         val colors = LocalCommuteColors.current
         val paths = remember {

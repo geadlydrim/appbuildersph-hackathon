@@ -19,7 +19,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import app.commutenity.domain.GeoPoint
 import app.commutenity.domain.Place
+import app.commutenity.domain.TripPath
 import app.commutenity.ui.theme.LocalCommuteColors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -34,11 +36,14 @@ import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.CircleLayer
+import org.maplibre.android.style.layers.LineLayer
+import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
+import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
 import java.io.File
 
@@ -88,6 +93,7 @@ object MapLibreSurface : MapSurface {
         origin: Place?,
         destination: Place?,
         onTap: ((lat: Double, lng: Double) -> Unit)?,
+        path: TripPath?,
     ) {
         val context = LocalContext.current
         val lifecycleOwner = LocalLifecycleOwner.current
@@ -156,6 +162,13 @@ object MapLibreSurface : MapSurface {
                         .target(LatLng(14.5577, 121.0134))
                         .zoom(14.5)
                         .build()
+                    addTripLayers(
+                        loaded,
+                        route = colors.route.toArgb(),
+                        dash = colors.dash.toArgb(),
+                        para = colors.para.toArgb(),
+                        paraOn = colors.paraOn.toArgb(),
+                    )
                     addPinLayers(loaded, pinA = colors.pinA.toArgb(), pinB = colors.pinB.toArgb())
                     map.addOnMapClickListener { point ->
                         latestOnTap?.invoke(point.latitude, point.longitude)
@@ -167,8 +180,15 @@ object MapLibreSurface : MapSurface {
             }
         }
 
-        // Redraw the A/B pins at their coordinates, and frame them, whenever either end changes.
-        LaunchedEffect(style, origin, destination) {
+        // The trip lines and stops; empty when there is no trip.
+        LaunchedEffect(style, path) {
+            val loaded = style ?: return@LaunchedEffect
+            loaded.getSourceAs<GeoJsonSource>(TRIP_SOURCE)?.setGeoJson(tripCollection(path))
+        }
+
+        // Redraw the A/B pins at their coordinates, and frame them (and the trip, when there is one),
+        // whenever either end or the trip changes.
+        LaunchedEffect(style, origin, destination, path) {
             val loaded = style ?: return@LaunchedEffect
             val map = maplibreMap ?: return@LaunchedEffect
             val a = origin?.latLng()
@@ -178,7 +198,14 @@ object MapLibreSurface : MapSurface {
                     listOfNotNull(a?.let { pinFeature(it, "A") }, b?.let { pinFeature(it, "B") }),
                 ),
             )
+            val framed = path?.allPoints().orEmpty().map { it.latLng() } + listOfNotNull(a, b)
             when {
+                path != null && framed.size >= 2 -> map.animateCamera(
+                    CameraUpdateFactory.newLatLngBounds(
+                        LatLngBounds.Builder().includes(framed).build(),
+                        fitSide, fitTop, fitSide, fitBottom,
+                    ),
+                )
                 a != null && b != null -> map.animateCamera(
                     CameraUpdateFactory.newLatLngBounds(
                         LatLngBounds.Builder().include(a).include(b).build(),
@@ -203,6 +230,89 @@ private fun Place.latLng(): LatLng? {
 
 private fun pinFeature(at: LatLng, label: String): Feature =
     Feature.fromGeometry(Point.fromLngLat(at.longitude, at.latitude)).apply { addStringProperty("label", label) }
+
+private const val TRIP_SOURCE = "commutenity-trip"
+
+private fun GeoPoint.point(): Point = Point.fromLngLat(lng, lat)
+
+private fun GeoPoint.latLng(): LatLng = LatLng(lat, lng)
+
+private fun TripPath.allPoints(): List<GeoPoint> =
+    rides.flatten() + walks.flatten() + boardStops + listOfNotNull(para)
+
+/** Lines tagged `kind = ride|walk` and points tagged `kind = board|para`; empty for no trip. */
+private fun tripCollection(path: TripPath?): FeatureCollection {
+    if (path == null) return FeatureCollection.fromFeatures(emptyList<Feature>())
+    fun line(points: List<GeoPoint>, kind: String): Feature? =
+        if (points.size < 2) null
+        else Feature.fromGeometry(LineString.fromLngLats(points.map { Point.fromLngLat(it.lng, it.lat) }))
+            .apply { addStringProperty("kind", kind) }
+    fun dot(at: GeoPoint, kind: String): Feature =
+        Feature.fromGeometry(at.point()).apply { addStringProperty("kind", kind) }
+    return FeatureCollection.fromFeatures(
+        path.walks.mapNotNull { line(it, "walk") } +
+            path.rides.mapNotNull { line(it, "ride") } +
+            path.boardStops.map { dot(it, "board") } +
+            listOfNotNull(path.para?.let { dot(it, "para") }),
+    )
+}
+
+private fun kindIs(kind: String): Expression = Expression.eq(Expression.get("kind"), Expression.literal(kind))
+
+/** The trip: ride line over a white casing, dashed walks, board-stop dots and the para point. Added before the pins so they draw on top. */
+private fun addTripLayers(style: Style, route: Int, dash: Int, para: Int, paraOn: Int) {
+    val white = android.graphics.Color.WHITE
+    style.addSource(GeoJsonSource(TRIP_SOURCE))
+    style.addLayer(
+        LineLayer("commutenity-trip-ride-casing", TRIP_SOURCE).withFilter(kindIs("ride")).withProperties(
+            PropertyFactory.lineWidth(9f),
+            PropertyFactory.lineColor(white),
+            PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+            PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+        ),
+    )
+    style.addLayer(
+        LineLayer("commutenity-trip-walk", TRIP_SOURCE).withFilter(kindIs("walk")).withProperties(
+            PropertyFactory.lineWidth(3.5f),
+            PropertyFactory.lineColor(dash),
+            PropertyFactory.lineDasharray(arrayOf(1.5f, 1.5f)),
+        ),
+    )
+    style.addLayer(
+        LineLayer("commutenity-trip-ride", TRIP_SOURCE).withFilter(kindIs("ride")).withProperties(
+            PropertyFactory.lineWidth(6f),
+            PropertyFactory.lineColor(route),
+            PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+            PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+        ),
+    )
+    style.addLayer(
+        CircleLayer("commutenity-trip-board", TRIP_SOURCE).withFilter(kindIs("board")).withProperties(
+            PropertyFactory.circleRadius(7f),
+            PropertyFactory.circleColor(white),
+            PropertyFactory.circleStrokeWidth(3f),
+            PropertyFactory.circleStrokeColor(route),
+        ),
+    )
+    style.addLayer(
+        CircleLayer("commutenity-trip-para", TRIP_SOURCE).withFilter(kindIs("para")).withProperties(
+            PropertyFactory.circleRadius(11f),
+            PropertyFactory.circleColor(para),
+            PropertyFactory.circleStrokeWidth(3f),
+            PropertyFactory.circleStrokeColor(white),
+        ),
+    )
+    style.addLayer(
+        SymbolLayer("commutenity-trip-para-label", TRIP_SOURCE).withFilter(kindIs("para")).withProperties(
+            PropertyFactory.textField("P"),
+            PropertyFactory.textFont(arrayOf("Noto Sans Medium")),
+            PropertyFactory.textSize(12f),
+            PropertyFactory.textColor(paraOn),
+            PropertyFactory.textAllowOverlap(true),
+            PropertyFactory.textIgnorePlacement(true),
+        ),
+    )
+}
 
 /** A circle per pin, coloured A/B, with its letter on top (the bundled Noto Sans covers A and B). */
 private fun addPinLayers(style: Style, pinA: Int, pinB: Int) {

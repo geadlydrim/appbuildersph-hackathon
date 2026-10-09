@@ -6,6 +6,7 @@ import app.commutenity.domain.Place
 import app.commutenity.domain.SearchRow
 import app.commutenity.domain.Trip
 import app.commutenity.domain.TripResult
+import app.commutenity.domain.TripPreference
 import app.commutenity.domain.TripSource
 
 /**
@@ -54,7 +55,7 @@ class SampleTripSource : TripSource {
         }
     }
 
-    override fun resolve(origin: Place, destination: Place): TripResult {
+    override fun resolve(origin: Place, destination: Place, preference: TripPreference): TripResult {
         if (!origin.inMakati || !destination.inMakati) return TripResult.NotInData
         return TripResult.Ready(
             Trip(

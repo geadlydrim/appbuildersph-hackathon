@@ -22,7 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import app.commutenity.data.sample.SampleQuestions
-import app.commutenity.data.sample.SampleTripSource
+
 import app.commutenity.domain.HomeEvent
 import app.commutenity.domain.HomeState
 import app.commutenity.domain.QaEvent
@@ -44,7 +44,10 @@ import app.commutenity.ui.theme.CommuteNityTheme
 import android.content.pm.ApplicationInfo
 import androidx.lifecycle.lifecycleScope
 import app.commutenity.ai.LlmSelfTest
+import app.commutenity.ai.LlmStatus
 import app.commutenity.ai.LocalLlm
+import app.commutenity.data.pack.PackTripSource
+import androidx.compose.runtime.collectAsState
 
 class MainActivity : ComponentActivity() {
     private val llm by lazy { LocalLlm(applicationContext) }
@@ -55,7 +58,7 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
-        val source = SampleTripSource()
+        val source = PackTripSource.fromAssets(applicationContext)
         llm.start(lifecycleScope)
         val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         if (debuggable && intent.getBooleanExtra("llm_selftest", false)) {
@@ -102,10 +105,16 @@ class MainActivity : ComponentActivity() {
                 }
                 val drawerState = rememberDrawerState(DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
+                val llmStatus by llm.status.collectAsState()
+                val aiStatusText = when (llmStatus) {
+                    LlmStatus.Loading -> "AI loading… (about 30 s after opening)"
+                    LlmStatus.Ready -> "On-device AI ready"
+                    is LlmStatus.Failed -> "AI unavailable; simple matching"
+                }
                 val origin = state.origin
                 val destination = state.destination
                 val shownTrip = if (canOpenTrip(state) && origin != null && destination != null) {
-                    (source.resolve(origin, destination) as? TripResult.Ready)?.let {
+                    (source.resolve(origin, destination, state.preference) as? TripResult.Ready)?.let {
                         QaTrip(it.trip.key, QaRoute(origin.id, destination.id, origin.name, destination.name))
                     }
                 } else {
@@ -119,9 +128,32 @@ class MainActivity : ComponentActivity() {
                         MapHomeScreen(
                             state = state,
                             source = source,
+                            aiStatus = aiStatusText,
                             onEvent = { event: HomeEvent ->
                                 if (state.listening && (event == HomeEvent.CloseAsk || event == HomeEvent.SubmitAsk)) speech.cancel()
-                                dispatch(event)
+                                if (event != HomeEvent.SubmitAsk) {
+                                    dispatch(event)
+                                } else {
+                                    val draft = state.askDraft
+                                    when {
+                                        draft.isBlank() -> dispatch(event)
+                                        state.thinking -> Unit
+                                        llmStatus is LlmStatus.Ready -> {
+                                            dispatch(HomeEvent.AskThinking)
+                                            lifecycleScope.launch {
+                                                try {
+                                                    val result = llm.parse(draft)
+                                                    dispatch(HomeEvent.AskParsed(result.output))
+                                                } catch (e: Exception) {
+                                                    dispatch(HomeEvent.AskFailed("The AI couldn't read that. Try again or pick on the map."))
+                                                }
+                                            }
+                                        }
+                                        llmStatus is LlmStatus.Loading ->
+                                            dispatch(HomeEvent.AskFailed("AI is still loading (about 30 s after opening). Try again in a moment."))
+                                        else -> dispatch(event)
+                                    }
+                                }
                             },
                             onOpenQuestions = {
                                 questions = reduceQa(questions, QaEvent.Open(shownTrip, onlyTrip = true))
