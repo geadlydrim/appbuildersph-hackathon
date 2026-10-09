@@ -246,9 +246,10 @@ private fun TripPreferenceHint?.toPreference(): TripPreference = when (this) {
 private fun applyParsed(state: HomeState, output: ParserOutput, source: TripSource): HomeState {
     val base = state.copy(thinking = false, listening = false)
     return when (output.intent) {
-        Intent.VEHICLE_CHECK -> base.copy(
-            askFeedback = "You read \"${output.vehicleText.orEmpty()}\". The signboard check is coming next.",
-        )
+        Intent.VEHICLE_CHECK -> {
+            val read = output.vehicleText.orEmpty()
+            base.copy(askFeedback = VehicleCheck.message(read, VehicleCheck.check(read, nextRideSignboards(state, source))))
+        }
         Intent.OTHER -> base.copy(askFeedback = OTHER_INTENT_FEEDBACK)
         Intent.TRIP -> {
             val originText = output.origin?.takeIf { it.isNotBlank() }
@@ -279,6 +280,14 @@ private fun applyParsed(state: HomeState, output: ParserOutput, source: TripSour
             }
         }
     }
+}
+
+/** Signboards of the first ride of the trip on screen; empty when A and B aren't both set. */
+private fun nextRideSignboards(state: HomeState, source: TripSource): List<String> {
+    if (!canOpenTrip(state)) return emptyList()
+    val trip = (source.resolve(state.origin!!, state.destination!!, state.preference) as? TripResult.Ready)?.trip
+        ?: return emptyList()
+    return trip.legs.filterIsInstance<Leg.Ride>().firstOrNull()?.signboards.orEmpty()
 }
 
 private fun submitAsk(state: HomeState, source: TripSource): HomeState {

@@ -360,9 +360,10 @@ class HomeStateTest {
 
     @Test
     fun parsedVehicleCheckAndOtherIntentsShowTheirTexts() {
+        // No trip on screen yet, so the check can't say yes or no.
         val vehicle = reduce(asking(), parsed(intent = Intent.VEHICLE_CHECK, vehicleText = "Buendia"), source)
         assertTrue(vehicle.asking)
-        assertEquals("You read \"Buendia\". The signboard check is coming next.", vehicle.askFeedback)
+        assertTrue(vehicle.askFeedback!!.contains("Not sure"))
         val other = reduce(asking(), parsed(intent = Intent.OTHER), source)
         assertTrue(other.asking)
         assertEquals("I can help with trips in Makati. Try: V.A. Rufino to Dela Rosa St.", other.askFeedback)
