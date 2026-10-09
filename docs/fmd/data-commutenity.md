@@ -123,6 +123,8 @@ All preference labels, contributions, and questions carry `source_class` too. La
 
 For each ranking `[a, b, c]`, training emits only `(a, b)`, `(a, c)`, and `(b, c)` with label `left_preferred`. Feature values are normalized from training pairs only. The pair vector is the preferred candidate's ranker vector minus the other candidate's vector; preference-specific interactions multiply every base feature by the one-hot stated preference (`default`, `fastest`, `cheapest`, or `fewest_transfers`).
 
+Each pair is also emitted mirrored (the negated vector, label `right_preferred`), because logistic regression cannot be fitted on a single class. Train without an intercept so a pair's score flips sign when its order flips; the exported `intercept` is `0.0`.
+
 ## 5. Training Plan
 
 | Item | Plan |

@@ -28,6 +28,7 @@ Append-only. One row per meaningful action or decision. Never edit past rows.
 | 14 | 2026-10-09 | Owner decision: hero-trip minutes are typical, non-peak team estimates (`known`) until event verification makes them `collected`; mock minutes never drive the hero trip. T0 uses an explainable lexicographic candidate order, with a requested preference promoted and bounded votes only as a final tie-break. | state D16 (A10 closed), SDD §3, data plan §3 | D16 |
 | 15 | 2026-10-09 | Owner decision: use Supabase anonymous Auth and one authenticated Edge Function for local-first contribution sync. It validates and rate-limits mutations server-side; only suggestions and vote aggregates are readable. | state D17 (A9 closed), SDD §4–§5, data plan §2.1, CLR, BUILD | D17 |
 | 16 | 2026-10-09 | Owner decision: ranker labelling uses three-candidate JSON scenarios and strict top-3 rankings from four teammates. A deterministic pair split protects held-out `known` evaluation; pairwise logistic regression with preference interactions exports JSON for Kotlin. | state D18 (A11 closed), data plan §§4–6, SDD §3, QAD AI-06, GLOSSARY | D18 |
+| 17 | 2026-10-09 | P3 review of the ranker training plan: the pairwise examples had only one label class, so logistic regression could not be fitted. Each pair is now also emitted mirrored and trained without an intercept (exported `intercept` is `0.0`); D18 is otherwise unchanged. | data plan §4.2 | — |
 
 ---
 
