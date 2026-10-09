@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "app.commutenity"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "app.commutenity"
@@ -14,6 +14,8 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+        // LiteRT-LM ships native code; the demo phone is arm64.
+        ndk { abiFilters += "arm64-v8a" }
     }
 
     buildTypes {
@@ -27,9 +29,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
 
     buildFeatures {
         compose = true
@@ -43,6 +43,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.activity.compose)
+    implementation(libs.litertlm)
     debugImplementation(libs.compose.ui.tooling)
     testImplementation(libs.junit)
 }
