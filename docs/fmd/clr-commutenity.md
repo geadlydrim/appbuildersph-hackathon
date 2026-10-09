@@ -2,7 +2,7 @@
 
 **Project:** CommuteNity
 **Date:** 2026-10-09
-**Version:** 0.3
+**Version:** 0.4
 **Owner:** Project owner
 **Status:** Draft. Updated for the Makati-only, map-first scope, with in-trip GPS tracking ([D25](state.md#5-decisions)) and OCR dropped ([D26](state.md#5-decisions)).
 **Last reconciled:** 2026-10-09
@@ -69,7 +69,7 @@ No legal conclusion is drawn beyond this.
 
 ## 4. Terms Readiness
 
-There are no terms and no privacy policy because nothing is distributed. The README states what runs locally and what needs the internet (refresh of the pack, map pack, and community data; online place search and foot routes, which can carry a "use my location" Point A; model download if T3 ships; contribution sync), as the [submission rules](JUDGING.md#submission) require. It also states that the GPS track stays on the phone.
+There are no terms and no privacy policy because nothing is distributed. The README states what runs locally and what needs the internet (refresh of the pack, map pack, and community data; online place search and foot routes, which can carry a "use my location" Point A; the one-time model download for ask in words, which is in the MVP per [D31](state.md#5-decisions); contribution sync), as the [submission rules](JUDGING.md#submission) require. It also states that the GPS track stays on the phone.
 
 ## 5. IP, Provenance and Disclosure
 

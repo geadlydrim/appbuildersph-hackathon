@@ -2,7 +2,7 @@
 
 **Project:** CommuteNity
 **Date:** 2026-10-09
-**Version:** 0.3
+**Version:** 0.4
 **Owner:** Implementer
 **Status:** Draft
 **Last reconciled:** 2026-10-09
@@ -37,7 +37,7 @@ Full-bleed map ([D23](state.md#5-decisions)), always the root screen.
 2. **`TripBuilderCard`** under the top overlay: two `SearchField`s, A ("Saan ka manggagaling?", with "use my location") and B ("Saan ka pupunta?"). It collapses to a one-line `A → B` chip when the trip sheet is half or expanded; tap the chip to expand it.
 3. **Pins:** `PinMarker` A and B on the map. Tap the map to place the next empty pin (A, then B). Drag a pin to move it. Tap a field to search pack places by name. A "my location" button sits bottom-end above the sheet.
 4. **`TripSheet`** (bottom sheet) with states `collapsed`, `half`, `expanded`. Collapsed is a peek of about 96 dp; half is 50 % of screen height; expanded is 80 % and always leaves a map strip.
-5. **Ask bar** (T3, secondary): a compact `AskBar` pill above the sheet, bottom-start. Hidden in T0–T2 builds. It never replaces the pins.
+5. **Ask bar** (secondary input, MVP per [D31](state.md#5-decisions)): a compact `AskBar` pill, collapsed ("Magtanong…" with mic), directly under `TripBuilderCard`. It stays under the `A → B` chip when the card collapses, and it is visible whenever the map home or the best-trip sheet is shown (a focused `SearchField` and its results cover its spot while typing). It never replaces the pins or the fields: the map trip builder stays the primary way in.
 6. **OSM attribution** ([§1.7](#17-osm-attribution)) on the map, bottom-end, riding the sheet's top edge.
 
 Setting A and B computes the best trip on the phone, with no network, and opens the sheet at `half`.
@@ -57,7 +57,7 @@ Setting A and B computes the best trip on the phone, with no network, and opens 
 - Online: a foot route fetched via our server and cached, drawn as a solid `walk` `MapLine`.
 - Offline: a dashed straight `MapLine` (`dashed-walk-offline`) with a `WalkLabel` "walk ~N m". This is the only straight line the app draws.
 
-**Sample data:** a `SourceLabel` `sample` sits beside every value that comes from `mock` data. Real values never carry it ([QA-17](qad-commutenity.md#6-release-criteria)). The demo never hides it.
+**Sample data:** a `SourceLabel` `sample` sits beside every value that comes from `mock` data. Real values never carry it ([QA-17](qad-commutenity.md#6-release-criteria)). The demo never hides it. The hero pair is real ([D30](state.md#5-decisions)): A = "Ayala Center" (Station Rd, San Lorenzo), B = "Dela Rosa St" (Pio del Pilar). Until the candidate trips are listed ([A13](state.md#4-open-assumptions)), the legs' routes, fares, and minutes in examples and mockups are placeholders marked `TBD (A13)` and carry `sample`.
 
 **Unknown values:** a missing fare or minutes shows "unknown" for that value and the total is marked unknown. Never show a partial total ([QA-19](qad-commutenity.md#6-release-criteria)).
 
@@ -87,9 +87,9 @@ Setting A and B computes the best trip on the phone, with no network, and opens 
 
 ### 1.6 Ask in words, voice, correct-vehicle check (T3)
 
-- **`AskBar`:** secondary. Collapsed pill "Magtanong…" with mic; expanded text field, mic, submit, and example questions built from pack places. "How to get from X to Y?" sets pins A and B and shows what it understood as chips; an ambiguous place opens the place picker. Disabled with progress while models load.
-- **Voice (`MicButton`):** listening, then transcribing; the transcript fills the field for confirmation before use ([D26](state.md#5-decisions)). Mic denied or nothing heard shows a message and leaves the text field usable.
-- **Correct-vehicle check:** from a jeepney, bus, or UV `LegRow` (and from tracking mode), "Tama ba 'tong sasakyan?" opens a text field (or mic) for the signboard text or route name. The `VerdictCard` returns `ride`, `wrong`, or `unsure` from a deterministic text match ([D27](state.md#5-decisions)). The LLM never decides the verdict.
+- **`AskBar`:** secondary input, part of the MVP ([D31](state.md#5-decisions)); the label "T3" is only the tier name. Collapsed pill "Magtanong…" with mic, under `TripBuilderCard`; expanded text field, mic, submit, and example questions built from pack places, e.g. "Paano pumunta sa Dela Rosa St., Pio del Pilar galing Ayala Center?" / "How to get from Ayala Center to Pio del Pilar?". Submitting sets pins A and B and shows what it understood as chips; an ambiguous place opens the place picker. Disabled with progress while the model loads. The model failing to load never blocks the map builder.
+- **Voice (`MicButton`, optional, F9):** listening, then transcribing; the transcript fills the field for confirmation before use ([D26](state.md#5-decisions)). Mic denied or nothing heard shows a message and leaves the text field usable. Voice is cut before the ask bar.
+- **Correct-vehicle check (MVP, F8):** from a jeepney, bus, or UV `LegRow` (on the best-trip sheet and from tracking mode), "Tama ba 'tong sasakyan?" opens a text field (or mic) for the signboard text or route name. The `VerdictCard` returns `ride`, `wrong`, or `unsure` from a deterministic text match ([D27](state.md#5-decisions)). The LLM never decides the verdict.
 
 ### 1.7 OSM attribution
 
@@ -138,9 +138,9 @@ Component names are shared with the [Figma brief §5](figma-brief-commutenity.md
 | `RouteStatusBanner` | `on` | `off` | `gps-lost` |
 | `ActiveTripPanel` / `TripProgress` | Current leg and distance to para point | Leg changes | "Walang GPS" overlay on the distance |
 | `ParaAlertBanner` | Hidden | Shown once at threshold | — |
-| `AskBar` (T3) | Collapsed pill "Magtanong…" | Expanded, focus ring in amber | Disabled while models load, with progress |
-| `MicButton` (T3) | Idle | Listening, transcribing | Mic denied; nothing heard |
-| `VerdictCard` (T3) | — | `ride`, `wrong`, `unsure` | — |
+| `AskBar` (MVP, D31) | Collapsed pill "Magtanong…" under `TripBuilderCard` | Expanded, focus ring in amber | Disabled while the model loads, with progress |
+| `MicButton` (T3, optional) | Idle | Listening, transcribing | Mic denied; nothing heard |
+| `VerdictCard` (MVP, D31) | — | `ride`, `wrong`, `unsure` | — |
 | `StateMessage` | — | — | Not in data, no route, no alternatives, map error, pack error, model error |
 | Setup / download | Size and progress | Percent and text | Retry. Never shows "ready" until verified. |
 
@@ -159,9 +159,9 @@ Component names are shared with the [Figma brief §5](figma-brief-commutenity.md
 | Refresh failed | Status sheet | "Hindi na-refresh · susubukan ulit." | "Refresh now" |
 | GPS lost | Tracking | "Walang GPS. Hinahanap ulit…" | None; recovers automatically |
 | Location denied | Before first trip | "Kailangan ang location para masubaybayan ang biyahe." | Open settings; trip sheet still works |
-| Model failed to load (T3) | Ask bar | "Hindi ma-load ang AI model." | Retry; the map builder still works |
-| Mic denied (T3) | Mic | "Walang access sa mic. I-type na lang." | Open settings |
-| Nothing heard (T3) | Mic | "Walang narinig. Subukan ulit." | Retry |
+| Model failed to load (MVP, D31) | Ask bar | "Hindi ma-load ang AI model." | Retry; the map builder still works |
+| Mic denied (voice, optional) | Mic | "Walang access sa mic. I-type na lang." | Open settings |
+| Nothing heard (voice, optional) | Mic | "Walang narinig. Subukan ulit." | Retry |
 
 **Copy:**
 - Loading: "Nag-iisip sa phone mo…"
@@ -207,5 +207,6 @@ Before the demo, check:
 - OSM attribution visible on every map screen, including tracking mode
 - no straight line on the map except the labelled offline walk
 - `sample` marker shown only on mock values
+- the `AskBar` is visible under `TripBuilderCard` on the map home and best-trip screens, and the hero question ("How to get from Ayala Center to Pio del Pilar?") sets A = "Ayala Center" and B = "Dela Rosa St" ([D30](state.md#5-decisions), [D31](state.md#5-decisions))
 
 No P0 or P1 UI defects may be open. Covered by QAD [QA-18](qad-commutenity.md#6-release-criteria), with QA-01..QA-14 and QA-17 for the behavior behind each state.
