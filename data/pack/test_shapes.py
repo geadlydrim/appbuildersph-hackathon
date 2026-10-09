@@ -1,6 +1,16 @@
 import unittest
 
-from shapes import encode_polyline, decode_polyline, length_m
+from shapes import (
+    trim_overshoot,
+    ShapeError,
+    check_segment,
+    length_m,
+    encode_polyline,
+    decode_polyline,
+)
+
+START = (14.561313, 121.014922)
+END = (14.557850, 121.007780)
 
 
 class ShapeTest(unittest.TestCase):
@@ -13,3 +23,30 @@ class ShapeTest(unittest.TestCase):
             assert abs(got[1] - want[1]) < 1e-6
         assert length_m(points) == length_m(back)
         assert length_m([points[0], points[0]]) == 0
+
+    def test_trim_cuts_the_loop_past_the_stop(self):
+        near = (14.55790, 121.00780)   # within 30 m of END
+        far = (14.55750, 121.00684)    # the live overshoot, about 109 m past END
+        trimmed = trim_overshoot([START, near, far, END], END)
+        assert far not in trimmed
+        assert trimmed[-1] == near
+
+    def test_trim_keeps_a_line_that_stops(self):
+        line = [START, (14.559000, 121.011000), END]
+        assert trim_overshoot(line, END) == line
+
+    def test_check_names_a_missing_or_bad_line(self):
+        with self.assertRaises(ShapeError) as missing:
+            check_segment("jeep-buendia-lrt", [], START, END, 0)
+        assert "jeep-buendia-lrt" in str(missing.exception)
+        straight = [START, END]
+        with self.assertRaises(ShapeError):
+            check_segment("bus-buendia-lrt", straight, START, END, length_m(straight))
+        far_end = (14.50, 121.00)
+        bent = [START, (14.560000, 121.012000), far_end]
+        with self.assertRaises(ShapeError):
+            check_segment("jeep-buendia-lrt", bent, START, END, length_m(bent))
+        good = [START, (14.560000, 121.012000), (14.558500, 121.009000), END]
+        with self.assertRaises(ShapeError):
+            check_segment("jeep-buendia-lrt", good, START, END, length_m(good) + 5)
+        check_segment("jeep-buendia-lrt", good, START, END, length_m(good))
