@@ -170,10 +170,10 @@ Candidate models and runtimes ([A4](state.md#4-open-assumptions)). All are open-
 
 | Role | Candidates | Android runtime candidates |
 |---|---|---|
-| Parser / phrasing LLM | Gemma 2B/3 1B-class, Qwen2.5 0.5B/1.5B Instruct, Llama 3.2 1B (quantized) | MediaPipe LLM Inference API; llama.cpp via JNI |
-| Place embeddings | multilingual-e5-small, multilingual MiniLM | ONNX Runtime Android; MediaPipe Text Embedder |
-| Route ranker | Pairwise logistic regression or small GBDT | Plain Kotlin (weights) or ONNX Runtime Android |
-| Signboard OCR | ML Kit Text Recognition (on-device), PaddleOCR (ONNX) | ML Kit; ONNX Runtime Android |
+| Parser / phrasing LLM | Gemma3-1B-IT int4 (gated on Hugging Face), Qwen2.5-0.5B / Qwen3-0.6B int4 (ungated, Apache-2.0), Qwen2.5-1.5B Q4_K_M | **LiteRT-LM** (Kotlin API, JSON-schema `ResponseFormat`); fallback llama.cpp via JNI (needs a GBNF patch). MediaPipe LLM Inference is maintenance-only. |
+| Place embeddings | EmbeddingGemma (270M); multilingual-e5-small int8 | LiteRT-LM EmbeddingEngine; fallback MediaPipe Text Embedder or ONNX Runtime Android. Alias and fuzzy matching run first; alias vectors are precomputed. |
+| Route ranker | Pairwise logistic regression or small GBDT | Plain Kotlin (JSON weights or tree dump); ONNX Runtime Android only if it's already in the app |
+| Signboard OCR | ML Kit Text Recognition v2, Latin, **bundled** (the unbundled variant downloads its model on first use) | ML Kit |
 | Speech-to-text | Whisper tiny/base multilingual | whisper.cpp via JNI |
 
 | Risk | Control | Eval |

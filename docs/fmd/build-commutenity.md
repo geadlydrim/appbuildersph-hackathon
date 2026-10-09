@@ -53,9 +53,9 @@ Nothing is pinned yet. Record exact versions when installing, and never fabricat
 | Layer | Candidate | Verified | Pin |
 |---|---|---|---|
 | App | Kotlin, Jetpack Compose (Material 3), Room, Gradle | No | — |
-| LLM runtime | MediaPipe LLM Inference API, or llama.cpp via JNI | No | — |
-| Embeddings / ranker | ONNX Runtime Android, or plain Kotlin weights | No | — |
-| Signboard OCR | ML Kit Text Recognition (on-device) | No | — |
+| LLM runtime | LiteRT-LM (`litertlm-android`, research: 0.18.0); fallback llama.cpp via JNI | No | — |
+| Embeddings / ranker | LiteRT-LM EmbeddingEngine + EmbeddingGemma; ranker in plain Kotlin | No | — |
+| Signboard OCR | ML Kit Text Recognition v2, bundled Latin model | No | — |
 | Speech | whisper.cpp via JNI | No | — |
 | Sync backend | Supabase (Postgres plus REST) or an alternative ([A9](state.md#4-open-assumptions)) | No | — |
 | Training / eval | Python (scikit-learn for logistic regression; GBDT library only if needed) | No | — |

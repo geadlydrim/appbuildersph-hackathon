@@ -60,7 +60,11 @@ These records are stored locally in Room and synced to the backend ([A9](state.m
 
 1. **Corridors ([A6](state.md#4-open-assumptions)):** pick 1–3 demo corridors the team rides. At least one should have two or more genuinely different ways to make the trip. Build them from `collected` and `known` data.
 2. **Stops and segments:** use team knowledge, with OpenStreetMap for coordinates. Class each one `collected` (verified this event) or `known` (from memory).
-3. **Fares:** use the current official fare matrix where possible, citing the source and date (`collected`). Otherwise use team knowledge (`known`) or a `mock` value. If none of those exists, the fare is unknown.
+3. **Fares:** use the current official fare matrix where possible, citing the source and date (`collected`). Otherwise use team knowledge (`known`) or a `mock` value. If none of those exists, the fare is unknown. Per [fare research](https://github.com/geadlydrim/appbuildersph-hackathon/issues/5):
+   - LRT-1, LRT-2, and MRT-3 matrices are `collected`, transcribed by hand from official images.
+   - The MRT-3 and LRT-2 discount goes in a dated overlay.
+   - Jeepney and bus fares become `collected` once a teammate saves the LTFRB fare guides from a browser.
+   - UV Express and P2P are `known` or `mock`.
 4. **Minutes ([A10](state.md#4-open-assumptions)):** the team's ride estimates per segment, labelled `team estimate`. Use typical, not peak, times, and state that in the app.
 5. **Aliases:** for each stop, record the names people actually say.
 6. **Signboards:** transcribe the exact painted text into `routes.signboards[]`. About 20 photos go into the signboard eval set.
