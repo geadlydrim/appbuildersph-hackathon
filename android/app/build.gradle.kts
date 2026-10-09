@@ -52,6 +52,11 @@ val copyPackAssets = tasks.register<Copy>("copyPackAssets") {
         into("pack")
         rename { "hero-trip.json" }
     }
+    // OpenStreetMap import (optional; the app runs on the hero pack alone if this file is absent).
+    from("${rootDir}/../data/pack/osm-makati.source.json") {
+        into("pack")
+        rename { "osm-makati.json" }
+    }
     from("${rootDir}/../data/mock/rider-qa.json") {
         into("mock")
     }

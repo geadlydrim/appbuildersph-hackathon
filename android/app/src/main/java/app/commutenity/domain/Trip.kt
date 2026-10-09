@@ -14,6 +14,9 @@ data class Place(
     val lng: Double? = null,
 )
 
+/** [Trip.key] of the walk-only option (no ride needed); rider evidence and answers recognise it by this key. */
+const val WALK_ONLY_TRIP_KEY = "walk"
+
 data class Trip(
     /** Stable candidate key; rider evidence ties to this, never to display text. */
     val key: String,
@@ -26,6 +29,8 @@ data class Trip(
     val legs: List<Leg>,
     /** Where to draw the trip on the map. Null when the source has no coordinates (sample data). */
     val path: TripPath? = null,
+    /** True when any ride comes from unverified OpenStreetMap data rather than the team's own collection. */
+    val unverified: Boolean = false,
 )
 
 data class GeoPoint(val lat: Double, val lng: Double)

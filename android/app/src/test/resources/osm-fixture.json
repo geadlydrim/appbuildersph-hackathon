@@ -1,0 +1,343 @@
+{
+  "meta": {
+    "version": "0.0.0-osm-fixture",
+    "built_at": "2026-10-10T00:00:00Z",
+    "coverage": {
+      "name": "Hand-made OSM-shaped test fixture"
+    },
+    "sources": [
+      "Hand-made test data shaped like the OSM import; not real geography"
+    ],
+    "shape_precision": 6,
+    "minutes_est_m_per_min": 120,
+    "notes": "Test fixture. Routes osm-r1 and osm-r2 share stop osm-n3; osm-n7 is 150 m from osm-n4; osm-r9 overlays the hero pack's own stops."
+  },
+  "places": [
+    {
+      "id": "osm-p1",
+      "name": "Fixture Place 1",
+      "aliases": [],
+      "lat": 14.55,
+      "lng": 121.0,
+      "kind": "station",
+      "stop_ids": [
+        "osm-n1"
+      ],
+      "source_class": "osm"
+    },
+    {
+      "id": "osm-p2",
+      "name": "Fixture Place 2",
+      "aliases": [],
+      "lat": 14.55,
+      "lng": 121.0056,
+      "kind": "station",
+      "stop_ids": [
+        "osm-n2"
+      ],
+      "source_class": "osm"
+    },
+    {
+      "id": "osm-p3",
+      "name": "Fixture Place 3 (shared)",
+      "aliases": [],
+      "lat": 14.55,
+      "lng": 121.0112,
+      "kind": "station",
+      "stop_ids": [
+        "osm-n3"
+      ],
+      "source_class": "osm"
+    },
+    {
+      "id": "osm-p4",
+      "name": "Fixture Place 4",
+      "aliases": [],
+      "lat": 14.55,
+      "lng": 121.0168,
+      "kind": "station",
+      "stop_ids": [
+        "osm-n4"
+      ],
+      "source_class": "osm"
+    },
+    {
+      "id": "osm-p5",
+      "name": "Fixture Place 5",
+      "aliases": [],
+      "lat": 14.5554,
+      "lng": 121.0112,
+      "kind": "station",
+      "stop_ids": [
+        "osm-n5"
+      ],
+      "source_class": "osm"
+    },
+    {
+      "id": "osm-p6",
+      "name": "Fixture Place 6",
+      "aliases": [],
+      "lat": 14.5608,
+      "lng": 121.0112,
+      "kind": "station",
+      "stop_ids": [
+        "osm-n6"
+      ],
+      "source_class": "osm"
+    },
+    {
+      "id": "osm-p7",
+      "name": "Fixture Place 7 (150 m from stop 4)",
+      "aliases": [],
+      "lat": 14.551349,
+      "lng": 121.0168,
+      "kind": "station",
+      "stop_ids": [
+        "osm-n7"
+      ],
+      "source_class": "osm"
+    },
+    {
+      "id": "osm-p8",
+      "name": "Fixture Place 8",
+      "aliases": [],
+      "lat": 14.551349,
+      "lng": 121.0224,
+      "kind": "station",
+      "stop_ids": [
+        "osm-n8"
+      ],
+      "source_class": "osm"
+    }
+  ],
+  "stops": [
+    {
+      "id": "osm-n1",
+      "name": "Fixture Stop 1",
+      "lat": 14.55,
+      "lng": 121.0,
+      "modes": [
+        "bus"
+      ]
+    },
+    {
+      "id": "osm-n2",
+      "name": "Fixture Stop 2",
+      "lat": 14.55,
+      "lng": 121.0056,
+      "modes": [
+        "bus"
+      ]
+    },
+    {
+      "id": "osm-n3",
+      "name": "Fixture Stop 3 (shared)",
+      "lat": 14.55,
+      "lng": 121.0112,
+      "modes": [
+        "bus"
+      ]
+    },
+    {
+      "id": "osm-n4",
+      "name": "Fixture Stop 4",
+      "lat": 14.55,
+      "lng": 121.0168,
+      "modes": [
+        "bus"
+      ]
+    },
+    {
+      "id": "osm-n5",
+      "name": "Fixture Stop 5",
+      "lat": 14.5554,
+      "lng": 121.0112,
+      "modes": [
+        "bus"
+      ]
+    },
+    {
+      "id": "osm-n6",
+      "name": "Fixture Stop 6",
+      "lat": 14.5608,
+      "lng": 121.0112,
+      "modes": [
+        "bus"
+      ]
+    },
+    {
+      "id": "osm-n7",
+      "name": "Fixture Stop 7 (150 m from stop 4)",
+      "lat": 14.551349,
+      "lng": 121.0168,
+      "modes": [
+        "bus"
+      ]
+    },
+    {
+      "id": "osm-n8",
+      "name": "Fixture Stop 8",
+      "lat": 14.551349,
+      "lng": 121.0224,
+      "modes": [
+        "bus"
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "id": "osm-r1",
+      "name": "Fixture Bus 1",
+      "mode": "bus",
+      "signboards": [
+        "1",
+        "Fixture East"
+      ],
+      "source_class": "osm"
+    },
+    {
+      "id": "osm-r2",
+      "name": "Fixture Bus 2",
+      "mode": "bus",
+      "signboards": [
+        "2",
+        "Fixture North"
+      ],
+      "source_class": "osm"
+    },
+    {
+      "id": "osm-r3",
+      "name": "Fixture Bus 3",
+      "mode": "bus",
+      "signboards": [
+        "3",
+        "Fixture Far"
+      ],
+      "source_class": "osm"
+    },
+    {
+      "id": "osm-r9",
+      "name": "Fixture Bus 9 (overlays hero stops)",
+      "mode": "bus",
+      "signboards": [
+        "9"
+      ],
+      "source_class": "osm"
+    }
+  ],
+  "segments": [
+    {
+      "route_id": "osm-r1",
+      "seq": 1,
+      "from_stop_id": "osm-n1",
+      "to_stop_id": "osm-n2",
+      "fare_php": null,
+      "minutes": null,
+      "minutes_est": 5,
+      "distance_m": 600,
+      "provenance": {
+        "source_class": "osm",
+        "source": "OpenStreetMap relation 1",
+        "verified_by": null,
+        "verified_at": null
+      }
+    },
+    {
+      "route_id": "osm-r1",
+      "seq": 2,
+      "from_stop_id": "osm-n2",
+      "to_stop_id": "osm-n3",
+      "fare_php": null,
+      "minutes": null,
+      "minutes_est": 5,
+      "distance_m": 600,
+      "provenance": {
+        "source_class": "osm",
+        "source": "OpenStreetMap relation 1",
+        "verified_by": null,
+        "verified_at": null
+      }
+    },
+    {
+      "route_id": "osm-r1",
+      "seq": 3,
+      "from_stop_id": "osm-n3",
+      "to_stop_id": "osm-n4",
+      "fare_php": null,
+      "minutes": null,
+      "minutes_est": 5,
+      "distance_m": 600,
+      "provenance": {
+        "source_class": "osm",
+        "source": "OpenStreetMap relation 1",
+        "verified_by": null,
+        "verified_at": null
+      }
+    },
+    {
+      "route_id": "osm-r2",
+      "seq": 1,
+      "from_stop_id": "osm-n3",
+      "to_stop_id": "osm-n5",
+      "fare_php": null,
+      "minutes": null,
+      "minutes_est": 5,
+      "distance_m": 600,
+      "provenance": {
+        "source_class": "osm",
+        "source": "OpenStreetMap relation 2",
+        "verified_by": null,
+        "verified_at": null
+      }
+    },
+    {
+      "route_id": "osm-r2",
+      "seq": 2,
+      "from_stop_id": "osm-n5",
+      "to_stop_id": "osm-n6",
+      "fare_php": null,
+      "minutes": null,
+      "minutes_est": 5,
+      "distance_m": 600,
+      "provenance": {
+        "source_class": "osm",
+        "source": "OpenStreetMap relation 2",
+        "verified_by": null,
+        "verified_at": null
+      }
+    },
+    {
+      "route_id": "osm-r3",
+      "seq": 1,
+      "from_stop_id": "osm-n7",
+      "to_stop_id": "osm-n8",
+      "fare_php": null,
+      "minutes": null,
+      "minutes_est": 5,
+      "distance_m": 600,
+      "provenance": {
+        "source_class": "osm",
+        "source": "OpenStreetMap relation 3",
+        "verified_by": null,
+        "verified_at": null
+      }
+    },
+    {
+      "route_id": "osm-r9",
+      "seq": 1,
+      "from_stop_id": "gil-puyat-h267",
+      "to_stop_id": "gil-puyat-osmena",
+      "fare_php": null,
+      "minutes": null,
+      "minutes_est": 1,
+      "distance_m": 848,
+      "provenance": {
+        "source_class": "osm",
+        "source": "OpenStreetMap relation 9",
+        "verified_by": null,
+        "verified_at": null
+      }
+    }
+  ],
+  "transfers": []
+}

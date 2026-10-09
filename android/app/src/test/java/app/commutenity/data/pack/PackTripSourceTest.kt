@@ -137,18 +137,103 @@ class PackTripSourceTest {
     }
 
     @Test
-    fun noCandidatesWhenThereIsNoRouteData() {
-        assertTrue(source.candidates(delaRosa, rufino).isEmpty())
+    fun theReverseOfTheHeroPairHasNoRideDataSoOnlyWalkingIsOffered() {
+        val trips = source.candidates(delaRosa, rufino)
+        assertEquals(listOf("walk"), trips.map { it.key })
+        assertEquals("14 min", trips.single().minutes)
     }
 
     @Test
     fun pinnedSpotNearVaRufinoResolvesViaNearestStop() {
         val pin = Place("pin", "Pinned spot", "", inMakati = true, lat = 14.5585, lng = 121.0180)
-        val trip = ready(source.resolve(pin, delaRosa))
+        val trip = source.candidates(pin, delaRosa).first { it.key != "walk" }
 
         assertEquals("₱12", trip.fare)
         val walk = trip.legs.first() as Leg.Walk
         assertTrue(walk.meters, walk.meters.startsWith("~4"))
+    }
+
+    private fun pin(id: String, lat: Double, lng: Double) = Place(id, id, "", inMakati = true, lat = lat, lng = lng)
+
+    // Stops: gil-puyat-h267 (14.561313, 121.014922) and gil-puyat-osmena (14.55785, 121.00778), 860 m apart.
+    private val atBoardStop = pin("at-board", 14.561313, 121.014922)
+    private val atAlightStop = pin("at-alight", 14.55785, 121.00778)
+
+    @Test
+    fun aPairNineHundredMetresApartWithNoRideNearbyIsWalkOnly() {
+        val start = pin("start", 14.5613, 121.0149)
+        val end = pin("end", 14.5613, 121.0232629) // 900 m due east, more than 800 m from every stop
+        val trips = source.candidates(start, end)
+
+        assertEquals(listOf("walk"), trips.map { it.key })
+        val trip = ready(source.resolve(start, end))
+        assertEquals(trips.single(), trip)
+        assertEquals("₱0", trip.fare)
+        assertEquals("12 min", trip.minutes)
+        assertEquals("0", trip.transfers)
+        assertEquals("Walk: no ride needed", trip.reason)
+        assertEquals(false, trip.sample)
+        assertEquals(false, trip.unverified)
+        assertEquals("0.9 km   ·   walk 12 min", trip.distanceLine)
+        assertEquals(listOf(Leg.Walk("~900 m", "12 min")), trip.legs)
+        val path = checkNotNull(trip.path)
+        assertTrue(path.rides.isEmpty() && path.boardStops.isEmpty() && path.para == null)
+        assertEquals(listOf(listOf(GeoPoint(14.5613, 121.0149), GeoPoint(14.5613, 121.0232629))), path.walks)
+    }
+
+    @Test
+    fun walkingComesFirstWhenNoSlowerThanTheBestRide() {
+        // 860 m on foot is 11 min; reaching the stops (500 m each end) and riding is 7 + 7 + 7.
+        val start = pin("start", 14.556813, 121.014922)
+        val end = pin("end", 14.55335, 121.00778)
+        val trips = source.candidates(start, end)
+
+        assertEquals(listOf("walk", "jeep-buendia-lrt#1", "bus-buendia-lrt#1"), trips.map { it.key })
+        assertEquals("₱0", ready(source.resolve(start, end)).fare)
+        assertEquals("11 min", trips.first().minutes)
+    }
+
+    @Test
+    fun walkingGoesRightAfterTheBestRideWhenTheRideIsFaster() {
+        // 860 m on foot is 11 min; riding from stop to stop is 7 min.
+        for (preference in listOf(TripPreference.Default, TripPreference.Fastest, TripPreference.FewestTransfers)) {
+            val trips = source.candidates(atBoardStop, atAlightStop, preference)
+            assertEquals(preference.name, listOf("jeep-buendia-lrt#1", "walk", "bus-buendia-lrt#1"), trips.map { it.key })
+        }
+        assertEquals("₱12", ready(source.resolve(atBoardStop, atAlightStop)).fare)
+        assertEquals("11 min", source.candidates(atBoardStop, atAlightStop)[1].minutes)
+    }
+
+    @Test
+    fun cheapestPutsWalkingFirst() {
+        val trips = source.candidates(atBoardStop, atAlightStop, TripPreference.Cheapest)
+
+        assertEquals(listOf("walk", "jeep-buendia-lrt#1", "bus-buendia-lrt#1"), trips.map { it.key })
+        assertEquals("₱0", ready(source.resolve(atBoardStop, atAlightStop, TripPreference.Cheapest)).fare)
+    }
+
+    @Test
+    fun theHeroPairNeverGetsAWalkOnlyTrip() {
+        for (preference in TripPreference.values()) {
+            val trips = source.candidates(rufino, delaRosa, preference)
+            assertTrue(preference.name, trips.none { it.key == "walk" })
+            assertTrue(preference.name, trips.first().key.startsWith("jeep-buendia-lrt"))
+            assertEquals(preference.name, "₱12", trips.first().fare)
+        }
+    }
+
+    @Test
+    fun aPairThreeKilometresApartGetsNoWalkOnlyTrip() {
+        val start = pin("start", 14.5613, 121.0149)
+        val end = pin("end", 14.5613, 121.0449) // more than 3 km due east
+        assertTrue(source.candidates(start, end).isEmpty())
+        assertEquals(TripResult.NotInData, source.resolve(start, end))
+    }
+
+    @Test
+    fun aPlaceWithoutCoordinatesGetsNoWalkOnlyTrip() {
+        val nowhere = Place("nowhere", "Nowhere", "", inMakati = true)
+        assertTrue(source.candidates(nowhere, delaRosa).isEmpty())
     }
 
     @Test

@@ -125,6 +125,41 @@ class TripAnswerTest {
     }
 
     @Test
+    fun anUnverifiedTripIsPrefixedWithItsSource() {
+        val osm = trip.copy(unverified = true)
+        assertTrue(TripAnswer.compose(osm).startsWith("Unverified (OpenStreetMap): Walk ~540 m"))
+        assertTrue(TripAnswer.compose(osm, taglish = true).startsWith("Hindi pa beripikado (OpenStreetMap): Maglakad"))
+        assertTrue(!TripAnswer.compose(trip).contains("Unverified"))
+    }
+
+    @Test
+    fun estimatedMinutesKeepTheirTildeAndLabel() {
+        val estimated = trip.copy(minutes = "~9 min (est.)", fare = "Fare unknown")
+        assertTrue(TripAnswer.compose(estimated).endsWith("Fare unknown, ~9 min (est.) in all."))
+        assertTrue(TripAnswer.compose(estimated, taglish = true).endsWith("Fare unknown, ~9 min (est.) lahat."))
+    }
+
+    @Test
+    fun theWalkOnlyTripSaysNoRideIsNeeded() {
+        val start = Place("start", "Start", "", inMakati = true, lat = 14.5613, lng = 121.0149)
+        val end = Place("end", "End", "", inMakati = true, lat = 14.5613, lng = 121.0232629)
+        val walkOnly = (source.resolve(start, end) as TripResult.Ready).trip
+
+        assertEquals("walk", walkOnly.key)
+        assertEquals("Walk ~900 m to your stop, about 12 min. No ride needed.", TripAnswer.compose(walkOnly))
+        assertEquals(
+            "Maglakad ~900 m papunta sa pupuntahan mo, mga 12 min. Hindi na kailangang sumakay.",
+            TripAnswer.compose(walkOnly, taglish = true),
+        )
+    }
+
+    @Test
+    fun aRideLessTripThatIsNotTheWalkOnlyTripStaysEmpty() {
+        val walkLegsOnly = trip.copy(legs = listOf(Leg.Walk("~540 m", "7 min"), Leg.Para("Somewhere")))
+        assertEquals("", TripAnswer.compose(walkLegsOnly))
+    }
+
+    @Test
     fun aTripWithNoRidesGivesNothing() {
         val noRides = trip.copy(legs = trip.legs.filterNot { it is Leg.Ride })
         assertEquals("", TripAnswer.compose(noRides))

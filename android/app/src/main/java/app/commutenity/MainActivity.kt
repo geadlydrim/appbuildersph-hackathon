@@ -247,6 +247,7 @@ private class VoteAwareSource(private val inner: TripSource, private val context
 
 /** Short label for an answer chip: ride kind, fare and time straight from the trip. */
 private fun tripLabel(trip: Trip): String {
+    if (trip.legs.none { it is Leg.Ride }) return "Walk · ${trip.minutes}"
     val mode = trip.legs.filterIsInstance<Leg.Ride>().firstOrNull()?.mode?.lowercase().orEmpty()
     val kind = when {
         mode.startsWith("jeep") -> "Jeep"
