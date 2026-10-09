@@ -2,9 +2,9 @@
 
 **Project:** CommuteNity
 **Date:** 2026-10-09
-**Version:** 0.3
+**Version:** 0.4
 **Owner:** Implementer
-**Status:** Draft. Makati only ([D20](state.md#5-decisions)), map-first with precomputed road shapes and an offline PMTiles map ([D21](state.md#5-decisions) to [D23](state.md#5-decisions)), online refresh and in-trip tracking ([D24](state.md#5-decisions), [D25](state.md#5-decisions)). The map pack is pending [A14](state.md#4-open-assumptions); LLM runtimes pending [A4](state.md#4-open-assumptions) and now gate T3 only. Contribution sync and the ranker plan are decided in [D17](state.md#5-decisions) and [D18](state.md#5-decisions).
+**Status:** Draft. Makati only ([D20](state.md#5-decisions)), map-first with precomputed road shapes and an offline PMTiles map ([D21](state.md#5-decisions) to [D23](state.md#5-decisions)), online refresh and in-trip tracking ([D24](state.md#5-decisions), [D25](state.md#5-decisions)). The map pack is pending [A14](state.md#4-open-assumptions); LLM runtimes are pending [A4](state.md#4-open-assumptions) and pick the model for PRD-F8, which is release-critical and part of the MVP ([D31](state.md#5-decisions)). Contribution sync and the ranker plan are decided in [D17](state.md#5-decisions) and [D18](state.md#5-decisions).
 **Last reconciled:** 2026-10-09
 **PRD:** [Product requirements](prd-commutenity.md)
 
@@ -15,7 +15,7 @@ CommuteNity is a native Android app built with Kotlin and Jetpack Compose ([D8](
 The network is used for only these, never on the answer path or the tracking path:
 - **Refresh** ([D24](state.md#5-decisions)): fetch and cache the latest pack (with shapes), map pack, community suggestions, and vote aggregates; fetch foot routes for first/last-mile walks. Pack and map come from Supabase Storage; community data through the [D17](state.md#5-decisions) Edge Function.
 - **Sync** of community contributions ([D7](state.md#5-decisions), [D17](state.md#5-decisions)).
-- First-run download of the map pack (if not bundled) and, at T3, the LLM and Whisper models.
+- First-run download of the map pack (if not bundled) and the LLM model (PRD-F8, MVP per [D31](state.md#5-decisions)); the Whisper model only if voice (PRD-F9) ships.
 
 The app computes, draws, and tracks in airplane mode. A refresh or sync failure never blocks the UI.
 
@@ -23,7 +23,7 @@ The app computes, draws, and tracks in airplane mode. A refresh or sync failure 
 - **The candidate generator** (deterministic, over the pack) and **validated community suggestions** are the only sources of routes, stops, fares, minutes, distances, and shapes.
 - **The scorer or ranker** only orders candidates.
 - **The map-matcher and para-alert logic** are deterministic code. No model sits on the tracking path.
-- **The LLM (T3)** turns free text into a structured query and phrases an already-computed trip. It never decides a fact or the correct-vehicle verdict ([D27](state.md#5-decisions)).
+- **The LLM (PRD-F8, release-critical per [D31](state.md#5-decisions))** turns free text into a structured query and phrases an already-computed trip. It never decides a fact or the correct-vehicle verdict ([D27](state.md#5-decisions)).
 
 This keeps answers correct and testable. It serves Technical Execution (20%) and Problem & Usefulness (25%) ([JUDGING](JUDGING.md#judging-criteria)).
 
@@ -52,11 +52,11 @@ flowchart LR
     TS --> MM[Map-matcher]
     MM --> PA[Para alert + status]
     PA --> UI
-    UI --> QP[Query parser: on-device LLM - T3]
+    UI --> QP[Query parser: on-device LLM - PRD-F8, MVP]
     QP --> PS
-    UI --> SP[Speech-to-text: Whisper - T3]
+    UI --> SP[Speech-to-text: Whisper - T3 voice, optional]
     SP --> QP
-    QP --> CV[Correct-vehicle matcher - T3]
+    QP --> CV[Correct-vehicle matcher - PRD-F8, MVP]
     CV --> PK
 ```
 
@@ -111,13 +111,13 @@ Proposed shapes. Final names are settled at CP3.
 
 **Trip builder:** `setPoint(which: A | B, source: tap | drag | search | myLocation, latLng, placeId?) → TripRequest { a, b, preference? }`. A request is computed as soon as both points are set and re-computed when either is moved. `myLocation` needs the location permission; without it the other three sources still work.
 
-**Place search** (P2; also resolves LLM-extracted places): `resolvePlace(text) → { status: ok | ambiguous | unknown, candidates: PlaceRef[] }`. It tries an exact alias, then a normalized alias, then fuzzy string match, then (T3 only, if the embedding model is installed) embedding similarity above a threshold. Online geocoding through the server is an optional extra; its failure falls back to pack places.
+**Place search** (P2; also resolves LLM-extracted places): `resolvePlace(text) → { status: ok | ambiguous | unknown, candidates: PlaceRef[] }`. It tries an exact alias, then a normalized alias, then fuzzy string match, then (PRD-F8 only, if the embedding model is installed) embedding similarity above a threshold. Online geocoding through the server is an optional extra; its failure falls back to pack places.
 
 **Candidate generator:** `candidates(a: Point, b: Point) → Candidate[]`. Each `Candidate` has `{ source: algorithm | community, suggestionId?, legs[{ kind: first_mile | ride | transfer_walk | last_mile, mode, routeId?, boardStopId, alightStopId, fare?, minutes?, distance_m, signboards[], shapeRef }], features, display{ distance_m, walk_m, walk_minutes } }`.
 
 **Scorer:** `rank(candidates, preference) → Ranked[]`. Each `Ranked` has `{ candidate, score, reason }`. The reason comes from the top contributing features.
 
-**Trip composer:** `compose(Ranked, lang) → { text, factsUsed[] }`. The template renders first. At T3 the LLM phrasing is accepted only if every number and place it mentions is in `factsUsed`. T0 to T2 use the template only.
+**Trip composer:** `compose(Ranked, lang) → { text, factsUsed[] }`. The template renders first. With PRD-F8 the LLM phrasing is accepted only if every number and place it mentions is in `factsUsed`. T0 to T2 use the template only, and the template is the F8 fallback.
 
 **Shape store:** `shapeFor(legRef) → LatLng[]` decodes the encoded polyline stored in the pack for a segment or transfer; `tripShapes(trip) → LegShape[]` returns one line per leg for the map, and the active trip's full polyline for tracking. `footShape(pinStop) → LatLng[]?` returns a cached foot route or `null` (the caller then draws the dashed straight line). Decoded shapes are cached in memory for the visible trip only.
 
@@ -147,7 +147,7 @@ Proposed shapes. Final names are settled at CP3.
 | `PARA_ALERT_M` | 300 | [D25](state.md#5-decisions) |
 | `GPS_INTERVAL_MS`, `GPS_STALE_S`, `MAX_ACCURACY_M`, `BACKTRACK_M`, `LOOKAHEAD_M`, `ARRIVE_M` | Set during the A16 tuning; not yet chosen | — |
 
-**Query parser** (LLM, constrained JSON, T3):
+**Query parser** (LLM, constrained JSON, PRD-F8):
 ```json
 { "intent": "trip" | "vehicle_check" | "other",
   "origin": "string | null",
@@ -212,7 +212,7 @@ sequenceDiagram
     PA-->>R: vibrate + notification + banner
 ```
 
-**Ask in words (T3, offline):**
+**Ask in words (PRD-F8, MVP per [D31](state.md#5-decisions); offline):**
 
 ```mermaid
 sequenceDiagram
@@ -272,24 +272,24 @@ These are planning targets on the demo phone; none has been measured yet.
 | Candidate generation and ranking | ≤ 300 ms | Timed in-app |
 | Tracking update | ≤ 1 s from GPS fix to updated status on screen | Timed with a mock-location track |
 | Battery | Not measured. A 30-minute tracking run on the demo phone records the drop; GPS interval is a config knob if it's too heavy. | Battery stats before and after |
-| Ask in words, warm (T3) | ≤ 5 s from question to best-trip card | 20 timed runs |
-| Correct-vehicle match (T3) | ≤ 1 s after the text is available | Timed runs |
-| Cold model load (T3) | ≤ 20 s | Timed relaunch |
-| Model download (T3) | ≤ 1.5 GB total, to confirm with the model choice | Storage settings |
+| Ask in words, warm (PRD-F8) | ≤ 5 s from question to best-trip card | 20 timed runs |
+| Correct-vehicle match (PRD-F8) | ≤ 1 s after the text is available | Timed runs |
+| Cold model load (PRD-F8) | ≤ 20 s | Timed relaunch |
+| Model download (PRD-F8) | ≤ 1.5 GB total, to confirm with the model choice | Storage settings |
 | Pack size (with shapes) | ≤ 10 MB, unmeasured; shapes may push it up | File size |
 | Map pack (PMTiles) size | TBD, depends on the Makati extract and zoom range ([A14](state.md#4-open-assumptions)) | File size |
 | Refresh and sync | Never block the UI; retry with backoff; an interrupted download resumes or restarts cleanly | QA-04, QA-09 |
 
 ## 8. AI Architecture and Safety
 
-Candidate models and runtimes ([A4](state.md#4-open-assumptions)). The T0 to T2 path runs no model. All of these are open-weight or on-device, and all are to be verified on the demo phone:
+Candidate models and runtimes ([A4](state.md#4-open-assumptions)). The T0 to T2 path runs no model; the MVP's model is the PRD-F8 LLM ([D31](state.md#5-decisions)), and if the LLM speed test fails the fallbacks are a smaller model, then llama.cpp, then the rule-based parser plus on-device embedding place search, never a cloud model. All of these are open-weight or on-device, and all are to be verified on the demo phone:
 
 | Role | Candidates | Android runtime candidates |
 |---|---|---|
-| Parser / phrasing LLM (T3) | Gemma3-1B-IT int4 (gated on Hugging Face), Qwen2.5-0.5B / Qwen3-0.6B int4 (ungated, Apache-2.0), Qwen2.5-1.5B Q4_K_M | **LiteRT-LM** (Kotlin API, JSON-schema `ResponseFormat`); fallback llama.cpp via JNI (needs a GBNF patch). MediaPipe LLM Inference is maintenance-only. |
-| Place embeddings (T3, optional) | EmbeddingGemma (270M); multilingual-e5-small int8 | LiteRT-LM EmbeddingEngine; fallback MediaPipe Text Embedder or ONNX Runtime Android. Alias and fuzzy matching run first and carry T0 to T2; alias vectors are precomputed. |
+| Parser / phrasing LLM (PRD-F8, MVP) | Gemma3-1B-IT int4 (gated on Hugging Face), Qwen2.5-0.5B / Qwen3-0.6B int4 (ungated, Apache-2.0), Qwen2.5-1.5B Q4_K_M | **LiteRT-LM** (Kotlin API, JSON-schema `ResponseFormat`); fallback llama.cpp via JNI (needs a GBNF patch). MediaPipe LLM Inference is maintenance-only. |
+| Place embeddings (PRD-F8, optional; the last-resort on-device fallback per [D31](state.md#5-decisions)) | EmbeddingGemma (270M); multilingual-e5-small int8 | LiteRT-LM EmbeddingEngine; fallback MediaPipe Text Embedder or ONNX Runtime Android. Alias and fuzzy matching run first and carry T0 to T2; alias vectors are precomputed. |
 | Route ranker (T4) | Pairwise logistic regression or small GBDT | Plain Kotlin (JSON weights or tree dump); ONNX Runtime Android only if it's already in the app |
-| Speech-to-text (T3) | Whisper tiny/base multilingual | whisper.cpp via JNI |
+| Speech-to-text (T3 voice, optional) | Whisper tiny/base multilingual | whisper.cpp via JNI |
 | Correct-vehicle matcher | No model: deterministic fuzzy string match ([D27](state.md#5-decisions)) | Plain Kotlin |
 | Map-matcher, para alert | No model: geometry on the stored shape | Plain Kotlin |
 
@@ -304,7 +304,7 @@ Candidate models and runtimes ([A4](state.md#4-open-assumptions)). The T0 to T2 
 | Ranker overfits team preferences | Held-out split by origin–destination; ships only if it beats the baseline; disclosed | AI-06 |
 | Wrong "ride this" verdict | Deterministic matcher, conservative threshold, shows the text it matched; LLM only extracts text | AI-05 (0 false "ride this"), QA-13 |
 | Wrong or noisy GPS gives a false off-route or a mistimed para alert | Accuracy filter, duration gate before off-route, one-shot alert, thresholds in config, tuned on Makati tracks | QA-10, QA-11, [A16](state.md#4-open-assumptions) |
-| Model too slow or large for the phone | Smaller model fallback; template answer if phrasing fails; T0 to T2 don't depend on it | QA-12 |
+| Model too slow or large for the phone | Smaller model fallback, then llama.cpp, then the rule-based parser plus on-device embedding place search ([D31](state.md#5-decisions)); template answer if phrasing fails; T0 to T2 don't depend on it | QA-12 |
 
 ### 8.2 AI Craft
 

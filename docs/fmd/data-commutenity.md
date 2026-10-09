@@ -2,9 +2,9 @@
 
 **Project:** CommuteNity
 **Date:** 2026-10-09
-**Version:** 0.3
+**Version:** 0.4
 **Owner:** Data owner and ranker owner ([A8](state.md#4-open-assumptions)); road-shape pipeline owned by P4 ([D19](state.md#5-decisions))
-**Status:** Draft. Makati City only ([D20](state.md#5-decisions)), precomputed road shapes ([D22](state.md#5-decisions)), and the offline map pack ([D23](state.md#5-decisions)) are decided. The Makati hero trip ([A13](state.md#4-open-assumptions)), the shape engine ([A15](state.md#4-open-assumptions)), and the map pack size ([A14](state.md#4-open-assumptions)) are open. The travel-time baseline and the ranker data/model plan are decided ([D16](state.md#5-decisions), [D18](state.md#5-decisions)). The Valenzuela–Recto corridor ([D15](state.md#5-decisions)) is superseded by D20.
+**Status:** Draft. Makati City only ([D20](state.md#5-decisions)), the hero trip pair ([D30](state.md#5-decisions): Ayala Center to Dela Rosa Street, Pio del Pilar), precomputed road shapes ([D22](state.md#5-decisions)), and the offline map pack ([D23](state.md#5-decisions)) are decided. The candidate trips for the hero pair ([A13](state.md#4-open-assumptions)), the shape engine ([A15](state.md#4-open-assumptions)), and the map pack size ([A14](state.md#4-open-assumptions)) are open. The travel-time baseline and the ranker data/model plan are decided ([D16](state.md#5-decisions), [D18](state.md#5-decisions)). The Valenzuela–Recto corridor ([D15](state.md#5-decisions)) is superseded by D20.
 **Last reconciled:** 2026-10-09
 **SDD:** [System design](sdd-commutenity.md)
 
@@ -103,7 +103,7 @@ Refresh ([D24](state.md#5-decisions)) fetches and caches new data when online. T
 
 ## 3. Collection Protocol
 
-1. **Coverage and hero trip ([D20](state.md#5-decisions), [A13](state.md#4-open-assumptions)):** build the pack for Makati City. P4 and the team choose the hero origin–destination pair inside Makati, with at least two genuinely different trips, before CP2. Those candidates must be built from `collected` and `known` data. Mock records may cover adjacent stops only; they cannot supply hero-trip facts. (The earlier Valenzuela–Recto corridor, [D15](state.md#5-decisions), is superseded; its rules about collected, known, and mock data still apply.)
+1. **Coverage and hero trip ([D20](state.md#5-decisions), [D30](state.md#5-decisions), [A13](state.md#4-open-assumptions)):** build the pack for Makati City. The hero pair is set by D30: **A = Ayala Center** (Station Road, San Lorenzo, Makati; plus code 7Q63G2XG+PR; 14.549312, 121.027062) to **B = Dela Rosa Street, Pio del Pilar** (Makati; plus code 7Q63H245+R7; 14.557063, 121.008188), about 2.2 km apart in a straight line. What stays open under A13 is the candidate trips: P4 Jrabara101 and the team list and verify at least two genuinely different trips for this pair (modes, boarding points, and para points) before pack v0, from `collected` and `known` data. Those candidates must be built from `collected` and `known` data. Mock records may cover adjacent stops only; they cannot supply hero-trip facts. Do not invent routes, jeepney names, fares, or minutes. (The earlier Valenzuela–Recto corridor, [D15](state.md#5-decisions), is superseded; its rules about collected, known, and mock data still apply.)
 2. **Stops and segments:** use team knowledge, with OpenStreetMap for coordinates. Class each one `collected` (verified this event) or `known` (from memory). Road shapes come from the pipeline in [§3.2](#32-road-shape-pipeline-a15).
 3. **Fares:** use the current official fare matrix where possible, citing the source and date (`collected`). Otherwise use team knowledge (`known`) or a `mock` value. If none of those exists, the fare is unknown. Per [fare research](https://github.com/geadlydrim/appbuildersph-hackathon/issues/5):
    - LRT-1, LRT-2, and MRT-3 matrices are `collected`, transcribed by hand from official images.
@@ -185,7 +185,7 @@ All preference labels, contributions, and questions carry `source_class` too. La
 }
 ```
 
-The place IDs are filled in once the hero trip is chosen ([A13](state.md#4-open-assumptions)). The feature list is the D18 spec and does not change with the map-first flow.
+The place IDs are the pack's IDs for the D30 pair: origin Ayala Center and destination Dela Rosa Street, Pio del Pilar. They are assigned when pack v0 is built, and the scenarios are filled in once the candidate trips are verified ([A13](state.md#4-open-assumptions)). The feature list is the D18 spec and does not change with the map-first flow.
 
 `data/labels/rankings.jsonl` contains `{ "scenario_id", "rater_id": "R1" | "R2" | "R3" | "R4", "ranking": [candidate_key, candidate_key, candidate_key], "source_class": "known" }`. Rankings are strict and contain all three candidates. The deterministic pair split is written to versioned input before raters label it.
 

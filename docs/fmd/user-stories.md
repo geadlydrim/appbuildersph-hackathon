@@ -2,8 +2,8 @@
 
 **Project:** CommuteNity
 **Date:** 2026-10-09
-**Version:** 0.3
-**Status:** Draft. Re-scoped to Makati, map-first ([D20](state.md#5-decisions)–[D29](state.md#5-decisions)).
+**Version:** 0.4
+**Status:** Draft. Re-scoped to Makati, map-first ([D20](state.md#5-decisions)–[D29](state.md#5-decisions)). US-11 and US-12 are release-critical for the submission and part of the MVP ([D31](state.md#5-decisions)); US-13 (voice) stays optional.
 
 Format: *As a [persona], I want [capability] so that [outcome].* Acceptance criteria use Given/When/Then.
 
@@ -128,8 +128,11 @@ The v0.2 stories (question-first, including the OCR signboard story) are retired
 
 ## T3: Ask in words + voice
 
+US-11 and US-12 keep their T3 label but are **release-critical (MVP) per [D31](state.md#5-decisions)**: PRD-F8 merges behind its feature flag as soon as T0 is demo-safe, tagged `demo-safe-f8` when both pass. US-13 (voice) is optional and is cut before them.
+
 ### US-11: Ask "How to get from X to Y?" in words
 **PRD-F8** · QA-12
+*Release-critical (MVP), [D31](state.md#5-decisions).*
 
 > As a **New Arrival** who'd rather type than tap, I want to ask in my own words so that the app sets A and B for me.
 
@@ -140,6 +143,7 @@ The v0.2 stories (question-first, including the OCR signboard story) are retired
 
 ### US-12: Is this the correct vehicle?
 **PRD-F8** · QA-13
+*Release-critical (MVP), [D31](state.md#5-decisions).*
 
 > As a **New Arrival** at a terminal, I want to type or say what's written on the jeep so that I know in seconds whether it's the right one.
 
