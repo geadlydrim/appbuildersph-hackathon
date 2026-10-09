@@ -4,8 +4,8 @@
 **Date:** 2026-10-09
 **Version:** 0.4
 **Owner:** Project owner
-**Status:** Draft. Re-scoped to Makati City only, with a map-first trip builder ([D20](state.md#5-decisions) to [D29](state.md#5-decisions)). The hero trip pair is set by [D30](state.md#5-decisions), and PRD-F8 (ask in words) is release-critical per [D31](state.md#5-decisions). PRD-F12 is a mock Q&A screen only: no login and no accounts.
-**Last reconciled:** 2026-10-09
+**Status:** Draft. Re-scoped to Makati City only, with a map-first trip builder ([D20](state.md#5-decisions) to [D29](state.md#5-decisions)). The hero trip pair is set by [D30](state.md#5-decisions), and PRD-F8 (ask in words) is release-critical per [D31](state.md#5-decisions). PRD-F12 is rider Q&A as bounded trip evidence ([D34](state.md#5-decisions)): no login and no accounts.
+**Last reconciled:** 2026-10-10
 **IDEA:** [Idea brief](idea-commutenity.md) · **Scope:** [MVP scope](mvp-scope.md) · **Stories:** [User stories](user-stories.md)
 
 ## 1. Purpose
@@ -33,7 +33,7 @@ Definitions: [IDEA §2](idea-commutenity.md#2-who-its-for). These are target rol
 | PRD-F4 | Online refresh and cache | When online, fetch and cache the latest pack, map pack, community suggestions and vote aggregates, and first/last-mile foot routes. Shows status. Nothing on the answer path needs it. | Must | T1 |
 | PRD-F5 | Alternatives on request | Other ranked candidates, labelled Algorithm or Community, with reason lines and vote counts | Must | T1 |
 | PRD-F6 | Community contributions with local-first sync | Suggest a trip (structured legs plus a note) and vote "this worked / didn't". Stored locally and synced through the secondary backend when online ([D17](state.md#5-decisions)). | Must | T1 |
-| PRD-F12 | Community Q&A | **Mock data only. There is no login and no account.** Every question and every answer on this screen is sample text, including anything the rider types during the session. It is not a post from another person, and it does not sync. A question or answer may name one place. Answers are flat. Up and down only mark usefulness on this phone, and pressing the same way again clears the mark. A vote never writes a fare, stop, or route into the commute pack. If the map is missing, the place name still shows. This is not the parked social feed ([PRD-F11](#3-features-and-priorities)). | Should | Proposed, mock shell |
+| PRD-F12 | Rider Q&A | Supporting evidence for trip suggestions at showcase size ([D34](state.md#5-decisions)). It is not the parked social platform ([PRD-F11](#3-features-and-priorities)): no feed ranking, profiles, accounts, comments on comments, moderation, or sync. A rider can ask and answer. Their text is saved on the phone only (memory or Room), marked as their own, and never synced. An answer may be tied to one pack-valid candidate trip, by the pack's stable candidate key, through an optional "This trip worked" chip that lists the candidates on screen. Without the chip it is text only. Code counts tied answers per trip and shows "N riders say this works" on that trip's card, marked Sample when mock. Each tied answer is one "worked" vote for that trip inside the [D16](state.md#5-decisions) clamp (net votes −3…+3, used only to break an otherwise exact tie). There is no new ordering rule, and untied answers count for nothing. There are no votes on answers; riders vote on trips only ([PRD-F6](#3-features-and-priorities)). Mock content is the bundled `data/mock/rider-qa.json`, separate from the commute pack, with every thread and answer tagged `mock`. Mock evidence is shown on hero-trip cards but excluded from the hero-pair ordering ([D13](state.md#5-decisions)); it counts on other pairs. Q&A text never writes a fare, stop, or route into the commute pack. The Questions screen is filtered to the current origin–destination pair (an "All" view is acceptable). Stretch, not MVP: the on-device LLM extracts a route or signboard mention from untied answers, and code ties it only if it matches a pack route; this starts after the `demo-safe-f8` tag exists and is cut if not working by 7:00 AM. | Should | T1 (first thing cut; not part of the MVP gate) |
 | PRD-F7 | In-trip tracking | Offline GPS snapped to the active trip's shape: on-route or off-route status, current leg, distance and stops to the para point, and a para alert before the alight stop. | Must | T2 |
 | PRD-F8 | Ask in words | An on-device LLM turns "How to get from X to Y?" into point A and point B, and turns "Is this the correct vehicle?" into the correct-vehicle check ([D27](state.md#5-decisions)). Phrasing stays grounded in the computed trip. **Release-critical for the 10:00 AM submission and part of the MVP ([D31](state.md#5-decisions)).** | Must | T3 (label kept; part of the MVP per D31) |
 | PRD-F9 | Voice questions | On-device speech-to-text (Whisper) feeding PRD-F8 | Should | T3 |
@@ -45,7 +45,7 @@ Definitions: [IDEA §2](idea-commutenity.md#2-who-its-for). These are target rol
 These are owned by [user stories](user-stories.md):
 - US-01 to US-03 (T0)
 - US-04 to US-08 (T1)
-- US-15 (PRD-F12, proposed)
+- US-15 (PRD-F12, T1, first thing cut)
 - US-09 and US-10 (T2)
 - US-11 to US-13 (T3)
 - US-14 (T4)
@@ -63,8 +63,9 @@ Design reference: [DSD](dsd-commutenity.md). The map is the home screen; the tri
 | Alternatives sheet | "Show alternatives" | — | "No other trips yet. Suggest one?" | — | Ranked list with Algorithm/Community labels and votes; picking one redraws the map |
 | Suggest trip | From the card or alternatives | — | — | Invalid leg, with the reason | "Saved on your phone · will sync" |
 | Vote | On any trip | — | — | — | Vote state shown; unsynced marker |
-| Community Q&A (PRD-F12) | From a trip, or from "Mga tanong" | — | No threads: "Wala pang naka-save na tanong." | Map tiles missing: the place name still shows. | A sample banner stays on screen: "Sample data. Walang account at walang login." Questions and answers are marked Sample. A place name may sit on a question or an answer. |
-| Ask or answer (PRD-F12) | "Magtanong" or "Sumagot" | — | — | Empty text is not saved | "Na-save sa phone mo · sample lang, walang login." The new text is still marked Sample. Nothing is sent to a server. |
+| Rider Q&A: Questions screen (PRD-F12) | The Questions button on the map home, or the evidence line on a trip card | — | No threads for this pair: "No questions for this trip yet." | Map tiles missing: the place name still shows. | Threads for the current origin–destination pair ("All" view allowed). Mock threads and answers are marked Sample; the rider's own are marked as theirs. A banner says there is no account and no login. A tied answer shows which trip it worked for. There are no up or down marks on answers. |
+| Ask or answer (PRD-F12) | "Ask" or "Answer" on the Questions screen | — | — | Empty text is not saved | "Saved on this phone only." While answering, an optional "This trip worked" chip lists the candidates on screen. With the chip the answer is tied to that trip; without it, the answer is text only. Nothing is sent to a server. |
+| Trip evidence line (PRD-F12) | On a trip card that has tied answers | — | No line when no answer is tied to the trip | — | "N riders say this works", marked Sample when it comes from mock answers. Tapping it opens the Questions screen for the pair. |
 | Refresh and sync status | Top bar | Refreshing or syncing | Nothing new | Offline or failed; the app keeps working on cached data and retries later | "Updated" or "Synced", with a timestamp and the pack and map versions |
 | Active trip (tracking) | "Start trip" on the best-trip card | "Naghahanap ng GPS…" | — | GPS unavailable or permission denied: trip stays viewable without tracking; GPS lost mid-trip shows the last known status as stale | Position on the route, "On route", current leg, distance and stops to the para point, ongoing notification |
 | Off route | Tracking sees a deviation past the threshold | — | — | — | "You may be off route" with distance from the route; clears when the rider returns |
@@ -103,7 +104,7 @@ flowchart TD
     T -.F8.-> K[Correct-vehicle check]
 ```
 
-The app has no user-facing accounts. **Community Q&A (PRD-F12) does not add one.** The questions and answers there are mock data. There is no login, no profile, and no identity. Suggest-and-vote contributions, which are a different feature, still use an internal anonymous Auth identity and sync through the server-side validation boundary ([D17](state.md#5-decisions)). GPS tracks never leave the phone ([SDD §5](sdd-commutenity.md#5-security-and-privacy)).
+The app has no user-facing accounts. **Rider Q&A (PRD-F12) does not add one.** There is no login, no profile, and no identity. Rider-written questions and answers are saved on the phone only, marked as the rider's own, and never synced ([D34](state.md#5-decisions)); the mock threads come from a bundled file. Suggest-and-vote contributions, which are a different feature, still use an internal anonymous Auth identity and sync through the server-side validation boundary ([D17](state.md#5-decisions)). GPS tracks never leave the phone ([SDD §5](sdd-commutenity.md#5-security-and-privacy)).
 
 ### 5.6 Instrumentation
 
@@ -137,7 +138,7 @@ All inference runs on the phone ([SDD §8](sdd-commutenity.md#8-ai-architecture-
 - **Speech (PRD-F9):** Whisper transcribes on the phone. The transcript is shown for confirmation before parsing.
 - **No OCR, no TTS** ([D26](state.md#5-decisions)).
 - **No cloud fallback** for any of these.
-- **Community Q&A (PRD-F12):** the current screen is mock data and has no login. The assistant must not quote a question or an answer from it as a rider report or as a pack fact. Fares, stops, and the drawn trip still come only from the pack and from validated route suggestions.
+- **Rider Q&A (PRD-F12, [D34](state.md#5-decisions)):** the LLM never treats Q&A text as a fact source, and the assistant must not quote a question or an answer as a rider report or as a pack fact. Fares, stops, minutes, and shapes still come only from the pack and from validated route suggestions ([D33](state.md#5-decisions)). Q&A only adds bounded tie-break evidence through code: tied answers are counted structurally and enter the D16 vote term inside its clamp. The stretch extraction (LLM reads untied answers for a route mention) keeps a value only if it matches a pack route.
 
 ## 8. Dependencies
 
@@ -153,15 +154,15 @@ All inference runs on the phone ([SDD §8](sdd-commutenity.md#8-ai-architecture-
 
 ## 9. Implementation and Rollback
 
-| Stage | Entry | Exit | Owner |
+| Stage | Entry | Exit | Who |
 |---|---|---|---|
 | Specify / Shape | Docs and wayfinder map | D20 to D31 recorded; A13 (candidate trips for the D30 pair) to A15 closed before their checkpoints | Project owner |
-| T0 skeleton | CP1 map spike passes; pack v0 with shapes | US-01 to US-03 pass offline on the demo phone | P1, P3, P4 |
-| F8 ask in words (T3 label, MVP per [D31](state.md#5-decisions)) | T0 demo-safe (it merges behind its feature flag, independent of T1 and T2); LLM speed test done and a model chosen | ~4:30 AM (CP-F8): US-11 and US-12 pass offline; tag `demo-safe-f8` | P2 |
+| T0 skeleton | CP1 map spike passes; pack v0 with shapes | US-01 to US-03 pass offline on the demo phone | Issue claimants |
+| F8 ask in words (T3 label, MVP per [D31](state.md#5-decisions)) | T0 demo-safe (it merges behind its feature flag, independent of T1 and T2); LLM speed test done and a model chosen | ~4:30 AM (CP-F8): US-11 and US-12 pass offline; tag `demo-safe-f8` | Issue claimants |
 | T1 demo-ready | T0 passes | US-04 to US-08 pass; [QAD gate](qad-commutenity.md#6-release-criteria) for T0 + T1 | Whole team |
-| T2 tracking | T1 demo-safe | US-09 and US-10 pass, including the mock-location GPS track | P1, P3 |
-| T3 voice | T2 demo-safe; F8 passing | US-13 passes (optional; cut before F8) | P2 |
-| T4 ranker | Eval beats baseline | Ranker swapped in; eval recorded | P3 |
+| T2 tracking | T1 demo-safe | US-09 and US-10 pass, including the mock-location GPS track | Issue claimants |
+| T3 voice | T2 demo-safe; F8 passing | US-13 passes (optional; cut before F8) | Issue claimants |
+| T4 ranker | Eval beats baseline | Ranker swapped in; eval recorded | Issue claimants |
 | Freeze and submit | 8:00 AM feature freeze | Submitted before 10:00 AM | Project owner |
 
 **Rollback trigger:** any regression in the offline T0/T1/T2 path, a wrong fact during rehearsal, a para alert that fires at the wrong place or more than once, or a refresh or sync failure that blocks the UI. Action: install the last `demo-safe-*` APK ([BUILD §5](build-commutenity.md#5-conventions-and-definition-of-done)) and turn off the failing tier's feature flag. A failing F8 reverts to the next on-device fallback ([D31](state.md#5-decisions)), never to a cloud model.

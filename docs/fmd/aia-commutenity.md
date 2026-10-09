@@ -5,7 +5,7 @@
 **Version:** 0.4
 **Owner:** Project owner
 **Status:** Draft. Updated for the Makati-only, map-first scope. OCR is dropped ([D26](state.md#5-decisions)). The MVP includes the PRD-F8 on-device LLM ([D31](state.md#5-decisions)).
-**Last reconciled:** 2026-10-09
+**Last reconciled:** 2026-10-10
 **PRD:** [Requirements](prd-commutenity.md) · **SDD:** [System design](sdd-commutenity.md) · **QAD:** [QA plan](qad-commutenity.md) · **CLR:** [Protection register](clr-commutenity.md)
 
 ## 0. Scope
@@ -20,6 +20,7 @@ AI and AI-adjacent logic ship in these features:
 | PRD-F8 | The LLM extracts places and the vehicle text from a free-form question and phrases a grounded answer; the correct-vehicle verdict comes from a deterministic text matcher ([D27](state.md#5-decisions)) | Yes (MVP per [D31](state.md#5-decisions); T3 label) |
 | PRD-F9 | Speech-to-text: on-device Whisper via whisper.cpp ([D26](state.md#5-decisions)) | Yes (T3 voice, optional) |
 | PRD-F10 | Learned ranker ([D11](state.md#5-decisions), [D18](state.md#5-decisions)) | Yes (T4) |
+| PRD-F12 | Rider Q&A evidence ([D34](state.md#5-decisions)): code counts answers tied to a candidate by key and feeds the D16 vote term inside its clamp; no model reads answer text. Stretch, not MVP: the F8 LLM extracts a route mention from untied answers and code keeps it only if it matches a pack route | No (stretch: yes, after `demo-safe-f8`) |
 
 The MVP (T0 + T1 + T2 + PRD-F8) includes one model: the F8 on-device LLM ([D31](state.md#5-decisions)). The T0 to T2 path itself needs no model. If the LLM speed test fails, the fallbacks stay on-device: a smaller model, then llama.cpp, and last the rule-based parser plus on-device embedding place search; never a cloud model. Voice (T3) and the ranker (T4) are optional, are cut before F8, and merge into the demo build only in tier order.
 

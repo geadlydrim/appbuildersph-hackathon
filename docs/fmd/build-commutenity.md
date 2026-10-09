@@ -5,31 +5,32 @@
 **Version:** 0.4
 **Owner:** Implementer
 **Status:** Draft. Re-planned for Makati only, map-first, new tier order ([D20](state.md#5-decisions) to [D29](state.md#5-decisions)), with the hero pair ([D30](state.md#5-decisions)) and the Local-AI floor ([D31](state.md#5-decisions)) added. Map pack support is pending [A14](state.md#4-open-assumptions) (CP1); the LLM runtime, pending [A4](state.md#4-open-assumptions), picks the model for PRD-F8, which is part of the MVP. Contribution sync is decided in [D17](state.md#5-decisions).
-**Last reconciled:** 2026-10-09
+**Last reconciled:** 2026-10-10
 **PRD:** [Requirements](prd-commutenity.md) · **SDD:** [System design](sdd-commutenity.md) · **Data:** [Data plan](data-commutenity.md)
 
 ## 1. Build Sequence
 
-Start with [state](state.md), then read only the doc your workstream needs. Tiers merge into the demo build strictly in order ([MVP scope](mvp-scope.md#tiers)): T0 walking skeleton, T1 refresh and community, T2 tracking, T3 ask in words and voice, T4 ranker. **The MVP is T0 + T1 + T2 + PRD-F8** ([D31](state.md#5-decisions)): ask in words (F8) keeps its T3 label but is release-critical, so it merges behind its feature flag as soon as T0 is demo-safe, independent of T1 and T2 (CP-F8, ~4:30 AM). LLM work (P2) starts now; STT and ranker data (P3, from CP2) merge only in tier order, and voice and the ranker are cut before F8.
+Start with [state](state.md), then read only the doc your issue needs. Tiers merge into the demo build strictly in order ([MVP scope](mvp-scope.md#tiers)): T0 walking skeleton, T1 refresh and community, T2 tracking, T3 ask in words and voice, T4 ranker. **The MVP is T0 + T1 + T2 + PRD-F8** ([D31](state.md#5-decisions)): ask in words (F8) keeps its T3 label but is release-critical, so it merges behind its feature flag as soon as T0 is demo-safe, independent of T1 and T2 (CP-F8, ~4:30 AM). LLM work starts now; STT and ranker data (from CP2) merge only in tier order, and voice and the ranker are cut before F8.
 
-| Checkpoint | Target (Oct 9–10) | Work | Done when | Owner |
+| Checkpoint | Target (Oct 9–10) | Work | Done when | Who |
 |---|---|---|---|---|
 | CP0 Decisions | Now | D20 to D31 recorded in [state](state.md) | Recorded | Project owner |
-| CP1 Spikes | ~11:30 PM | **Map spike:** MapLibre Native Android renders a Makati PMTiles file offline on the POCO X6 5G; record file size ([A14](state.md#4-open-assumptions)). **LLM speed test** (issue #8): **done** ([D32](state.md#5-decisions)). Gemma 4 E2B on LiteRT-LM 0.18.0, GPU, hybrid parser: worst p95 2.84 s, 10/10 exact on 10 Makati questions. | Map renders in airplane mode, or the A14 fallback is chosen. LLM: passed; P2 builds PRD-F8 on it. | P1 (map); P2 owns the LLM work from here |
-| CP2 Foundations | in parallel with CP1; shape engine chosen before pack v0 ([A15](state.md#4-open-assumptions)); the ≥2 candidate trips for the D30 pair (Ayala Center to Dela Rosa St., Pio del Pilar) listed and verified before pack v0 ([A13](state.md#4-open-assumptions)) | P4: **pack v0 for Makati with road shapes** plus validator (incl. shape rules), mock generator, eval sets. P3: **trip finder module** (candidate generator and scorer) as a pure Kotlin module with fixture tests. P1: app shell, Room, feature flags, map screen. | Fixture tests pass; pack validates (QA-16) | P1, P3, P4 |
-| CP3 T0 walking skeleton | ~1:30 AM | Pins A and B on the offline map → trip finder → best-trip card and shapes drawn on real roads; airplane mode | US-01 to US-03 pass offline on the phone (QA-01 to QA-03, QA-16, QA-17, QA-19); tag `demo-safe-t0` plus APK | P1 + P3 + P4 |
-| CP4 T1 refresh and community | ~3:30 AM | Refresh client (pack, map pack, community), foot routes for first/last-mile, alternatives sheet, suggest/vote, Room plus sync backend (2 tables, push/pull), two-phone sync | US-04 to US-08 pass; [QAD gate](qad-commutenity.md#6-release-criteria) for T0 + T1 (QA-04 to QA-09); tag `demo-safe-t1` | Whole team |
-| CP-F8 Ask in words (T3 label, MVP) | ~4:30 AM | Query parser LLM, place search and the correct-vehicle matcher merge behind the F8 flag once `demo-safe-t0` exists, independent of T1 and T2; P2 builds from now in parallel. Falls back as in [D31](state.md#5-decisions); never a cloud model. | US-11 and US-12 pass offline on the phone (QA-12, QA-13, AI-01 to AI-05); tag `demo-safe-f8` | P2 |
-| CP5 T2 in-trip tracking | ~5:30 AM | Foreground service, GPS, map-matcher, on/off-route status, para alert | US-09 and US-10 pass on the phone with a mock-location GPS track (QA-10, QA-11); tag `demo-safe-t2` | P1 (service, UI) + P3 (matcher) |
-| CP6 T3 voice / T4 | 5:30–8:00 AM | T3 voice: STT feeding F8 (P2). T4: train the ranker, evaluate on held-out pairs, parity test, swap in behind a flag if it wins (P3). Both are optional and are cut before F8. | T3 voice: US-13 (QA-14). T4: AI-06 and QA-15 pass; tag `demo-safe-t3` / `demo-safe-t4`. | P2 (T3 voice), P3 (T4) |
+| CP1 Spikes | ~11:30 PM | **Map spike:** MapLibre Native Android renders a Makati PMTiles file offline on the POCO X6 5G; record file size ([A14](state.md#4-open-assumptions)). **LLM speed test** (issue #8): **done** ([D32](state.md#5-decisions)). Gemma 4 E2B on LiteRT-LM 0.18.0, GPU, hybrid parser: worst p95 2.84 s, 10/10 exact on 10 Makati questions. | Map renders in airplane mode, or the A14 fallback is chosen. LLM: passed; PRD-F8 is built on it. | Issue claimants |
+| CP2 Foundations | in parallel with CP1; shape engine chosen before pack v0 ([A15](state.md#4-open-assumptions)); the ≥2 candidate trips for the D30 pair (Ayala Center to Dela Rosa St., Pio del Pilar) listed and verified before pack v0 ([A13](state.md#4-open-assumptions)) | **Pack v0 for Makati with road shapes** plus validator (incl. shape rules), mock generator, eval sets. **Trip finder module** (candidate generator and scorer) as a pure Kotlin module with fixture tests. App shell, Room, feature flags, map screen. | Fixture tests pass; pack validates (QA-16) | Issue claimants |
+| CP3 T0 walking skeleton | ~1:30 AM | Pins A and B on the offline map → trip finder → best-trip card and shapes drawn on real roads; airplane mode | US-01 to US-03 pass offline on the phone (QA-01 to QA-03, QA-16, QA-17, QA-19); tag `demo-safe-t0` plus APK | Issue claimants |
+| CP4 T1 refresh and community | ~3:30 AM | Refresh client (pack, map pack, community), foot routes for first/last-mile, alternatives sheet, suggest/vote, Room plus sync backend (2 tables, push/pull), two-phone sync; rider Q&A evidence (PRD-F12, [D34](state.md#5-decisions)), the first thing cut | US-04 to US-08 pass (US-15 if rider Q&A is built; QA-20 to QA-23); [QAD gate](qad-commutenity.md#6-release-criteria) for T0 + T1 (QA-04 to QA-09); tag `demo-safe-t1` | Whole team |
+| CP-F8 Ask in words (T3 label, MVP) | ~4:30 AM | Query parser LLM, place search and the correct-vehicle matcher merge behind the F8 flag once `demo-safe-t0` exists, independent of T1 and T2; built from now in parallel. Falls back as in [D31](state.md#5-decisions); never a cloud model. | US-11 and US-12 pass offline on the phone (QA-12, QA-13, AI-01 to AI-05); tag `demo-safe-f8` | Issue claimants |
+| CP5 T2 in-trip tracking | ~5:30 AM | Foreground service, GPS, map-matcher, on/off-route status, para alert | US-09 and US-10 pass on the phone with a mock-location GPS track (QA-10, QA-11); tag `demo-safe-t2` | Issue claimants |
+| CP6 T3 voice / T4 | 5:30–8:00 AM | T3 voice: STT feeding F8. T4: train the ranker, evaluate on held-out pairs, parity test, swap in behind a flag if it wins. Both are optional and are cut before F8. | T3 voice: US-13 (QA-14). T4: AI-06 and QA-15 pass; tag `demo-safe-t3` / `demo-safe-t4`. | Issue claimants |
 | **Freeze** | **8:00 AM** | No new features; fixes only | — | Project owner |
-| Submit | 8:00–9:30 AM | README with disclosures, ~1 min demo video, X/LinkedIn post (#AppBuildersPH, tag Devin/Cognition), the "why local" answer | Submitted once, before **10:00 AM** | P4 |
+| Submit | 8:00–9:30 AM | README with disclosures, ~1 min demo video, X/LinkedIn post (#AppBuildersPH, tag Devin/Cognition), the "why local" answer | Submitted once, before **10:00 AM** | Issue claimants |
 
 The feature freeze (8:00 AM) and code freeze (10:00 AM) are fixed.
 
 **Ranker data runs in parallel from CP2.** Teammates rank scenarios independently between tasks (about 2 minutes per scenario). Once T1 exists, seeded contributions go through the app.
 
 **Cut rules (no debate at 2 AM):**
+- If time runs short at any point, cut rider Q&A (PRD-F12) first, before T2 tracking and before F8 ([D34](state.md#5-decisions)). Its LLM extraction stretch starts only after `demo-safe-f8` exists and is cut if not working by 7:00 AM.
 - If T0 slips past 2:30 AM, cut T3 voice and T4. **Keep F8**: it is release-critical ([D31](state.md#5-decisions)).
 - If refresh or sync isn't working by 4:00 AM, demo with the bundled pack and local contributions only, and say so.
 - If T2 isn't passing by 6:30 AM, demo tracking with a recorded mock-GPS route, labelled as simulated.
@@ -39,16 +40,19 @@ The feature freeze (8:00 AM) and code freeze (10:00 AM) are fixed.
 
 ## 2. Team Workstreams
 
-Four people ([D12](state.md#5-decisions)). Owners per [D19](state.md#5-decisions).
+Four people ([D12](state.md#5-decisions)): geadlydrim, pablo-pica, storms23, and Jrabara101. Fixed role owners are retired ([D35](state.md#5-decisions); [D19](state.md#5-decisions) is superseded). Work is broken into GitHub issues as we go. Anyone claims any issue by assigning themselves, and no one is limited to one area. Checkpoints, tier order, and cut rules stay.
 
-| Role | Owner | Owns |
-|---|---|---|
-| **P1: Android app** | geadlydrim (Keanu) | App shell, MapLibre map and PMTiles map pack, A/B trip builder UI, trip card and alternatives UI, refresh and sync client, tracking UI and foreground service, APK builds, `demo-safe-*` tags. Ran the LLM speed test (issue #8) on his POCO X6 5G. |
-| **P2: On-device AI** | pablo-pica | LLM (PRD-F8, MVP: the hybrid parser on Gemma 4 E2B per [D32](state.md#5-decisions); LLM phrasing is off), STT (T3 voice, optional), place search and alias matching, correct-vehicle text matcher, latency |
-| **P3: Routing, tracking, ranker** | storms23 (Jeff) | Candidate generator and D16 ordering (trip finder), map-matching and tracking computation (T2), GPS test tracks, ranker training and eval in `ml/`, Kotlin parity, AI-06 (T4) |
-| **P4: Data, evals and story** | Jrabara101 | Makati pack with the road-shape precompute pipeline ([A15](state.md#4-open-assumptions)), fares, minutes, distances, aliases, signboards, mock-data generator, validator, eval sets, labelling sessions, QA runs, README disclosures, pitch, video, post |
+The areas below are a map of the work, not owners:
 
-Work comes from GitHub issues. Decisions go through the wayfinder map, not chat.
+| Area | Work |
+|---|---|
+| Android app | App shell, MapLibre map and PMTiles map pack, A/B trip builder UI, trip card and alternatives UI, refresh and sync client, tracking UI and foreground service, APK builds, `demo-safe-*` tags |
+| On-device AI | LLM (PRD-F8, MVP: the hybrid parser on Gemma 4 E2B per [D32](state.md#5-decisions); LLM phrasing is off), STT (T3 voice, optional), place search and alias matching, correct-vehicle text matcher, latency |
+| Routing, tracking, ranker | Candidate generator and D16 ordering (trip finder), map-matching and tracking computation (T2), GPS test tracks, ranker training and eval in `ml/`, Kotlin parity, AI-06 (T4) |
+| Data, evals and story | Makati pack with the road-shape precompute pipeline ([A15](state.md#4-open-assumptions)), fares, minutes, distances, aliases, signboards, mock-data generator, validator, eval sets, labelling sessions, QA runs, README disclosures, pitch, video, post |
+| Community layer | Suggest and vote with sync (T1) and rider Q&A evidence (PRD-F12, [D34](state.md#5-decisions)): the Questions screen, the bundled `data/mock/rider-qa.json`, the evidence counter feeding the D16 vote term. Rider Q&A is the first thing cut. |
+
+Work comes from GitHub issues. Decisions go through the wayfinder map, not chat. `docs/fmd/` beats code, branches, PR text, and chat ([D35](state.md#5-decisions)): when they conflict, the code changes, or a decision updates the doc first. Only the owner (geadlydrim) merges changes to decisions in `state.md`; teammates propose them by issue or PR.
 
 ## 3. Stack Currency
 
@@ -76,6 +80,7 @@ Removed: ML Kit Text Recognition (OCR is dropped, [D26](state.md#5-decisions)). 
 - **Shapes:** road shapes are generated at data-build time by the engine (A15), validated (QA-16), and stored in the pack. The phone decodes and draws them; there is no routing engine in the app. The only runtime line not from the pack is the first/last-mile walk: a cached foot route online, a dashed "walk ~N m" line offline.
 - **Refresh:** read the manifest, download a newer pack or map pack to a temporary file, check `sha256`, swap atomically. The bundled pack always remains as the fallback. Never swap during an active trip. A failed refresh never blocks the UI.
 - **Tracking:** GPS fix → map-matcher (pure Kotlin) → status and para alert. No network call anywhere on this path. Thresholds live in the one `TrackingConfig` file. Test with mock-location tracks from `data/tracks/`; tune on real Makati tracks ([A16](state.md#4-open-assumptions)).
+- **Rider Q&A ([D34](state.md#5-decisions)):** the bundled `data/mock/rider-qa.json` plus the rider's own local answers feed `evidenceFor` ([SDD §4](sdd-commutenity.md#4-module-contracts)). Counts only enter the D16 vote term inside its clamp, mock answers are left out of the hero-pair ordering, and nothing is synced.
 - **Contributions:** validate against the pack, save to Room, then sync batched mutations through the authenticated Supabase Edge Function. Fares, minutes, distances, and shapes always come from the pack; only aggregates are pulled for votes.
 - **Ranker:** one feature spec file shared by Python and Kotlin. Retrain, evaluate on held-out pairs, run the parity test, then flip the flag.
 - **Models (PRD-F8, and Whisper if voice ships):** downloaded once and cached in app storage. Model IDs live in one config file.
@@ -92,6 +97,7 @@ Removed: ML Kit Text Recognition (OCR is dropped, [D26](state.md#5-decisions)). 
 | `data/pack/` | Pack source, shape source and cached engine responses, and pack builds |
 | `data/map/` | Map pack build script and the PMTiles file (the file itself is not committed) |
 | `data/tracks/` | GPS test tracks for mock-location runs |
+| `data/mock/` | Hand-written mock files, such as `rider-qa.json` (rider Q&A, [D34](state.md#5-decisions)); bundled in the app, separate from the commute pack |
 | `data/eval/` | Held-out sets, including the signboard text eval set |
 | `data/labels/` | Preference rankings |
 | `data/raw/` | Raw source material such as photos (gitignored) |

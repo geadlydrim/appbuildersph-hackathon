@@ -3,9 +3,9 @@
 **Project:** CommuteNity
 **Date:** 2026-10-09
 **Version:** 0.4
-**Owner:** Data owner and ranker owner ([A8](state.md#4-open-assumptions)); road-shape pipeline owned by P4 ([D19](state.md#5-decisions))
+**Owner:** Whoever claims the data issues ([D35](state.md#5-decisions)); no fixed role owners
 **Status:** Draft. Makati City only ([D20](state.md#5-decisions)), the hero trip pair ([D30](state.md#5-decisions): Ayala Center to Dela Rosa Street, Pio del Pilar), precomputed road shapes ([D22](state.md#5-decisions)), and the offline map pack ([D23](state.md#5-decisions)) are decided. The candidate trips for the hero pair ([A13](state.md#4-open-assumptions)), the shape engine ([A15](state.md#4-open-assumptions)), and the map pack size ([A14](state.md#4-open-assumptions)) are open. The travel-time baseline and the ranker data/model plan are decided ([D16](state.md#5-decisions), [D18](state.md#5-decisions)). The Valenzuela–Recto corridor ([D15](state.md#5-decisions)) is superseded by D20.
-**Last reconciled:** 2026-10-09
+**Last reconciled:** 2026-10-10
 **SDD:** [System design](sdd-commutenity.md)
 
 This document owns five things: the pack and contribution schemas, the road-shape pipeline and offline map pack, how we collect and verify data, what we train (the route ranker, [D11](state.md#5-decisions)), and how we prove it helped.
@@ -20,6 +20,7 @@ This document owns five things: the pack and contribution schemas, the road-shap
 | Map pack (Makati PMTiles file) | Offline base map | PRD-F1, F3 | T0 |
 | Refresh manifest | Versions and checksums of the pack and map pack | PRD-F4 | T1 |
 | Community contributions | Alternatives and vote signals | PRD-F5, F6; ranker features | T1 |
+| Rider Q&A mock file (`data/mock/rider-qa.json`) | Hand-written sample threads and answers; tied answers give bounded tie-break evidence ([D34](state.md#5-decisions)) | PRD-F12 | T1 (first thing cut) |
 | GPS test tracks (mock-location) | Replaying on-route, deviation, return, and GPS loss for tracking tests | PRD-F7; QA-10, QA-11 | T2 |
 | Trip question set | Place search and LLM-extraction eval, and end-to-end eval | PRD-F8; AI-03 | T3 |
 | Route preference set | Ranker training and eval | PRD-F10 | T4 (collection starts at CP2) |
@@ -80,11 +81,11 @@ The map pack is the offline Makati base map ([D23](state.md#5-decisions)): one P
 |---|---|
 | File | `makati-<version>.pmtiles`, built under `data/map/` and not committed to git (too large). Distributed through Supabase Storage ([§2.3](#23-refresh-manifest-and-versioning)); bundled in the APK or downloaded once. |
 | Source | A Protomaps vector-tile build of OpenStreetMap data, cut to a Makati bounding box (for example with the `pmtiles` command-line tool's extract command). The exact source build and its date are recorded in the pack `meta.sources[]`. Unverified until the CP1 map spike. |
-| Area and zoom | Makati City plus a margin, set by P1 at CP1; zoom range chosen to keep size down ([A14](state.md#4-open-assumptions)) |
+| Area and zoom | Makati City plus a margin, set at CP1; zoom range chosen to keep size down ([A14](state.md#4-open-assumptions)) |
 | Size | TBD. Measured at CP1 and recorded here. |
 | Style assets | The map style, fonts (glyphs), and sprites must be available offline and are bundled in the app. Unverified until the CP1 map spike. |
 | Licence and attribution | OpenStreetMap data (ODbL). Attribution is shown on the map and in the README. The app never bulk-downloads tiles from tile.openstreetmap.org; its usage policy forbids it. |
-| Fallback | If MapLibre Native Android cannot render a local PMTiles file ([A14](state.md#4-open-assumptions)), use a MapLibre offline region from a provider whose terms allow offline use. Decided at CP1 (P1). |
+| Fallback | If MapLibre Native Android cannot render a local PMTiles file ([A14](state.md#4-open-assumptions)), use a MapLibre offline region from a provider whose terms allow offline use. Decided at CP1. |
 
 ### 2.3 Refresh Manifest and Versioning
 
@@ -103,7 +104,7 @@ Refresh ([D24](state.md#5-decisions)) fetches and caches new data when online. T
 
 ## 3. Collection Protocol
 
-1. **Coverage and hero trip ([D20](state.md#5-decisions), [D30](state.md#5-decisions), [A13](state.md#4-open-assumptions)):** build the pack for Makati City. The hero pair is set by D30: **A = Ayala Center** (Station Road, San Lorenzo, Makati; plus code 7Q63G2XG+PR; 14.549312, 121.027062) to **B = Dela Rosa Street, Pio del Pilar** (Makati; plus code 7Q63H245+R7; 14.557063, 121.008188), about 2.2 km apart in a straight line. What stays open under A13 is the candidate trips: P4 Jrabara101 and the team list and verify at least two genuinely different trips for this pair (modes, boarding points, and para points) before pack v0, from `collected` and `known` data. Those candidates must be built from `collected` and `known` data. Mock records may cover adjacent stops only; they cannot supply hero-trip facts. Do not invent routes, jeepney names, fares, or minutes. (The earlier Valenzuela–Recto corridor, [D15](state.md#5-decisions), is superseded; its rules about collected, known, and mock data still apply.)
+1. **Coverage and hero trip ([D20](state.md#5-decisions), [D30](state.md#5-decisions), [A13](state.md#4-open-assumptions)):** build the pack for Makati City. The hero pair is set by D30: **A = Ayala Center** (Station Road, San Lorenzo, Makati; plus code 7Q63G2XG+PR; 14.549312, 121.027062) to **B = Dela Rosa Street, Pio del Pilar** (Makati; plus code 7Q63H245+R7; 14.557063, 121.008188), about 2.2 km apart in a straight line. What stays open under A13 is the candidate trips: the team (Jrabara101 leading the pack data) lists and verifies at least two genuinely different trips for this pair (modes, boarding points, and para points) before pack v0, from `collected` and `known` data. Those candidates must be built from `collected` and `known` data. Mock records may cover adjacent stops only; they cannot supply hero-trip facts. Do not invent routes, jeepney names, fares, or minutes. (The earlier Valenzuela–Recto corridor, [D15](state.md#5-decisions), is superseded; its rules about collected, known, and mock data still apply.)
 2. **Stops and segments:** use team knowledge, with OpenStreetMap for coordinates. Class each one `collected` (verified this event) or `known` (from memory). Road shapes come from the pipeline in [§3.2](#32-road-shape-pipeline-a15).
 3. **Fares:** use the current official fare matrix where possible, citing the source and date (`collected`). Otherwise use team knowledge (`known`) or a `mock` value. If none of those exists, the fare is unknown. Per [fare research](https://github.com/geadlydrim/appbuildersph-hackathon/issues/5):
    - LRT-1, LRT-2, and MRT-3 matrices are `collected`, transcribed by hand from official images.
@@ -120,31 +121,33 @@ Mock data fills the gaps that real and known data can't cover overnight ([D13](s
 
 | Rule | Detail |
 |---|---|
-| Where mock may be used | Wider coverage around the demo trips (places, stops, routes, segments); missing fares and minutes; extra community suggestions and votes so alternatives have content; augmenting ranker training; growing the question set |
-| Where mock may not be used | The demo hero question. Held-out evaluation labels for the ranker ship rule (AI-06). Any number quoted in the pitch as real-world accuracy. |
+| Where mock may be used | Wider coverage around the demo trips (places, stops, routes, segments); missing fares and minutes; extra community suggestions and votes so alternatives have content; the hand-written rider Q&A file ([D34](state.md#5-decisions)); augmenting ranker training; growing the question set |
+| Where mock may not be used | The demo hero question. The hero-pair ordering: mock rider Q&A is shown on hero-trip cards but never counts toward it ([D13](state.md#5-decisions), [D34](state.md#5-decisions)). Held-out evaluation labels for the ranker ship rule (AI-06). Any number quoted in the pitch as real-world accuracy. |
 | How it's made | A script in `ml/` or `data/` with a fixed seed, so the mock pack is reproducible. Mock values must be plausible for Metro Manila but are never claimed as real. Never hand-type mock data into the same files as `collected` or `known` data without the class tag. Mock segments get road shapes from the same pipeline, so nothing is a straight line. |
 | Tagging | Every mock record has `source_class: mock` and `source: mock generator <version>` |
 | Precedence | If a collected or known record exists for the same fact, it overrides the mock one |
 | Visibility | The app marks mock values with a "sample data" tag ([DSD §2](dsd-commutenity.md#2-theme-and-type)) and only on mock values (QA-17). The README reports counts per class. |
 | Mock preferences | If mock preference labels are generated from a utility function, the ranker can only learn that function back. They are used for training augmentation only, never for the ship-rule eval. |
+| Rider Q&A file ([D34](state.md#5-decisions)) | `data/mock/rider-qa.json`, bundled in the app and kept separate from the commute pack: a refresh never merges it into the pack. It is **hand-written**, an exception to the fixed-seed script rule above. About 5 origin–destination pairs including the hero pair ([D30](state.md#5-decisions)), with 2–4 answers each, and at least one non-hero pair where tied answers decide an otherwise exactly tied pick, so the demo can show evidence changing a choice. Every thread and answer has `source_class: mock` and `source: hand-written sample`. An answer may carry a `candidate_key`, which must be a pack-valid candidate key for its pair; an answer without one is text only and counts for nothing. Keys are filled in once pack v0 exists. The app marks every item Sample. The rider's own answers are never written to this file. |
+| Hero-pair exclusion | Mock rider Q&A shows on hero-trip cards, marked Sample, but is excluded from the hero-pair ordering ([D13](state.md#5-decisions)). It counts on other pairs, inside the D16 vote clamp ([D34](state.md#5-decisions)). |
 
 ### 3.2 Road Shape Pipeline (A15)
 
-Owner: P4. Runs at data-build time on a laptop or server, never on the phone ([D22](state.md#5-decisions)).
+Runs at data-build time on a laptop or server, never on the phone ([D22](state.md#5-decisions)).
 
 1. **Input:** the pack source: stops and, for each route, the ordered segments.
-2. **Per segment:** ask the routing engine for the path from `from_stop_id` to `to_stop_id` with the segment's profile (`driving` for jeepney, bus, and UV Express). Where the shortest road path differs from the route the vehicle really takes, P4 adds via-points to the shape source in `data/pack/` (never shipped in the app) until the shape follows the real road.
+2. **Per segment:** ask the routing engine for the path from `from_stop_id` to `to_stop_id` with the segment's profile (`driving` for jeepney, bus, and UV Express). Where the shortest road path differs from the route the vehicle really takes, the pack builder adds via-points to the shape source in `data/pack/` (never shipped in the app) until the shape follows the real road.
 3. **Transfers:** the `foot` profile.
 4. **Rail:** MRT and LRT shapes follow the track geometry from OpenStreetMap (`osm_rail`), cut at the stations.
 5. **Encode:** write `shape.polyline`, `engine`, `profile`, `generated_at`; compute `distance_m` from the decoded geometry.
 6. **Cache:** store the raw engine responses under `data/pack/` so a rebuild is reproducible and doesn't call the engine again. Don't hammer a public demo server.
 7. **Validate:** the pack validator runs the shape rules above (QA-16). A segment without a valid shape fails the build.
 
-**Engine ([A15](state.md#4-open-assumptions)):** OSRM public demo server, GraphHopper, or a self-hosted instance, decided by P4 before pack v0 once its usage terms are read. Unverified here. The same decision covers the rail geometry source and the engine behind the server's first/last-mile foot routes.
+**Engine ([A15](state.md#4-open-assumptions)):** OSRM public demo server, GraphHopper, or a self-hosted instance, decided before pack v0 once its usage terms are read. Unverified here. The same decision covers the rail geometry source and the engine behind the server's first/last-mile foot routes.
 
 ### 3.3 GPS Test Tracks
 
-Owner: P3 with P4. Tracking is tested with Android mock-location, not with a ride.
+Tracking is tested with Android mock-location, not with a ride.
 
 - Build tracks from the hero trip's shapes: `on-route`, `deviate-return` (past the off-route threshold, then rejoin), `blip` (one outlier fix or a deviation shorter than the threshold; must not flag off route), `approach-alight` (approaches the para point), and `gps-loss` (gap, then recovery). QA usage is in [QAD §2](qad-commutenity.md#2-data-and-environment).
 - Files live in `data/tracks/`: a timestamped list of `lat, lng, accuracy`. Generated tracks are marked simulated; real Makati tracks recorded during tuning ([A16](state.md#4-open-assumptions)) are marked recorded.

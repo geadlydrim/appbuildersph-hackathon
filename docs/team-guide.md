@@ -4,7 +4,7 @@ Read this once before you start. It takes about 10 minutes.
 
 ## 1. The big picture (plain English)
 
-**What we're building.** CommuteNity is an Android app for **Makati City**. You set where you are (point A) and where you're going (point B) on a map. It picks the best trip: which jeep or train, where to say "para", and how much it costs, and draws it on real roads. It works **with no signal**, because the map, the commute data, and the road shapes are all stored on the phone and everything is computed there. When the phone is online it refreshes that data. While you ride, GPS tells you whether you're still on route and buzzes before your stop. Riders can also share their own trips and vote on what worked. You can also ask in words, for example "How to get from Ayala Center to Pio del Pilar?": a language model that runs on the phone reads the question and sets A and B. That is part of the MVP. Asking by voice comes later, if there's time. We are **not** building turn-by-turn navigation, a signboard camera scanner, or spoken answers.
+**What we're building.** CommuteNity is an Android app for **Makati City**. You set where you are (point A) and where you're going (point B) on a map. It picks the best trip: which jeep or train, where to say "para", and how much it costs, and draws it on real roads. It works **with no signal**, because the map, the commute data, and the road shapes are all stored on the phone and everything is computed there. When the phone is online it refreshes that data. While you ride, GPS tells you whether you're still on route and buzzes before your stop. Riders can also share their own trips and vote on what worked, and ask and answer questions that give small, bounded evidence for a trip (rider Q&A, saved on the phone only). You can also ask in words, for example "How to get from Ayala Center to Pio del Pilar?": a language model that runs on the phone reads the question and sets A and B. That is part of the MVP. Asking by voice comes later, if there's time. We are **not** building turn-by-turn navigation, a signboard camera scanner, or spoken answers.
 
 **Deadline.** The code freeze is **10:00 AM, Oct 10**. Whatever is on GitHub at 10:00 AM is what the judges see.
 
@@ -15,7 +15,9 @@ Read this once before you start. It takes about 10 minutes.
 
 **Any ticket still open takes the default answer written at the bottom of the ticket.** We build anyway.
 
-**The docs are the source of truth.** Everything we've decided is written in `docs/fmd/`. Start with `docs/fmd/state.md`: it says where we are, what's decided, and what's still open.
+**The docs are the source of truth.** Everything we've decided is written in `docs/fmd/`. Start with `docs/fmd/state.md`: it says where we are, what's decided, and what's still open. `docs/fmd/` beats code, branches, PR text, and chat (D35). If code and docs disagree, the code changes, or a decision updates the doc first. Only the owner (`geadlydrim`) merges changes to decisions in `state.md`; you propose a change by issue or PR.
+
+**No fixed roles (D35).** Work is broken into GitHub issues as we go. Anyone claims any issue by assigning themselves, and nobody is limited to one area. Checkpoints, tier order, and cut rules stay.
 
 ## 2. Words you'll see
 
@@ -27,7 +29,7 @@ Read this once before you start. It takes about 10 minutes.
 | **Blocked** | A ticket that depends on another one. GitHub shows "Blocked by …" on it. |
 | **Claim** | Assigning yourself to a ticket, so nobody else works on it at the same time |
 | **Ticket type** | *grilling* = a discussion, where an AI asks questions and the humans decide. *task* = a checklist people do by hand. *prototype* = throwaway test code. *research* = an AI reads docs and reports back. |
-| **Tier** | One build stage. T0 = set A and B on the offline map and get the best trip drawn on real roads. T1 = online refresh, alternatives, and community (suggest, vote, sync). T2 = in-trip tracking (on-route status and the para alert). T3 = ask in words and voice. T4 = trained ranker. The MVP is T0 + T1 + T2 + ask in words (the on-device LLM, PRD-F8, kept in the MVP by D31). Voice and the ranker are optional. |
+| **Tier** | One build stage. T0 = set A and B on the offline map and get the best trip drawn on real roads. T1 = online refresh, alternatives, and community (suggest, vote, sync, and rider Q&A, which is the first thing cut). T2 = in-trip tracking (on-route status and the para alert). T3 = ask in words and voice. T4 = trained ranker. The MVP is T0 + T1 + T2 + ask in words (the on-device LLM, PRD-F8, kept in the MVP by D31). Voice and the ranker are optional. |
 | **Source class** | Where a piece of data came from. `collected` = we verified it today. `known` = we know it from experience. `mock` = made up to fill gaps, and always labelled "sample data" in the app. |
 | **Route vs trip** | A **route** is one line (one jeepney route, or MRT-3). A **trip** is your whole door-to-door plan. Full list: [`GLOSSARY.md`](../GLOSSARY.md). |
 
@@ -69,7 +71,7 @@ flowchart LR
     B --> C[Claim it]
     C --> D[Answer it]
     D --> E[Post the answer, close it]
-    E --> F[Tell the map keeper]
+    E --> F[Tell the owner]
     F --> A
 ```
 
@@ -110,7 +112,7 @@ gh issue edit <number> --add-assignee @me
   gh issue comment <number> --body "Decision: … Why: …"
   gh issue close <number>
   ```
-  Then message the **map keeper** (`geadlydrim`). They add the one-line summary to the map and update `state.md`, so four people aren't editing the same file at once.
+  Then tell the project owner (`geadlydrim`). They add the one-line summary to the map and merge the decision into `state.md`, so four people aren't editing the same file at once (D35).
 
 **5. Repeat.** Closing a ticket can unblock others. Check the list again.
 
@@ -118,13 +120,13 @@ gh issue edit <number> --add-assignee @me
 
 | Ticket | Who |
 |---|---|
-| [Who owns each workstream?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/11) | Project owner, first. It takes about 5 minutes. |
+| ~~[Who owns each workstream?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/11)~~ | **Superseded (D35):** no fixed role owners. Anyone claims any issue. |
 | ~~[Which phone presents the demo?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/3)~~ | **Decided:** the owner's POCO X6 5G (Snapdragon 7s Gen 2). It was first recorded as the X6 Pro by mistake. |
-| ~~[Which corridors does the pack cover?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/6)~~ | **Superseded:** Makati City only (D20). The hero trip pair is decided (D30): **Ayala Center → Dela Rosa Street, Pio del Pilar**. Still open (A13): at least two genuinely different candidate trips for that pair, listed and verified by the data owner and the team before pack v0. |
-| [Which sync backend?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/9) | Android owner |
-| [Ranker data format](https://github.com/geadlydrim/appbuildersph-hackathon/issues/10) | Ranker owner |
+| ~~[Which corridors does the pack cover?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/6)~~ | **Superseded:** Makati City only (D20). The hero trip pair is decided (D30): **Ayala Center → Dela Rosa Street, Pio del Pilar**. Still open (A13): at least two genuinely different candidate trips for that pair, listed and verified by the team before pack v0. |
+| [Which sync backend?](https://github.com/geadlydrim/appbuildersph-hackathon/issues/9) | Whoever claims it |
+| [Ranker data format](https://github.com/geadlydrim/appbuildersph-hackathon/issues/10) | Whoever claims it |
 | ~~[LLM speed test on the demo phone](https://github.com/geadlydrim/appbuildersph-hackathon/issues/8)~~ | **Decided (D32):** Gemma 4 E2B on LiteRT-LM, GPU, with the hybrid parser: about 2–3 s per question, 10/10 correct on the test set. The LLM only parses; answers use the template. The 2.6 GB model is pre-installed on the demo phone. [Results](https://github.com/geadlydrim/appbuildersph-hackathon/blob/prototype/llm-speed-test/spikes/llm-speed-test/RESULTS.md). |
-| [Travel minutes and "most efficient"](https://github.com/geadlydrim/appbuildersph-hackathon/issues/7) | Data owner. Decided in D16; minutes now need to be recorded for the Makati hero trip. |
+| [Travel minutes and "most efficient"](https://github.com/geadlydrim/appbuildersph-hackathon/issues/7) | Whoever claims it. Decided in D16; minutes now need to be recorded for the Makati hero trip. |
 
 ### Useful prep while you wait
 
@@ -137,7 +139,7 @@ None of this needs a decision first:
 
 ## 5. Building phase: what to do (now → 10:00 AM)
 
-**Getting started.** The decisions are made. The map keeper turns them into build issues, one per task, each labelled with its role. Then:
+**Getting started.** The decisions are made. The decisions are broken into build issues, one per task, as we go. Anyone claims any issue; nobody is limited to one area (D35). Then:
 
 **1. Pick your next build issue and claim it:**
 
@@ -164,7 +166,7 @@ gh pr create --fill
 gh pr merge --squash --delete-branch
 ```
 
-**4. Close the loop.** When a tier fully works on the demo phone in airplane mode, the Android owner tags it and saves the APK. That tag is our rollback point if something breaks later.
+**4. Close the loop.** When a tier fully works on the demo phone in airplane mode, whoever finished the tier's last issue tags it and saves the APK. That tag is our rollback point if something breaks later.
 
 ```sh
 git tag demo-safe-t0 && git push origin demo-safe-t0
@@ -175,22 +177,23 @@ git tag demo-safe-t0 && git push origin demo-safe-t0
 | Time | Goal |
 |---|---|
 | ~11:30 PM | **CP1:** LLM speed test result on the demo phone, and the map spike (the Makati map renders offline on the POCO) |
-| In parallel | **CP2:** first version of the Makati commute pack with road shapes (data owner), and the trip-finder module (routing owner) |
+| In parallel | **CP2:** first version of the Makati commute pack with road shapes, and the trip-finder module |
 | ~1:30 AM | **T0:** set A and B offline, get the best trip drawn on real roads |
-| ~3:30 AM | **T1:** online refresh, alternatives, suggest a trip, vote, sync |
+| ~3:30 AM | **T1:** online refresh, alternatives, suggest a trip, vote, sync. Rider Q&A (bounded trip evidence, D34) is part of T1 and the first thing cut. |
 | ~4:30 AM | **Ask in words (CP-F8):** the on-device LLM turns "How to get from X to Y?" into A and B, and checks the vehicle text. It merges once T0 works, whatever T1 is doing. Tag `demo-safe-f8`. |
 | ~5:30 AM | **T2:** in-trip tracking with the para alert. T0 + T1 + T2 + ask in words is the demo-ready MVP. |
-| 5:30–8:00 AM | Voice (AI owner) and T4 trained ranker (routing owner), both optional, only if the ranker beats the simple ordering. They are cut before ask in words. |
+| 5:30–8:00 AM | Voice and T4 trained ranker, both optional, only if the ranker beats the simple ordering. They are cut before ask in words. |
 | **8:00 AM** | **Feature freeze.** Fixes only. |
 | 8:00–9:30 AM | README, disclosures, 1-minute video, X/LinkedIn post |
 | **10:00 AM** | **Code freeze and submission** |
 
-**If we fall behind,** we cut features. We don't stay up arguing. The cut rules are in [`docs/fmd/build-commutenity.md`](fmd/build-commutenity.md#1-build-sequence). For example, if T0 isn't working by 2:30 AM, voice and the ranker are dropped, but ask in words stays (D31). Other cuts: if refresh and sync aren't working by 4:00 AM, we demo with the bundled data and local contributions and say so; if T2 isn't passing by 6:30 AM, we demo tracking with a recorded mock-GPS route, labelled as simulated; if ask in words isn't passing by 6:30 AM, we ship the smallest model that gives valid JSON with template wording, plus the text matcher, and never drop it; if the ranker hasn't beaten the simple ordering by 7:00 AM, we ship the simple ordering.
+**If we fall behind,** we cut features. We don't stay up arguing. The cut rules are in [`docs/fmd/build-commutenity.md`](fmd/build-commutenity.md#1-build-sequence). If time runs short at any point, rider Q&A is cut first, before tracking and before ask in words (D34). For example, if T0 isn't working by 2:30 AM, voice and the ranker are dropped, but ask in words stays (D31). Other cuts: if refresh and sync aren't working by 4:00 AM, we demo with the bundled data and local contributions and say so; if T2 isn't passing by 6:30 AM, we demo tracking with a recorded mock-GPS route, labelled as simulated; if ask in words isn't passing by 6:30 AM, we ship the smallest model that gives valid JSON with template wording, plus the text matcher, and never drop it; if the ranker hasn't beaten the simple ordering by 7:00 AM, we ship the simple ordering.
 
 ## 6. Rules everyone follows
 
 - **The AI runs on the phone.** No cloud AI answers questions. The demo runs in airplane mode.
 - **Facts come from our data, not the AI.** Routes, stops, fares, and times come from the commute pack. The AI only understands the question and words the answer.
+- **Docs beat code (D35).** Fix the code, or get a decision updated first. Only the owner merges decision changes in `state.md`.
 - **Mock data is fine, as long as it's labelled.** Tag it `mock`, show it as "sample data" in the app, and list it in the README. Never present it as real.
 - **Never fake numbers.** No made-up benchmarks, fares, or model versions. Write down what you actually measured.
 - **Finish a tier before starting the next.** A working small app beats a broken big one.
