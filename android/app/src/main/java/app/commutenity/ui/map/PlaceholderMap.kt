@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.commutenity.domain.Field
@@ -70,6 +71,7 @@ object PlaceholderMap : MapSurface {
         onTap: ((lat: Double, lng: Double) -> Unit)?,
         path: TripPath?,
         onMovePin: ((field: Field, lat: Double, lng: Double) -> Unit)?,
+        compassBottom: Dp,
     ) {
         val colors = LocalCommuteColors.current
         val paths = remember {

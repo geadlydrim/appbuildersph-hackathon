@@ -5,6 +5,7 @@ import android.graphics.PointF
 import android.os.SystemClock
 import android.util.Log
 import android.view.HapticFeedbackConstants
+import android.view.Gravity
 import android.view.MotionEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
@@ -101,6 +103,7 @@ object MapLibreSurface : MapSurface {
         onTap: ((lat: Double, lng: Double) -> Unit)?,
         path: TripPath?,
         onMovePin: ((field: Field, lat: Double, lng: Double) -> Unit)?,
+        compassBottom: Dp,
     ) {
         val context = LocalContext.current
         val lifecycleOwner = LocalLifecycleOwner.current
@@ -120,6 +123,11 @@ object MapLibreSurface : MapSurface {
         val pinGrabRadiusPx = with(density) { 60.dp.toPx() }
         val dragSlopPx = with(density) { 12.dp.toPx() }
         val drag = remember { PinDrag() }
+        // The compass ("reset orientation") defaults to the top-right corner, where the status bar, the
+        // "Offline" chip and the search card cover it. Keep it bottom-right, just above the
+        // my-location button; the home screen passes that height and it follows the trip sheet.
+        val compassBottomPx = with(density) { compassBottom.roundToPx() }
+        val compassRightPx = with(density) { 16.dp.roundToPx() }
         // The loaded style; null until the map is ready. Pin updates wait for it.
         var style by remember { mutableStateOf<Style?>(null) }
         var maplibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
@@ -171,6 +179,8 @@ object MapLibreSurface : MapSurface {
                     // the rider never pans into blank space.
                     map.setLatLngBoundsForCameraTarget(LatLngBounds.from(14.6, 121.08, 14.5, 120.99))
                     map.setMinZoomPreference(12.0)
+                    map.uiSettings.compassGravity = Gravity.BOTTOM or Gravity.END
+                    map.uiSettings.setCompassMargins(0, 0, compassRightPx, compassBottomPx)
                     // Open on the hero trip (V.A. Rufino St → Dela Rosa St). Zoom 14+ uses the most
                     // detailed tiles; in-between zooms mix tile levels and look patchy.
                     map.cameraPosition = CameraPosition.Builder()
@@ -275,6 +285,11 @@ object MapLibreSurface : MapSurface {
                 )
                 a != null || b != null -> map.animateCamera(CameraUpdateFactory.newLatLng(a ?: b!!))
             }
+        }
+
+        // Follow the trip sheet as it opens, closes, or is dragged.
+        LaunchedEffect(maplibreMap, compassBottomPx) {
+            maplibreMap?.uiSettings?.setCompassMargins(0, 0, compassRightPx, compassBottomPx)
         }
 
         AndroidView(factory = { mapView }, modifier = modifier)
