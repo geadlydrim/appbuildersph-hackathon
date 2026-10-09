@@ -111,6 +111,9 @@ fun BestTripContent(
             if (trip.sample) {
                 Chip("Sample", colors.sample, colors.sampleOn, Modifier.padding(start = 8.dp))
             }
+            if (trip.unverified) {
+                Chip("OSM · unverified", colors.sample, colors.sampleOn, Modifier.padding(start = 8.dp))
+            }
         }
         val answerEnglish = remember(trip) { TripAnswer.compose(trip, taglish = false) }
         if (answerEnglish.isNotEmpty()) {

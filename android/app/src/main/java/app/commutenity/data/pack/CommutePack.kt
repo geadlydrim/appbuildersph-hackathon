@@ -12,11 +12,34 @@ data class CommutePack(
     val routes: List<PackRoute>,
     val segments: List<PackSegment>,
 ) {
+    /**
+     * This pack followed by [other]. Ids are expected to be disjoint (e.g. hero ids vs `osm-` ids); a differing
+     * polyline precision is rejected because segments are decoded with a single precision.
+     */
+    fun merge(other: CommutePack): CommutePack {
+        require(shapePrecision == other.shapePrecision) {
+            "Cannot merge packs with shape precision $shapePrecision and ${other.shapePrecision}"
+        }
+        return copy(
+            places = places + other.places,
+            stops = stops + other.stops,
+            routes = routes + other.routes,
+            segments = segments + other.segments,
+        )
+    }
+
     /** The pack's places in the shape [PackPlaceIndex] searches. */
-    fun placeIndex(): PackPlaceIndex = PackPlaceIndex(places.map { PackPlace(it.toPlace(), it.aliases) })
+    fun placeIndex(): PackPlaceIndex =
+        PackPlaceIndex(places.map { PackPlace(it.toPlace(), it.aliases, preferred = it.sourceClass != SOURCE_OSM) })
 
     companion object {
         private const val DEFAULT_SHAPE_PRECISION = 6
+
+        /** Provenance class of the team's own data; the default when a record names none. */
+        const val SOURCE_KNOWN = "known"
+
+        /** Real OpenStreetMap data that the team has not verified. */
+        const val SOURCE_OSM = "osm"
 
         fun parse(json: String): CommutePack {
             val root = JSONObject(json)
@@ -31,6 +54,7 @@ data class CommutePack(
                         lat = place.optDoubleOrNull("lat"),
                         lng = place.optDoubleOrNull("lng"),
                         stopIds = place.strings("stop_ids"),
+                        sourceClass = place.optStringOrNull("source_class") ?: SOURCE_KNOWN,
                     )
                 },
                 stops = root.objects("stops").map { stop ->
@@ -47,6 +71,7 @@ data class CommutePack(
                         name = route.optStringOrNull("name").orEmpty(),
                         mode = route.optStringOrNull("mode").orEmpty(),
                         signboards = route.strings("signboards"),
+                        sourceClass = route.optStringOrNull("source_class") ?: SOURCE_KNOWN,
                     )
                 },
                 segments = root.objects("segments").map { segment ->
@@ -57,8 +82,10 @@ data class CommutePack(
                         toStopId = segment.getString("to_stop_id"),
                         farePhp = segment.optIntOrNull("fare_php"),
                         minutes = segment.optIntOrNull("minutes"),
+                        minutesEst = segment.optIntOrNull("minutes_est"),
                         distanceM = segment.optIntOrNull("distance_m"),
                         polyline = segment.optJSONObject("shape")?.optStringOrNull("polyline")?.takeIf { it.isNotEmpty() },
+                        sourceClass = segment.optJSONObject("provenance")?.optStringOrNull("source_class") ?: SOURCE_KNOWN,
                     )
                 },
             )
@@ -89,13 +116,20 @@ data class PackPlaceRecord(
     val lat: Double?,
     val lng: Double?,
     val stopIds: List<String>,
+    val sourceClass: String = CommutePack.SOURCE_KNOWN,
 ) {
     fun toPlace(): Place = Place(id = id, name = name, area = area, inMakati = true, lat = lat, lng = lng)
 }
 
 data class PackStop(val id: String, val name: String, val lat: Double, val lng: Double)
 
-data class PackRoute(val id: String, val name: String, val mode: String, val signboards: List<String>)
+data class PackRoute(
+    val id: String,
+    val name: String,
+    val mode: String,
+    val signboards: List<String>,
+    val sourceClass: String = CommutePack.SOURCE_KNOWN,
+)
 
 data class PackSegment(
     val routeId: String,
@@ -104,6 +138,10 @@ data class PackSegment(
     val toStopId: String,
     val farePhp: Int?,
     val minutes: Int?,
+    /** Estimated ride time for segments with no measured [minutes] (OpenStreetMap data). */
+    val minutesEst: Int? = null,
     val distanceM: Int?,
     val polyline: String?,
+    /** `provenance.source_class`; "osm" marks unverified OpenStreetMap data. */
+    val sourceClass: String = CommutePack.SOURCE_KNOWN,
 )

@@ -16,21 +16,30 @@ class PackPlaceIndex(private val places: List<PackPlace>) {
                 .filter { it.isNotEmpty() }
                 .mapNotNull { candidate -> matchScore(needle, candidate) }
                 .minOrNull()
-            score?.let { it to packPlace.place }
-        }.sortedWith(compareBy<Pair<Int, Place>> { it.first }.thenBy { it.second.name })
-            .map { it.second }
+            score?.let { it to packPlace }
+        }.sortedWith(
+            // Best match first; on a tie, the team's own places before imported ones (an OSM bus stop
+            // named "Dela Rosa" must not displace the hero destination), then the shorter name.
+            compareBy<Pair<Int, PackPlace>> { it.first }
+                .thenBy { !it.second.preferred }
+                .thenBy { it.second.place.name.length }
+                .thenBy { it.second.place.name },
+        ).map { it.second.place }
     }
 
+    /** 0 exact; 1 name starts with the query; 2 name contains it; 3 a short name inside the query; then typos. */
     private fun matchScore(needle: String, candidate: String): Int? {
         if (needle == candidate) return 0
-        if (candidate.contains(needle) || needle.contains(candidate)) return 1
+        if (candidate.startsWith(needle)) return 1
+        if (candidate.contains(needle)) return 2
+        if (needle.contains(candidate)) return 3
         val maximumDistance = when (needle.length) {
             in 0..4 -> 0
             in 5..7 -> 1
             else -> 2
         }
         val distance = editDistance(needle, candidate)
-        return distance.takeIf { it <= maximumDistance }?.plus(2)
+        return distance.takeIf { it <= maximumDistance }?.plus(4)
     }
 
     /**
@@ -64,6 +73,8 @@ class PackPlaceIndex(private val places: List<PackPlace>) {
 data class PackPlace(
     val place: Place,
     val aliases: List<String>,
+    /** Team data (`known`/`collected`); wins ties against imported (OSM) places. */
+    val preferred: Boolean = false,
 )
 
 /** Street-type words riders add, spell out, or abbreviate; they never tell two places apart. */

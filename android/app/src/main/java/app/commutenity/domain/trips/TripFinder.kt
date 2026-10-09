@@ -29,6 +29,8 @@ data class RideEdge(
     val farePhp: Int?,
     override val distanceMeters: Int = 0,
     val signboards: List<String> = emptyList(),
+    /** True when [minutes] is an estimate (no measured time in the data). */
+    val minutesEstimated: Boolean = false,
 ) : TripEdge
 
 data class WalkEdge(
@@ -37,6 +39,8 @@ data class WalkEdge(
     override val toStopId: String,
     override val minutes: Int,
     override val distanceMeters: Int = 0,
+    /** A transfer link: only usable between two rides, never as the first or last edge of a trip. */
+    val transferOnly: Boolean = false,
 ) : TripEdge
 
 data class TripCandidate(
@@ -47,6 +51,8 @@ data class TripCandidate(
     val totalDistanceMeters: Int,
     val transfers: Int,
     val walkMinutes: Int,
+    /** True when any ride's minutes are estimates. */
+    val minutesEstimated: Boolean = false,
 )
 
 /** Finds and ranks loopless trips without relying on Android or a network connection. */
@@ -57,11 +63,18 @@ class TripFinder(
     private val edges = graph.edges
     private val outgoing: Map<String, List<Int>> = edges.indices.groupBy { edges[it].fromStopId }
 
-    fun find(request: TripRequest): List<TripCandidate> =
-        kShortestPaths(request)
-            .map { it.toCandidate() }
-            .sortedWith(candidateComparator(request.preference))
-            .take(MAX_CANDIDATES)
+    /** Generates, ranks and caps the candidates for [request]. */
+    fun find(request: TripRequest): List<TripCandidate> = rank(generate(request), request.preference)
+
+    /**
+     * Every loopless candidate for [request], unranked. Depends only on the graph and the request's stops, so
+     * the result can be cached and re-ranked with [rank] as votes change.
+     */
+    fun generate(request: TripRequest): List<TripCandidate> = kShortestPaths(request).map { it.toCandidate() }
+
+    /** Orders [candidates] for [preference] using the current net votes and keeps the best few. */
+    fun rank(candidates: List<TripCandidate>, preference: Preference): List<TripCandidate> =
+        candidates.sortedWith(candidateComparator(preference)).take(MAX_CANDIDATES)
 
     /**
      * Yen's k-shortest loopless paths over edge sequences (parallel edges between the same stops stay distinct),
@@ -165,6 +178,11 @@ class TripFinder(
             for (edgeIndex in outgoing[entry.state.stopId].orEmpty()) {
                 if (edgeIndex in blockedEdges) continue
                 val edge = edges[edgeIndex]
+                if (edge is WalkEdge && edge.transferOnly &&
+                    (entry.state.lastRouteId == null || edge.toStopId in destinations)
+                ) {
+                    continue
+                }
                 if (edge.toStopId in blockedStops) continue
                 val ride = edge as? RideEdge
                 val penalty = if (ride != null && entry.state.lastRouteId != null && entry.state.lastRouteId != ride.routeId) {
@@ -204,6 +222,7 @@ class TripFinder(
                 totalDistanceMeters = legs.sumOf { it.distanceMeters },
                 transfers = legs.transferCount(),
                 walkMinutes = legs.filterIsInstance<WalkEdge>().sumOf { it.minutes },
+                minutesEstimated = rides.any { it.minutesEstimated },
             )
         }
     }

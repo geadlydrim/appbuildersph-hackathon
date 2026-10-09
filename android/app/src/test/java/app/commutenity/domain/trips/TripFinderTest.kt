@@ -5,19 +5,18 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class TripFinderTest {
-    private val finder = TripFinder(
-        TripGraph(
-            listOf(
-                RideEdge("direct", "direct-jeep", "a", "d", minutes = 20, farePhp = 13),
-                RideEdge("fast-a", "fast-jeep", "a", "b", minutes = 5, farePhp = 10),
-                RideEdge("fast-b", "fast-bus", "b", "d", minutes = 5, farePhp = 10),
-                RideEdge("cheap-a", "cheap-jeep", "a", "c", minutes = 12, farePhp = 4),
-                RideEdge("cheap-b", "cheap-bus", "c", "d", minutes = 13, farePhp = 4),
-                RideEdge("unknown-fare", "unknown-jeep", "a", "e", minutes = 4, farePhp = null),
-                RideEdge("unknown-fare-end", "unknown-bus", "e", "d", minutes = 4, farePhp = null),
-            ),
+    private val finderGraph = TripGraph(
+        listOf(
+            RideEdge("direct", "direct-jeep", "a", "d", minutes = 20, farePhp = 13),
+            RideEdge("fast-a", "fast-jeep", "a", "b", minutes = 5, farePhp = 10),
+            RideEdge("fast-b", "fast-bus", "b", "d", minutes = 5, farePhp = 10),
+            RideEdge("cheap-a", "cheap-jeep", "a", "c", minutes = 12, farePhp = 4),
+            RideEdge("cheap-b", "cheap-bus", "c", "d", minutes = 13, farePhp = 4),
+            RideEdge("unknown-fare", "unknown-jeep", "a", "e", minutes = 4, farePhp = null),
+            RideEdge("unknown-fare-end", "unknown-bus", "e", "d", minutes = 4, farePhp = null),
         ),
     )
+    private val finder = TripFinder(finderGraph)
 
     @Test
     fun defaultPrefersFewestTransfersBeforeMinutesAndFare() {
@@ -220,5 +219,54 @@ class TripFinderTest {
 
         assertEquals(10, result.size)
         assertEquals(directs.map { it.id }, result.map { it.candidateKey })
+    }
+
+    @Test
+    fun findEqualsRankOfGenerateForEveryPreference() {
+        val request = TripRequest(setOf("a"), setOf("d"))
+        val voted = TripFinder(finderGraph) { key -> if (key == "unknown-fare|unknown-fare-end") 2 else 0 }
+        for (subject in listOf(finder, voted)) {
+            val generated = subject.generate(request)
+            for (preference in Preference.values()) {
+                assertEquals(
+                    preference.name,
+                    subject.find(request.copy(preference = preference)),
+                    subject.rank(generated, preference),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun estimatedMinutesFlowToTheCandidate() {
+        val graph = TripGraph(
+            listOf(
+                RideEdge("est", "route-est", "a", "b", minutes = 4, farePhp = null, minutesEstimated = true),
+                RideEdge("known", "route-known", "a", "b", minutes = 9, farePhp = 12),
+            ),
+        )
+
+        val byKey = TripFinder(graph).find(TripRequest(setOf("a"), setOf("b"))).associateBy { it.candidateKey }
+
+        assertEquals(true, byKey.getValue("est").minutesEstimated)
+        assertEquals(false, byKey.getValue("known").minutesEstimated)
+    }
+
+    @Test
+    fun aTransferOnlyWalkJoinsTwoRidesButNeverStartsOrEndsATrip() {
+        val graph = TripGraph(
+            listOf(
+                RideEdge("ride-1", "route-1", "a", "b", minutes = 5, farePhp = null),
+                WalkEdge("walk-b-c", "b", "c", minutes = 2, distanceMeters = 150, transferOnly = true),
+                WalkEdge("walk-c-b", "c", "b", minutes = 2, distanceMeters = 150, transferOnly = true),
+                WalkEdge("walk-x-a", "x", "a", minutes = 2, distanceMeters = 150, transferOnly = true),
+                RideEdge("ride-2", "route-2", "c", "d", minutes = 5, farePhp = null),
+            ),
+        )
+        val finder = TripFinder(graph)
+
+        assertEquals(listOf("ride-1|walk-b-c|ride-2"), finder.find(TripRequest(setOf("a"), setOf("d"))).map { it.candidateKey })
+        assertEquals(emptyList<TripCandidate>(), finder.find(TripRequest(setOf("b"), setOf("c"))))
+        assertEquals(emptyList<TripCandidate>(), finder.find(TripRequest(setOf("x"), setOf("b"))))
     }
 }

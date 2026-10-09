@@ -1,6 +1,7 @@
 package app.commutenity.data.pack
 
 import android.content.Context
+import android.util.Log
 import app.commutenity.domain.Field
 import app.commutenity.domain.GeoPoint
 import app.commutenity.domain.Leg
@@ -11,15 +12,19 @@ import app.commutenity.domain.TripPath
 import app.commutenity.domain.TripPreference
 import app.commutenity.domain.TripResult
 import app.commutenity.domain.TripSource
+import app.commutenity.domain.WALK_ONLY_TRIP_KEY
 import app.commutenity.domain.trips.Preference
 import app.commutenity.domain.trips.RideEdge
+import app.commutenity.domain.trips.TripEdge
 import app.commutenity.domain.trips.TripCandidate
 import app.commutenity.domain.trips.TripFinder
 import app.commutenity.domain.trips.TripGraph
 import app.commutenity.domain.trips.TripRequest
+import app.commutenity.domain.trips.WalkEdge
 import java.util.Locale
 import kotlin.math.atan2
 import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -27,7 +32,7 @@ import kotlin.math.sqrt
 
 /**
  * Trips and places straight from the commute pack. Every fare, minute, stop, signboard and shape shown
- * comes from [pack]; nothing is invented here.
+ * comes from [pack]; nothing is invented here. Minutes of OpenStreetMap rides are estimates and say so.
  */
 class PackTripSource(
     private val pack: CommutePack,
@@ -39,25 +44,86 @@ class PackTripSource(
     private val segmentsByEdgeId = pack.segments.associateBy { edgeId(it) }
     private val signboardsByRoute = pack.routes.associate { it.id to it.signboards }
     private val modeByRoute = pack.routes.associate { it.id to it.mode }
-    private val finder = TripFinder(
-        TripGraph(
-            pack.segments
-                .filter { it.fromStopId in stopsById && it.toStopId in stopsById }
-                .map { segment ->
-                    RideEdge(
-                        id = edgeId(segment),
-                        routeId = segment.routeId,
-                        fromStopId = segment.fromStopId,
-                        toStopId = segment.toStopId,
-                        minutes = segment.minutes ?: 0,
-                        farePhp = segment.farePhp,
-                        distanceMeters = segment.distanceM ?: 0,
-                        signboards = signboardsByRoute[segment.routeId].orEmpty(),
-                    )
-                },
-        ),
-        netVotes,
+    private val graphSegments = pack.segments.filter { it.fromStopId in stopsById && it.toStopId in stopsById }
+
+    /** Everything: every ride plus walking links between nearby stops, so riders can transfer on foot. */
+    private val finder: TripFinder
+
+    /** The hero pair only ever sees the team's own (non-OSM) rides and no generated walking links. */
+    private val heroFinder: TripFinder
+
+    init {
+        val allRides = graphSegments.map { rideEdge(it) }
+        val heroRides = graphSegments.filter { it.sourceClass != CommutePack.SOURCE_OSM }.map { rideEdge(it) }
+        val linkedStopIds = graphSegments.flatMapTo(hashSetOf()) { listOf(it.fromStopId, it.toStopId) }
+        finder = TripFinder(TripGraph(allRides + walkLinks(linkedStopIds)), netVotes)
+        heroFinder = TripFinder(TripGraph(heroRides), netVotes)
+    }
+
+    /** Unranked finder output per stop pair; ranking (which reads the current votes) runs on every call. */
+    private val cache = object : LinkedHashMap<CacheKey, List<TripCandidate>>(CACHE_SIZE, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<CacheKey, List<TripCandidate>>): Boolean =
+            size > CACHE_SIZE
+    }
+
+    private data class CacheKey(val origins: Set<String>, val destinations: Set<String>, val hero: Boolean)
+
+    private fun rideEdge(segment: PackSegment) = RideEdge(
+        id = edgeId(segment),
+        routeId = segment.routeId,
+        fromStopId = segment.fromStopId,
+        toStopId = segment.toStopId,
+        minutes = segment.minutes ?: segment.minutesEst ?: 0,
+        farePhp = segment.farePhp,
+        distanceMeters = segment.distanceM ?: 0,
+        signboards = signboardsByRoute[segment.routeId].orEmpty(),
+        minutesEstimated = segment.minutes == null && segment.minutesEst != null,
     )
+
+    /**
+     * Walking links, both directions, between distinct stops within [TRANSFER_WALK_M] in a straight line. Each
+     * stop links to its [MAX_TRANSFER_LINKS] nearest; a link chosen by either end is added both ways. A lat/lng
+     * grid with cells of that size keeps the search local instead of comparing every pair.
+     */
+    private fun walkLinks(stopIds: Set<String>): List<WalkEdge> {
+        val stops = stopIds.sorted().mapNotNull { stopsById[it] }
+        if (stops.isEmpty()) return emptyList()
+        val cellLat = TRANSFER_WALK_M / METERS_PER_DEGREE
+        val cellLng = cellLat / cos(Math.toRadians(stops.map { it.lat }.average()))
+        fun row(stop: PackStop) = floor(stop.lat / cellLat).toInt()
+        fun col(stop: PackStop) = floor(stop.lng / cellLng).toInt()
+        val grid = stops.groupBy { GridCell(row(it), col(it)) }
+
+        val metres = LinkedHashMap<Pair<String, String>, Int>()
+        for (stop in stops) {
+            val nearest = buildList {
+                for (dRow in -1..1) for (dCol in -1..1) {
+                    grid[GridCell(row(stop) + dRow, col(stop) + dCol)].orEmpty().forEach { other ->
+                        if (other.id == stop.id) return@forEach
+                        val distance = haversineMeters(stop.lat, stop.lng, other.lat, other.lng)
+                        if (distance <= TRANSFER_WALK_M) add(other to distance)
+                    }
+                }
+            }.sortedWith(compareBy<Pair<PackStop, Double>>({ it.second }, { it.first.id })).take(MAX_TRANSFER_LINKS)
+            for ((other, distance) in nearest) {
+                val rounded = distance.roundToInt()
+                metres.putIfAbsent(stop.id to other.id, rounded)
+                metres.putIfAbsent(other.id to stop.id, rounded)
+            }
+        }
+        return metres.map { (pair, distance) ->
+            WalkEdge(
+                id = "walk:${pair.first}>${pair.second}",
+                fromStopId = pair.first,
+                toStopId = pair.second,
+                minutes = walkMinutes(distance),
+                distanceMeters = distance,
+                transferOnly = true,
+            )
+        }
+    }
+
+    private data class GridCell(val row: Int, val col: Int)
 
     /** No GPS yet: the first pack place stands in, and its name says so. */
     override val myLocation: Place = pack.places.first().toPlace().let {
@@ -74,14 +140,63 @@ class PackTripSource(
 
     override fun candidates(origin: Place, destination: Place, preference: TripPreference): List<Trip> {
         if (!origin.inMakati || !destination.inMakati) return emptyList()
+        val hero = origin.id == HERO_ORIGIN_ID && destination.id == HERO_DESTINATION_ID
+        val rideTrips = rideTrips(origin, destination, preference, hero)
+        val walkOnly = (if (hero) null else walkOnlyTrip(origin, destination)) ?: return rideTrips.map { it.trip }
+
+        // Walking goes first when no ride exists, when the rider wants the cheapest, or when it is no slower than
+        // the best ride; otherwise it is offered right after that ride.
+        val bestRide = rideTrips.firstOrNull()
+        val walkFirst = bestRide == null || preference == TripPreference.Cheapest ||
+            (bestRide.totalMinutes != null && walkOnly.minutes <= bestRide.totalMinutes)
+        val trips = rideTrips.map { it.trip }
+        return if (walkFirst) listOf(walkOnly.trip) + trips else listOf(trips.first(), walkOnly.trip) + trips.drop(1)
+    }
+
+    private fun rideTrips(origin: Place, destination: Place, preference: TripPreference, hero: Boolean): List<BuiltTrip> {
         val originStops = stopsFor(origin)
         val destinationStops = stopsFor(destination)
         if (originStops.isEmpty() || destinationStops.isEmpty()) return emptyList()
 
-        val found = finder.find(TripRequest(originStops, destinationStops, preference.toFinder()))
+        val active = if (hero) heroFinder else finder
+        val generated = synchronized(cache) {
+            cache.getOrPut(CacheKey(originStops, destinationStops, hero)) {
+                active.generate(TripRequest(originStops, destinationStops))
+            }
+        }
+        val found = active.rank(generated, preference.toFinder())
         return found.mapIndexedNotNull { index, candidate ->
             buildTrip(candidate, reasonFor(candidate, found.getOrNull(index + 1), preference), origin, destination)
         }
+    }
+
+    private class BuiltTrip(val trip: Trip, val totalMinutes: Int?)
+
+    private class WalkOnly(val trip: Trip, val minutes: Int)
+
+    /** Walking the whole way, offered when both places have coordinates and are within [WALK_ONLY_MAX_M] in a straight line. */
+    private fun walkOnlyTrip(origin: Place, destination: Place): WalkOnly? {
+        val from = origin.point() ?: return null
+        val to = destination.point() ?: return null
+        if (haversineMeters(from.lat, from.lng, to.lat, to.lng) > WALK_ONLY_MAX_M) return null
+        val meters = walkMeters(origin, to.lat, to.lng)
+        if (meters < MIN_WALK_M) return null
+        val minutes = walkMinutes(meters)
+        return WalkOnly(
+            Trip(
+                key = WALK_KEY,
+                fare = "₱0",
+                minutes = "$minutes min",
+                transfers = "0",
+                distanceLine = String.format(Locale.US, "%.1f km   ·   walk %d min", meters / 1000.0, minutes),
+                reason = "Walk: no ride needed",
+                sample = false,
+                legs = listOf(Leg.Walk("~$meters m", "$minutes min")),
+                path = TripPath(rides = emptyList(), walks = listOf(listOf(from, to)), boardStops = emptyList(), para = null),
+                unverified = false,
+            ),
+            minutes,
+        )
     }
 
     /** A pack place uses its declared stops; any other place with coordinates uses every stop within walking range. */
@@ -92,72 +207,115 @@ class PackTripSource(
         return pack.stops.filter { haversineMeters(lat, lng, it.lat, it.lng) <= MAX_WALK_M }.mapTo(hashSetOf()) { it.id }
     }
 
-    private fun buildTrip(candidate: TripCandidate, reason: String, origin: Place, destination: Place): Trip? {
-        val rides = candidate.legs.filterIsInstance<RideEdge>()
-        val firstRide = rides.firstOrNull() ?: return null
-        val board = stopsById[firstRide.fromStopId] ?: return null
-        val alight = stopsById[rides.last().toStopId] ?: return null
-        val segments = rides.map { segmentsByEdgeId[it.id] ?: return null }
+    /** One step of the trip as the rider sees it: a whole ride on one route, or a walk between rides. */
+    private fun groupLegs(legs: List<TripEdge>): List<List<TripEdge>> {
+        val groups = mutableListOf<MutableList<TripEdge>>()
+        for (edge in legs) {
+            val previous = groups.lastOrNull()?.last()
+            val joins = when {
+                previous is RideEdge && edge is RideEdge -> previous.routeId == edge.routeId
+                previous is WalkEdge && edge is WalkEdge -> true
+                else -> false
+            }
+            if (joins) groups.last().add(edge) else groups.add(mutableListOf(edge))
+        }
+        return groups
+    }
+
+    private fun minutesText(minutes: Int, estimated: Boolean): String =
+        if (estimated) "~$minutes min (est.)" else "$minutes min"
+
+    private fun buildTrip(candidate: TripCandidate, reason: String, origin: Place, destination: Place): BuiltTrip? {
+        // Consecutive edges on one route become one ride; walks between rides stay as transfer walks.
+        val groups = groupLegs(candidate.legs)
+        val firstRideGroup = groups.indexOfFirst { it.first() is RideEdge }
+        if (firstRideGroup < 0) return null
+        val steps = groups.subList(firstRideGroup, groups.indexOfLast { it.first() is RideEdge } + 1)
+        val rides = steps.filter { it.first() is RideEdge }.map { group -> group.map { it as RideEdge } }
+        val ridesSegments = rides.map { ride -> ride.map { segmentsByEdgeId[it.id] ?: return null } }
+
+        val board = stopsById[rides.first().first().fromStopId] ?: return null
+        val alight = stopsById[rides.last().last().toStopId] ?: return null
+        val segments = ridesSegments.flatten()
 
         val firstWalkM = walkMeters(origin, board.lat, board.lng)
         val lastWalkM = walkMeters(destination, alight.lat, alight.lng)
-        val walkMinutes = walkMinutes(firstWalkM) + walkMinutes(lastWalkM)
+        val transferWalks = steps.filter { it.first() is WalkEdge }.map { group -> group.map { it as WalkEdge } }
+        val transferWalkMinutes = transferWalks.sumOf { walk -> walk.sumOf { it.minutes } }
+        val walkMinutes = walkMinutes(firstWalkM) + walkMinutes(lastWalkM) + transferWalkMinutes
 
-        val rideMinutes = segments.map { it.minutes }
-        val minutes = if (rideMinutes.any { it == null }) {
-            "Time unknown"
-        } else {
-            "${walkMinutes + rideMinutes.sumOf { it!! }} min"
-        }
+        val segmentMinutes = segments.map { it.minutes ?: it.minutesEst }
+        val estimated = segments.any { it.minutes == null && it.minutesEst != null }
+        val totalMinutes = if (segmentMinutes.any { it == null }) null else walkMinutes + segmentMinutes.sumOf { it!! }
+        val minutes = if (totalMinutes == null) "Time unknown" else minutesText(totalMinutes, estimated)
         val fare = candidate.totalFarePhp?.let { "₱$it" } ?: "Fare unknown"
-        val kilometres = (segments.sumOf { it.distanceM ?: 0 } + firstWalkM + lastWalkM) / 1000.0
+        val kilometres = (
+            segments.sumOf { it.distanceM ?: 0 } + transferWalks.sumOf { walk -> walk.sumOf { it.distanceMeters } } +
+                firstWalkM + lastWalkM
+            ) / 1000.0
+
+        val rideLegs = steps.map { group ->
+            val first = group.first()
+            if (first is RideEdge) {
+                val ride = group.map { it as RideEdge }
+                val rideSegments = ride.map { segmentsByEdgeId.getValue(it.id) }
+                val from = stopsById.getValue(first.fromStopId)
+                val to = stopsById.getValue(ride.last().toStopId)
+                val fares = rideSegments.map { it.farePhp }
+                val fareText = if (fares.any { it == null }) "Fare unknown" else "₱${fares.sumOf { it!! }}"
+                val times = rideSegments.map { it.minutes ?: it.minutesEst }
+                val rideEstimated = rideSegments.any { it.minutes == null && it.minutesEst != null }
+                val minutesLeg = if (times.any { it == null }) "" else minutesText(times.sumOf { it!! }, rideEstimated)
+                Leg.Ride(
+                    stops = "${from.name}  →  ${to.name}",
+                    fareAndMinutes = "$fareText  ·  ${minutesLeg.ifEmpty { "time unknown" }}",
+                    signboard = first.signboards.joinToString(" / "),
+                    signboards = first.signboards,
+                    mode = modeByRoute[first.routeId].orEmpty(),
+                    board = from.name,
+                    alight = to.name,
+                    fare = fareText,
+                    minutes = minutesLeg,
+                )
+            } else {
+                val meters = (group.sumOf { it.distanceMeters } / 10.0).roundToInt() * 10
+                Leg.Walk("~$meters m", "${group.sumOf { it.minutes }} min")
+            }
+        }
 
         val legs = buildList<Leg> {
             if (firstWalkM >= MIN_WALK_M) add(Leg.Walk("~$firstWalkM m", "${walkMinutes(firstWalkM)} min"))
-            rides.forEachIndexed { index, ride ->
-                val from = stopsById.getValue(ride.fromStopId)
-                val to = stopsById.getValue(ride.toStopId)
-                val fareText = segments[index].farePhp?.let { "₱$it" } ?: "Fare unknown"
-                val timeText = segments[index].minutes?.let { "$it min" } ?: "time unknown"
-                add(
-                    Leg.Ride(
-                        stops = "${from.name}  →  ${to.name}",
-                        fareAndMinutes = "$fareText  ·  $timeText",
-                        signboard = ride.signboards.joinToString(" / "),
-                        signboards = ride.signboards,
-                        mode = modeByRoute[ride.routeId].orEmpty(),
-                        board = from.name,
-                        alight = to.name,
-                        fare = fareText,
-                        minutes = segments[index].minutes?.let { "$it min" }.orEmpty(),
-                    ),
-                )
-            }
+            addAll(rideLegs)
             if (lastWalkM >= MIN_WALK_M) add(Leg.Walk("~$lastWalkM m", "${walkMinutes(lastWalkM)} min"))
             add(Leg.Para(alight.name))
         }
 
+        fun point(stopId: String) = stopsById.getValue(stopId).let { GeoPoint(it.lat, it.lng) }
         val boardPoint = GeoPoint(board.lat, board.lng)
         val alightPoint = GeoPoint(alight.lat, alight.lng)
         val path = TripPath(
-            rides = rides.mapIndexed { index, ride ->
-                val decoded = segments[index].polyline?.let { Polyline.decode(it, pack.shapePrecision) }.orEmpty()
-                decoded.takeIf { it.size >= 2 } ?: listOf(
-                    stopsById.getValue(ride.fromStopId).let { GeoPoint(it.lat, it.lng) },
-                    stopsById.getValue(ride.toStopId).let { GeoPoint(it.lat, it.lng) },
-                )
+            rides = rides.mapIndexed { rideIndex, ride ->
+                buildList<GeoPoint> {
+                    ride.forEachIndexed { edgeIndex, edge ->
+                        val decoded = ridesSegments[rideIndex][edgeIndex].polyline
+                            ?.let { Polyline.decode(it, pack.shapePrecision) }.orEmpty()
+                        val points = decoded.takeIf { it.size >= 2 } ?: listOf(point(edge.fromStopId), point(edge.toStopId))
+                        addAll(if (isNotEmpty() && points.first() == last()) points.drop(1) else points)
+                    }
+                }
             },
             walks = buildList<List<GeoPoint>> {
                 val from = origin.point()
                 if (from != null && firstWalkM >= MIN_WALK_M) add(listOf(from, boardPoint))
+                transferWalks.forEach { walk -> add(listOf(point(walk.first().fromStopId), point(walk.last().toStopId))) }
                 val to = destination.point()
                 if (to != null && lastWalkM >= MIN_WALK_M) add(listOf(alightPoint, to))
             },
-            boardStops = rides.map { ride -> stopsById.getValue(ride.fromStopId).let { GeoPoint(it.lat, it.lng) } },
+            boardStops = rides.map { ride -> point(ride.first().fromStopId) },
             para = alightPoint,
         )
 
-        return Trip(
+        val trip = Trip(
             key = candidate.candidateKey,
             fare = fare,
             minutes = minutes,
@@ -167,7 +325,9 @@ class PackTripSource(
             sample = false,
             legs = legs,
             path = path,
+            unverified = segments.any { it.sourceClass == CommutePack.SOURCE_OSM },
         )
+        return BuiltTrip(trip, totalMinutes)
     }
 
     /** Straight-line walk to a stop, rounded to 10 m; 0 when the place has no coordinates. */
@@ -210,17 +370,34 @@ class PackTripSource(
         const val MAX_WALK_M = 800.0
         const val WALK_M_PER_MIN = 80.0
         private const val MIN_WALK_M = 10
-        private const val ASSET_PATH = "pack/hero-trip.json"
+        private const val WALK_ONLY_MAX_M = 1500.0
+        private const val WALK_KEY = WALK_ONLY_TRIP_KEY
+        private const val HERO_ASSET_PATH = "pack/hero-trip.json"
+        private const val OSM_ASSET_PATH = "pack/osm-makati.json"
         private const val EARTH_RADIUS_M = 6_371_000.0
+        private const val METERS_PER_DEGREE = 111_195.0
+        private const val TRANSFER_WALK_M = 200.0
+        private const val MAX_TRANSFER_LINKS = 6
+        private const val CACHE_SIZE = 32
+        private const val LOG_TAG = "PackTripSource"
 
         const val HERO_ORIGIN_ID = "va-rufino"
         const val HERO_DESTINATION_ID = "dela-rosa-pio-del-pilar"
 
-        fun fromAssets(context: Context, netVotes: (String) -> Int = { 0 }): PackTripSource =
-            PackTripSource(
-                CommutePack.parse(context.assets.open(ASSET_PATH).bufferedReader().use { it.readText() }),
-                netVotes,
-            )
+        /** The hero pack, plus the OpenStreetMap pack when it is bundled and valid; trips still work without it. */
+        fun fromAssets(context: Context, netVotes: (String) -> Int = { 0 }): PackTripSource {
+            val hero = CommutePack.parse(readAsset(context, HERO_ASSET_PATH))
+            val pack = try {
+                hero.merge(CommutePack.parse(readAsset(context, OSM_ASSET_PATH)))
+            } catch (e: Exception) {
+                Log.w(LOG_TAG, "OpenStreetMap pack unavailable; using the hero pack only", e)
+                hero
+            }
+            return PackTripSource(pack, netVotes)
+        }
+
+        private fun readAsset(context: Context, path: String): String =
+            context.assets.open(path).bufferedReader().use { it.readText() }
 
         private fun edgeId(segment: PackSegment) = "${segment.routeId}#${segment.seq}"
 

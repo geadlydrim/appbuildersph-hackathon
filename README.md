@@ -6,11 +6,10 @@ AppBuildersPH Hackathon 2026, theme Local AI.
 
 ## Team
 
-<!-- TODO(owner): replace with the four names exactly as on the official participant list before submitting. -->
-- TODO: official name (GitHub `geadlydrim`)
-- TODO: official name (GitHub `pablo-pica`)
-- TODO: official name (GitHub `storms23`)
-- TODO: official name (GitHub `Jrabara101`)
+- Keanu Agustin (GitHub `geadlydrim`)
+- John Rainier Valencia (GitHub `pablo-pica`)
+- Jefferson Tuparan (GitHub `storms23`)
+- Johnrick Rabara (GitHub `Jrabara101`)
 
 ## Why run the AI locally?
 
@@ -29,6 +28,10 @@ Verified on the demo phone (POCO X6 5G, Snapdragon 7s Gen 2) in **airplane mode*
   - A short answer sentence in English or Taglish, built from those facts.
 - **"Is this the right jeep?":** e.g. "Tama ba tong jeep? Buendia LRT nakalagay" gives "Yes, ride this"; "PASAY GUADALUPE" gives "No, look for "LRT" or "Buendia - LRT"".
 - **Rider Q&A** (Questions screen): **sample data**, marked in the app. "2 riders say this works · sample" shows on the jeep card. Sample answers never change the order of the demo trip.
+- **More Makati routes and places from OpenStreetMap:**
+  - 120 bus routes, 302 named stops and 339 Makati places (malls, barangays, stations, schools, parks and more), so "Guadalupe to Glorietta" or "SM Makati to Guadalupe" gives a trip too.
+  - These trips are marked **"OSM · unverified"**: fares show as "Fare unknown", and minutes are estimates shown as "~N min (est.)" (120 m per minute, calibrated on the hero ride).
+  - Short hops suggest walking.
 
 Measured on that phone (on-device AI):
 - The AI is ready about 16 s after opening the app.
@@ -51,7 +54,7 @@ Measured on that phone (on-device AI):
 | Understanding the question (Gemma 4 E2B on LiteRT-LM, GPU) | Downloading the 2.6 GB model from Hugging Face |
 | English speech-to-text (Android on-device recognizer) | Getting the English offline speech pack, if the phone doesn't have it |
 | Place search, trip finding and ranking, fares, minutes, answer sentence, "right jeep?" check (Kotlin) | Building the app (Gradle downloads libraries) |
-| Map display (MapLibre + bundled PMTiles map) | Building the data: stop lookups (Nominatim, Overpass) and the road line (OSRM), done once by the team and stored in the repo |
+| Map display (MapLibre + bundled PMTiles map) | Building the data: stop and place lookups and OSM routes (Nominatim, Overpass), and the hero road line (OSRM), done once by the team and stored in the repo |
 | Rider Q&A (sample data bundled; your own answers stay on the phone) | — |
 
 The app makes no network requests at runtime.
@@ -110,7 +113,7 @@ Kotlin 2.4.21, Jetpack Compose (BOM 2024.10.01), Android Gradle Plugin 8.13.2, G
 - **No cloud API at runtime.** No cloud AI is used at all.
 - **Build-time only**, to make the stored data:
   - OSRM public demo server: the road line for the hero ride, fetched once.
-  - OpenStreetMap **Nominatim** and **Overpass**: stop and place lookups, done once.
+  - OpenStreetMap **Nominatim** and **Overpass**: stop and place lookups, and the OSM route and place import (`data/pack/osm_import.py`), run once.
 - **Hugging Face:** model download.
 - **GitHub:** repo, issues, releases.
 
@@ -118,6 +121,7 @@ Kotlin 2.4.21, Jetpack Compose (BOM 2024.10.01), Android Gradle Plugin 8.13.2, G
 
 - **Hero trip** (`data/pack/hero-trip.source.json`): **team-generated** from the team's own route knowledge (`known`, from memory). Fares ₱12 jeep / ₱15 bus and about 7 min on board were not checked on a ride during the event. Stop points come from team-supplied plus codes and OpenStreetMap.
 - **Road line:** OSRM driving route over OpenStreetMap data (ODbL), stored in `data/pack/`.
+- **OSM routes and places** (`data/pack/osm-makati.source.json`, built by `data/pack/osm_import.py` from Overpass): bus routes, stops and route geometry, plus places inside Makati's OSM boundary. © OpenStreetMap contributors (ODbL). Not verified by the team: OSM fares are not used ("Fare unknown"), and minutes are estimates (120 m/min). **Sakay.ph data is not used:** its Terms of Service forbid extracting or reusing it.
 - **Map:** Makati extract of the Protomaps basemap (`makati-20261009-z14.pmtiles`), © OpenStreetMap contributors (ODbL), with attribution shown on the map. Map fonts and icons are from [protomaps/basemaps-assets](https://github.com/protomaps/basemaps-assets): Noto Sans glyphs under the SIL Open Font License, and icons derived from MIT-licensed tangrams/icons. The style is based on [protomaps/basemaps](https://github.com/protomaps/basemaps).
 - **Rider Q&A** (`data/mock/rider-qa.json`): **mock, hand-written by the team**. Every record is tagged `source_class: mock` and shown as "sample" in the app.
 
