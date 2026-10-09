@@ -50,6 +50,24 @@ class PackTripSourceTest {
     }
 
     @Test
+    fun streetWordsSpacingAndPunctuationDoNotMatter() {
+        // How riders actually type: joined words, "street" spelled out or abbreviated, stray dots.
+        for (query in listOf("delarosa street", "Dela Rosa Street", "dela rosa st.", "DelaRosa St")) {
+            assertEquals(query, listOf("Dela Rosa St, Pio del Pilar"), names(query))
+        }
+        for (query in listOf("V.A. Rufino Street", "va rufino st", "varufino")) {
+            assertEquals(query, listOf("V.A. Rufino St"), names(query))
+        }
+    }
+
+    @Test
+    fun aStreetWordAloneMatchesNothing() {
+        for (query in listOf("street", "st.", "avenue")) {
+            assertTrue(query, names(query).isEmpty())
+        }
+    }
+
+    @Test
     fun fieldAListsMyLocationFirstAndFieldBDoesNot() {
         assertEquals(SearchRow.UseMyLocation, source.search(Field.A, "").first())
         assertEquals(2, names("", Field.A).size)
