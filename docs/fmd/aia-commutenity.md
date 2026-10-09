@@ -15,7 +15,7 @@ AI ships in these features:
 | Feature | AI role |
 |---|---|
 | PRD-F1 | Parsing the trip question |
-| PRD-F2 | Phrasing the answer, and the hand-weighted scorer |
+| PRD-F2 | Phrasing the answer, and the deterministic baseline scorer |
 | PRD-F7 | Learned ranker |
 | PRD-F8 | Reading the signboard |
 | PRD-F9 | Speech-to-text |

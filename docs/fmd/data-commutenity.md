@@ -4,7 +4,7 @@
 **Date:** 2026-10-09
 **Version:** 0.2
 **Owner:** Data owner and ranker owner ([A8](state.md#4-open-assumptions))
-**Status:** Draft. The Valenzuela–Recto corridor is decided ([D15](state.md#5-decisions)); travel times remain pending [A10](state.md#4-open-assumptions), and the ranker model remains pending [A11](state.md#4-open-assumptions).
+**Status:** Draft. The Valenzuela–Recto corridor and its travel-time baseline are decided ([D15](state.md#5-decisions), [D16](state.md#5-decisions)); the ranker model remains pending [A11](state.md#4-open-assumptions).
 **Last reconciled:** 2026-10-09
 **SDD:** [System design](sdd-commutenity.md)
 
@@ -32,7 +32,7 @@ The pack keeps the route → segment → stop shape from the original CommuteNit
 | `places` | `id`, `name`, `aliases[]`, `lat`, `lng`, `kind` (landmark, area, station, terminal), `stop_ids[]` | Aliases hold Taglish and colloquial names |
 | `stops` | `id`, `name`, `lat`, `lng`, `modes[]` | Where you board or alight |
 | `routes` | `id`, `name`, `mode`, `signboards[]`, `notes` | `mode` is one of: jeepney, bus, mrt, lrt, uv_express, p2p, tricycle, walking |
-| `segments` | `route_id`, `seq`, `from_stop_id`, `to_stop_id`, `fare_php?`, `minutes?` | Ordered legs. Minutes are needed for "efficient" ([A10](state.md#4-open-assumptions)). |
+| `segments` | `route_id`, `seq`, `from_stop_id`, `to_stop_id`, `fare_php?`, `minutes?` | Ordered legs. Minutes are needed for the T0 baseline ([D16](state.md#5-decisions)). |
 | `transfers` | `from_stop_id`, `to_stop_id`, `walk_minutes`, `notes` | Walking links |
 | `provenance` | per record: `source_class` (`collected` / `known` / `mock`), `source` (ride-verified, fare matrix, team estimate, signboard photo, mock generator), `verified_by`, `verified_at` | Every fact has a class and a source ([§3.1](#31-mock-data-rules)) |
 
@@ -65,7 +65,7 @@ These records are stored locally in Room and synced to the backend ([A9](state.m
    - The MRT-3 and LRT-2 discount goes in a dated overlay.
    - Jeepney and bus fares become `collected` once a teammate saves the LTFRB fare guides from a browser.
    - UV Express and P2P are `known` or `mock`.
-4. **Minutes ([A10](state.md#4-open-assumptions)):** the team's ride estimates per segment, labelled `team estimate`. Use typical, not peak, times, and state that in the app.
+4. **Minutes ([D16](state.md#5-decisions)):** record the team's typical, non-peak ride and transfer estimates per segment as `known`, with estimator and date. Replace a fact only when a teammate verifies it during the event (`collected`). Mock minutes may cover adjacent stops but never the hero trip; the app states that displayed `known` times are typical estimates.
 5. **Aliases:** for each stop, record the names people actually say.
 6. **Signboards:** transcribe the exact painted text into `routes.signboards[]`. About 20 photos go into the signboard eval set.
 
@@ -103,7 +103,7 @@ All preference labels, contributions, and questions carry `source_class` too. La
 | Item | Plan |
 |---|---|
 | Model ([A11](state.md#4-open-assumptions)) | Start with pairwise logistic regression on the [feature vector](sdd-commutenity.md#3-routing-contract). Try a small GBDT only if logistic regression plateaus and there is time. |
-| Baseline | The hand-weighted score from SDD §3 |
+| Baseline | The deterministic lexicographic order from SDD §3 |
 | Training | A Python script in `ml/`. Its inputs are the scenarios, labels, and seeded votes. Its output is the weights or model file plus the feature spec. |
 | On-device export | Logistic regression: a JSON weights file evaluated in Kotlin. GBDT: ONNX, run with ONNX Runtime Android. |
 | Parity | The same fixture produces the same scores in Python and Kotlin (QA-11) |
@@ -115,7 +115,7 @@ All preference labels, contributions, and questions carry `source_class` too. La
 |---|---|---|---|
 | Parser | Exact match on origin and destination over held-out questions | Pretrained LLM plus prompt | — |
 | End-to-end | % of answers whose picked route is valid and whose facts exactly match the pack | T0 build | [QAD §6](qad-commutenity.md#6-release-criteria) threshold |
-| Ranker | Top-1 agreement with the majority human pick on held-out pairs; pairwise accuracy | Hand-weighted score | Ranker must beat the baseline |
+| Ranker | Top-1 agreement with the majority human pick on held-out pairs; pairwise accuracy | Deterministic lexicographic order | Ranker must beat the baseline |
 | Signboard | Correct verdict % on held-out photos; unreadable rate; **0 false "ride"** | Pretrained OCR plus matcher | — |
 
 Report the real numbers, sample sizes, and limits (for example, "4 raters, N held-out pairs, team-generated"). **Split every metric by data class.** Results on `mock` data show that the pipeline works. They are not evidence of real-world accuracy.
