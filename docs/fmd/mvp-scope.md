@@ -29,7 +29,7 @@ Ranker **data collection** (scenarios, preference labels, seeded contributions) 
 
 ## Geography and modes
 
-- **Geography:** 1–3 demo corridors built from `collected` and `known` data, including at least one with real alternative routes worth ranking. `mock` data extends coverage around them, labelled as sample data ([A6](state.md#4-open-assumptions), [D13](state.md#5-decisions)).
+- **Geography:** the Valenzuela–Recto corridor, with the hero trip from Malanday to the Recto area. It has a direct Malanday–Recto e-jeep candidate and a Malanday → LRT-1 Monumento → LRT-1 Doroteo Jose → walk candidate. Build these from `collected` and `known` data; `mock` data may cover adjacent stops only and is labelled as sample data ([D13](state.md#5-decisions), [D15](state.md#5-decisions)).
 - **Modes:** jeepney, city bus, MRT, LRT, UV Express, P2P, tricycle, walking.
 
 ## Parked (later, not this event)
