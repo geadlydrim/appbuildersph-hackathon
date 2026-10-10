@@ -8,6 +8,10 @@ data class TripRequest(
     val originStopIds: Set<String>,
     val destinationStopIds: Set<String>,
     val preference: Preference = Preference.Default,
+    /** Minutes to walk from the rider's start to each origin stop; counted in every trip's total. */
+    val originWalkMinutes: Map<String, Int> = emptyMap(),
+    /** Minutes to walk from each destination stop to the rider's end; counted in every trip's total. */
+    val destinationWalkMinutes: Map<String, Int> = emptyMap(),
 )
 
 data class TripGraph(val edges: List<TripEdge>)
@@ -91,12 +95,23 @@ class TripFinder(
     private fun kShortestPaths(request: TripRequest): List<RoutedPath> {
         val origins = request.originStopIds.sorted()
         val destinations = request.destinationStopIds
+        val access = request.originWalkMinutes
+        val egress = request.destinationWalkMinutes
         val first = shortestPath(
             starts = origins.map { SearchState(it, null) },
             destinations = destinations,
             blockedStops = emptySet(),
             blockedEdges = emptySet(),
+            startCost = access,
+            egress = egress,
         ) ?: return emptyList()
+
+        fun routedPath(origin: String, edgeIndices: List<Int>): RoutedPath {
+            val legs = edgeIndices.map { edges[it] }
+            val walkIn = access[origin] ?: 0
+            val walkOut = egress[legs.last().toStopId] ?: 0
+            return RoutedPath(origin, edgeIndices, legs, walkIn, walkOut)
+        }
 
         val accepted = mutableListOf(routedPath(first.startStopId, first.edgeIndices))
         val seen = hashSetOf(first.edgeIndices)
@@ -118,6 +133,8 @@ class TripFinder(
                     destinations = destinations,
                     blockedStops = emptySet(),
                     blockedEdges = emptySet(),
+                    startCost = access,
+                    egress = egress,
                 )?.let { offer(routedPath(it.startStopId, it.edgeIndices)) }
             }
 
@@ -137,6 +154,7 @@ class TripFinder(
                     destinations = destinations,
                     blockedStops = rootStops.toHashSet(),
                     blockedEdges = blockedEdges,
+                    egress = egress,
                 ) ?: continue
                 offer(routedPath(previous.origin, root + spur.edgeIndices))
             }
@@ -158,22 +176,26 @@ class TripFinder(
         destinations: Set<String>,
         blockedStops: Set<String>,
         blockedEdges: Set<Int>,
+        startCost: Map<String, Int> = emptyMap(),
+        egress: Map<String, Int> = emptyMap(),
     ): SpurPath? {
         val queue = PriorityQueue<QueueEntry>(
             compareBy<QueueEntry> { it.cost }.thenBy { it.hops }.thenBy { it.order },
         )
         val labels = HashMap<SearchState, Label>()
         val steps = HashMap<SearchState, Step>()
+        // Reaching a destination stop isn't the end: the walk from it to the rider's end still counts. Each
+        // arrival is queued as a "finished" entry with that walk added, and the cheapest finished entry wins.
+        val finished = HashMap<SearchState, Int>()
         var order = 0L
         starts.forEach { start ->
-            labels[start] = Label(0, 0)
-            queue += QueueEntry(start, 0, 0, order++)
+            val cost = startCost[start.stopId] ?: 0
+            labels[start] = Label(cost, 0)
+            queue += QueueEntry(start, cost, 0, order++)
         }
         while (queue.isNotEmpty()) {
             val entry = queue.poll()
-            val label = labels.getValue(entry.state)
-            if (entry.cost != label.cost || entry.hops != label.hops) continue
-            if (entry.hops > 0 && entry.state.stopId in destinations) {
+            if (entry.finish) {
                 val edgeIndices = ArrayDeque<Int>()
                 var state = entry.state
                 while (true) {
@@ -182,6 +204,13 @@ class TripFinder(
                     state = step.previous
                 }
                 return SpurPath(state.stopId, edgeIndices.toList())
+            }
+            val label = labels.getValue(entry.state)
+            if (entry.cost != label.cost || entry.hops != label.hops) continue
+            if (entry.hops > 0 && entry.state.stopId in destinations && entry.state !in finished) {
+                val total = entry.cost + (egress[entry.state.stopId] ?: 0)
+                finished[entry.state] = total
+                queue += QueueEntry(entry.state, total, entry.hops, order++, finish = true)
             }
             for (edgeIndex in outgoing[entry.state.stopId].orEmpty()) {
                 if (edgeIndex in blockedEdges) continue
@@ -212,11 +241,14 @@ class TripFinder(
         return null
     }
 
-    private fun routedPath(origin: String, edgeIndices: List<Int>) =
-        RoutedPath(origin, edgeIndices, edgeIndices.map { edges[it] })
-
-    private class RoutedPath(val origin: String, val edgeIndices: List<Int>, private val legs: List<TripEdge>) {
-        val cost = legs.sumOf { it.minutes } + TRANSFER_PENALTY_MINUTES * legs.transferCount()
+    private class RoutedPath(
+        val origin: String,
+        val edgeIndices: List<Int>,
+        private val legs: List<TripEdge>,
+        private val walkIn: Int,
+        private val walkOut: Int,
+    ) {
+        val cost = walkIn + legs.sumOf { it.minutes } + TRANSFER_PENALTY_MINUTES * legs.transferCount() + walkOut
         private val key = legs.joinToString("|") { it.id }
 
         fun toCandidate(rideFare: (String, List<RideEdge>) -> Int?): TripCandidate {
@@ -229,11 +261,11 @@ class TripFinder(
             return TripCandidate(
                 candidateKey = key,
                 legs = legs,
-                totalMinutes = legs.sumOf { it.minutes },
+                totalMinutes = walkIn + legs.sumOf { it.minutes } + walkOut,
                 totalFarePhp = totalFare,
                 totalDistanceMeters = legs.sumOf { it.distanceMeters },
                 transfers = legs.transferCount(),
-                walkMinutes = legs.filterIsInstance<WalkEdge>().sumOf { it.minutes },
+                walkMinutes = walkIn + legs.filterIsInstance<WalkEdge>().sumOf { it.minutes } + walkOut,
                 minutesEstimated = rides.any { it.minutesEstimated },
             )
         }
@@ -247,7 +279,14 @@ class TripFinder(
 
     private class Step(val previous: SearchState, val edgeIndex: Int)
 
-    private class QueueEntry(val state: SearchState, val cost: Int, val hops: Int, val order: Long)
+    /** [finish] marks an arrival at a destination with the final walk added; popping one ends the search. */
+    private class QueueEntry(
+        val state: SearchState,
+        val cost: Int,
+        val hops: Int,
+        val order: Long,
+        val finish: Boolean = false,
+    )
 
     private fun candidateComparator(preference: Preference): Comparator<TripCandidate> {
         fun fare(candidate: TripCandidate) = candidate.totalFarePhp ?: Int.MAX_VALUE
