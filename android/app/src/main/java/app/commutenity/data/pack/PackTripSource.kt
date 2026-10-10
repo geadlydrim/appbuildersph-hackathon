@@ -79,7 +79,14 @@ class PackTripSource(
             size > CACHE_SIZE
     }
 
-    private data class CacheKey(val origins: Set<String>, val destinations: Set<String>, val hero: Boolean)
+    /** Walks depend on where the rider stands, not just which stops are near, so the places are part of the key. */
+    private data class CacheKey(
+        val origins: Set<String>,
+        val destinations: Set<String>,
+        val from: GeoPoint?,
+        val to: GeoPoint?,
+        val hero: Boolean,
+    )
 
     private fun rideEdge(segment: PackSegment) = RideEdge(
         id = edgeId(segment),
@@ -171,10 +178,20 @@ class PackTripSource(
         val destinationStops = stopsFor(destination)
         if (originStops.isEmpty() || destinationStops.isEmpty()) return emptyList()
 
+        // Count the walk to the first stop and from the last stop while searching, so a ride from a stop 700 m
+        // away can't beat one from next door just because its riding part is shorter.
+        fun walkTo(place: Place, stopId: String) =
+            stopsById[stopId]?.let { walkMinutes(walkMeters(place, it.lat, it.lng)) } ?: 0
+        val request = TripRequest(
+            originStopIds = originStops,
+            destinationStopIds = destinationStops,
+            originWalkMinutes = originStops.associateWith { walkTo(origin, it) },
+            destinationWalkMinutes = destinationStops.associateWith { walkTo(destination, it) },
+        )
         val active = if (hero) heroFinder else finder
         val generated = synchronized(cache) {
-            cache.getOrPut(CacheKey(originStops, destinationStops, hero)) {
-                active.generate(TripRequest(originStops, destinationStops))
+            cache.getOrPut(CacheKey(originStops, destinationStops, origin.point(), destination.point(), hero)) {
+                active.generate(request)
             }
         }
         val found = active.rank(generated, preference.toFinder())

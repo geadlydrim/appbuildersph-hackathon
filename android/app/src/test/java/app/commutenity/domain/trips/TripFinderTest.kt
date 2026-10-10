@@ -16,6 +16,47 @@ class TripFinderTest {
             RideEdge("unknown-fare-end", "unknown-bus", "e", "d", minutes = 4, farePhp = null),
         ),
     )
+
+    @Test
+    fun walkingToAndFromStopsCountsTowardTheBestTrip() {
+        // A faster ride from a stop 10 minutes' walk away must lose to a slower ride from a stop next door.
+        val graph = TripGraph(
+            listOf(
+                RideEdge("near-ride", "near-bus", "near", "end", minutes = 20, farePhp = 15),
+                RideEdge("far-ride", "far-bus", "far", "end", minutes = 15, farePhp = 15),
+            ),
+        )
+        val request = TripRequest(
+            originStopIds = setOf("near", "far"),
+            destinationStopIds = setOf("end"),
+            originWalkMinutes = mapOf("near" to 1, "far" to 10),
+            destinationWalkMinutes = mapOf("end" to 2),
+        )
+
+        val found = TripFinder(graph).find(request)
+
+        assertEquals(listOf("near-ride", "far-ride"), found.map { it.candidateKey })
+        assertEquals(23, found.first().totalMinutes)
+        assertEquals(3, found.first().walkMinutes)
+        assertEquals(27, found[1].totalMinutes)
+    }
+
+    @Test
+    fun theWalkFromTheLastStopDecidesBetweenDestinationStops() {
+        val graph = TripGraph(
+            listOf(
+                RideEdge("to-far-end", "bus-1", "start", "far-end", minutes = 10, farePhp = 15),
+                RideEdge("to-near-end", "bus-2", "start", "near-end", minutes = 12, farePhp = 15),
+            ),
+        )
+        val request = TripRequest(
+            originStopIds = setOf("start"),
+            destinationStopIds = setOf("far-end", "near-end"),
+            destinationWalkMinutes = mapOf("far-end" to 9, "near-end" to 1),
+        )
+
+        assertEquals("to-near-end", TripFinder(graph).find(request).first().candidateKey)
+    }
     private val finder = TripFinder(finderGraph)
 
     @Test
