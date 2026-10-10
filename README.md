@@ -1,6 +1,8 @@
 # CommuteNity
 
-An Android commute assistant for Makati City that works **with no internet**. Ask "Paano pumunta sa Dela Rosa galing V.A. Rufino?" by typing (Taglish or English) or by voice (English). An AI model running **on the phone** reads the question, and the app shows the trip on an offline map: which jeep or bus, the fare, the minutes, and where to say "para". At the stop, ask "Is this the right jeep?" with the signboard text you see.
+A commute assistant for Filipino commuters that works **with no internet**. Ask "Paano pumunta sa Dela Rosa galing V.A. Rufino?" by typing (Taglish or English) or by voice (English). An AI model running **on the phone** reads the question, and the app shows the trip on an offline map: which jeep or bus to ride, the fare, the minutes, and where to say "para". At the stop, ask "Is this the right jeep?" with the signboard text you see.
+
+CommuteNity is meant for commuters anywhere in the Philippines. **For this hackathon we built it for one city first, Makati**, so every route in the demo could be drawn on the real road and every fare checked against the fare table. A wide, half-right map is worse than a narrow, correct one. How it grows to other cities is under [From Makati to more cities](#from-makati-to-more-cities).
 
 AppBuildersPH Hackathon 2026, theme Local AI.
 
@@ -19,7 +21,7 @@ Commuters need directions exactly where the cloud fails them: underpasses, crowd
 
 Verified on the demo phone (POCO X6 5G, Snapdragon 7s Gen 2) in **airplane mode**, 2026-10-10:
 
-- **Offline Makati map:** pan and zoom. Tap to set A then B. Hold a pin, then drag it to move it.
+- **Offline map of Makati** (the pilot city): pan and zoom. Tap to set A then B. Hold a pin, then drag it to move it.
 - **Ask by text:** Taglish or English, read by the on-device AI. "Paano pumunta sa Dela Rosa galing V.A. Rufino?" sets A and B and shows the trip.
 - **Ask by voice:** English, on-device speech recognition; same path as typing.
 - **The real trip** from V.A. Rufino St to Dela Rosa St, Pio del Pilar, drawn along the road on Gil Puyat Ave:
@@ -28,8 +30,10 @@ Verified on the demo phone (POCO X6 5G, Snapdragon 7s Gen 2) in **airplane mode*
   - A short answer sentence in English or Taglish, built from those facts.
 - **"Is this the right jeep?":** e.g. "Tama ba tong jeep? Buendia LRT nakalagay" gives "Yes, ride this"; "PASAY GUADALUPE" gives "No, look for "LRT" or "Buendia - LRT"".
 - **Rider Q&A** (Questions screen): **sample data**, marked in the app. "2 riders say this works · sample" shows on the jeep card. Sample answers never change the order of the demo trip.
+- **EDSA Carousel** stops in Makati (Guadalupe, Buendia, Ayala / One Ayala), both directions, with the fare from the air-con bus rule (₱18 within Makati). "Guadalupe to Glorietta" rides the Carousel.
+- **Door-to-door ranking:** trips are compared including the walk to the first stop and from the last stop, so the app doesn't send you 700 m to a farther stop for a ride that's only faster on paper.
 - **More Makati routes and places from OpenStreetMap:**
-  - 120 bus routes, 302 named stops and 339 Makati places (malls, barangays, stations, schools, parks and more), so "Guadalupe to Glorietta" or "SM Makati to Guadalupe" gives a trip too.
+  - 118 bus routes, 295 named stops and 339 Makati places (malls, barangays, stations, schools, parks and more), so a trip like "Power Plant Mall to Glorietta" works too.
   - These trips are marked **"OSM · unverified"**: fares show as "Fare unknown", and minutes are estimates shown as "~N min (est.)" (120 m per minute, calibrated on the hero ride).
   - Short hops suggest walking.
 
@@ -46,6 +50,18 @@ Measured on that phone (on-device AI):
 - An alternatives list (the ₱15 bus is computed as the runner-up but not shown).
 - The learned ranker.
 - A 30-question AI evaluation.
+
+## From Makati to more cities
+
+Makati is the first city, not the limit. Everything city-specific is **data**, so a new city is a new data pack, not new app logic:
+
+- **Routes, stops and places:** `data/pack/osm_import.py` builds a city's bus routes, stops and named places from OpenStreetMap. OSM already has bus routes elsewhere: Manila 172 (167 bus, 5 jeepney) and Pasig 64, counted on 2026-10-10.
+- **Jeepney routes** are thin in OSM everywhere we checked, so they come from people who ride them, the way the team wrote the Makati demo trip, and later from riders' suggestions in the app.
+- **Fares** are rules in a table (base fare plus per-km, per vehicle type), not hard-coded numbers.
+- **Offline map:** one small map file per city, cut from the same open basemap (Makati's is 3.3 MB).
+- **The on-device AI doesn't change per city:** it only copies place names out of the question, and the city's pack supplies the places. Other languages, like Bisaya, need their own keyword lists; voice is English only for now.
+
+What's still needed to go beyond Makati: the city bounds and messages are hard-coded to Makati in this build, so the first step is making the city a setting.
 
 ## What runs locally, what needs internet
 
